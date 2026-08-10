@@ -4,7 +4,7 @@
 
 export const SITE = {
 	name: "Sam's Blog",
-	tagline: 'Notes from the field on Microsoft security engineering.',
+	tagline: 'Powered by learning. Engineered for defence.',
 	description:
 		'Field reports, detection queries and deployment notes on Microsoft security engineering: Entra ID, Defender XDR, Sentinel and Azure.',
 	author: 'Sam Broughton',
@@ -17,16 +17,26 @@ export const SITE = {
 } as const;
 
 /**
- * Topic: the subject area. Exactly one per entry, so counts stay meaningful and
- * the sidebar is stable.
+ * Domains: the XDR subject areas this blog covers. Exactly one per entry, so
+ * counts stay meaningful and the sidebar is stable.
+ *
+ * The order here is the intended progression across the discipline, not an
+ * alphabetical or by-volume ranking, and it is the order rendered everywhere.
+ * Domains with no published entries are filtered out at render time rather than
+ * removed from this list, so a domain can be written towards before it appears.
+ *
+ * The ids are URL slugs (/topics/<id>) and are deliberately left alone when a
+ * label is reworded, so existing links keep resolving.
  */
 export const TOPICS = [
-	{ id: 'identity', label: 'Identity' },
 	{ id: 'endpoint-security', label: 'Endpoint Security' },
-	{ id: 'siem-detection', label: 'SIEM & Detection' },
-	{ id: 'cloud-security', label: 'Cloud Security' },
-	{ id: 'data-security', label: 'Data Security' },
-	{ id: 'device-management', label: 'Device Management' },
+	{ id: 'identity', label: 'Identity Security' },
+	{ id: 'siem-detection', label: 'SIEM & Detection Engineering' },
+	{ id: 'threat-hunting', label: 'Threat Hunting & Incident Response' },
+	{ id: 'email-collaboration', label: 'Email & Collaboration Security' },
+	{ id: 'cloud-security', label: 'Cloud & SaaS Security' },
+	{ id: 'automation-soar', label: 'Automation & SOAR' },
+	{ id: 'xdr-engineering', label: 'XDR Engineering & Architecture' },
 ] as const;
 
 export type TopicId = (typeof TOPICS)[number]['id'];

@@ -36,7 +36,7 @@ function pageWindow(current: number, last: number): (number | 'gap')[] {
 const items = pageWindow(currentPage, lastPage);
 
 const cell =
-	'inline-flex h-7 min-w-7 items-center justify-center border px-1.5 font-mono text-xs transition-colors';
+	'inline-flex h-7 min-w-7 items-center justify-center border px-1.5 text-xs transition-colors';
 const idle = 'border-rule text-text-2 hover:border-rule-bright hover:text-blue';
 const active = 'border-blue bg-blue text-bg';
 const disabled = 'border-rule text-text-3/40';
@@ -63,7 +63,7 @@ const disabled = 'border-rule text-text-3/40';
 
 			{items.map((item) =>
 				item === 'gap' ? (
-					<span class="text-text-3 px-1 font-mono text-xs" aria-hidden="true">
+					<span class="text-text-3 px-1 text-xs" aria-hidden="true">
 						…
 					</span>
 				) : item === currentPage ? (

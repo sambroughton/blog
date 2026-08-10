@@ -38,9 +38,7 @@ const minutes = readingTimeMinutes(post.body);
 		<header>
 			{
 				post.data.series && (
-					<p class="text-blue font-mono text-[0.63rem] tracking-[0.14em] uppercase">
-						{post.data.series}
-					</p>
+					<p class="text-blue text-[0.68rem] tracking-[0.12em] uppercase">{post.data.series}</p>
 				)
 			}
 
@@ -53,7 +51,7 @@ const minutes = readingTimeMinutes(post.body);
 			</p>
 
 			<div class="border-rule mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-b pb-5">
-				<time datetime={isoDate(post.data.pubDate)} class="text-text-3 font-mono text-[0.65rem]">
+				<time datetime={isoDate(post.data.pubDate)} class="text-text-3 text-[0.72rem]">
 					{formatDate(post.data.pubDate)}
 				</time>
 				<EntryMeta topic={post.data.topic} minutes={minutes} />
@@ -61,7 +59,7 @@ const minutes = readingTimeMinutes(post.body);
 
 			{
 				post.data.updatedDate && (
-					<p class="text-text-3 mt-3 font-mono text-[0.65rem]">
+					<p class="text-text-3 mt-3 text-[0.72rem]">
 						Updated{' '}
 						<time datetime={isoDate(post.data.updatedDate)}>
 							{formatDate(post.data.updatedDate)}
@@ -95,9 +93,7 @@ const minutes = readingTimeMinutes(post.body);
 			{
 				older ? (
 					<a href={withBase(`/posts/${older.id}`)} class="group">
-						<span class="text-text-3 font-mono text-[0.63rem] tracking-[0.14em] uppercase">
-							Older
-						</span>
+						<span class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Older</span>
 						<span class="font-display text-text-2 group-hover:text-blue mt-1 block text-base font-bold transition-colors">
 							{older.data.title}
 						</span>
@@ -110,9 +106,7 @@ const minutes = readingTimeMinutes(post.body);
 			{
 				newer && (
 					<a href={withBase(`/posts/${newer.id}`)} class="group sm:text-right">
-						<span class="text-text-3 font-mono text-[0.63rem] tracking-[0.14em] uppercase">
-							Newer
-						</span>
+						<span class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Newer</span>
 						<span class="font-display text-text-2 group-hover:text-blue mt-1 block text-base font-bold transition-colors">
 							{newer.data.title}
 						</span>

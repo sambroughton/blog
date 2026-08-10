@@ -7,17 +7,20 @@ const posts = await getPublishedPosts();
 const topics = topicFacets(posts);
 ---
 
-<BaseLayout title="Topics" description="Browse entries by subject area.">
+{
+	/* The full domain browser. The sidebar's Domains block is the quick filter
+    counterpart; this page is the complete index behind it. */
+}
+<BaseLayout title="Topics" description="Browse entries by domain.">
 	<h1 class="font-display text-text text-2xl font-bold">Topics</h1>
 	<p class="text-text-2 mt-1.5 max-w-[52ch] text-sm">
-		Every entry has one subject area. Browse them here.
+		Every entry belongs to exactly one domain. These are the domains with something published behind
+		them.
 	</p>
 
 	{
 		topics.length === 0 ? (
-			<p class="text-text-2 mt-10 font-mono text-sm">
-				No entries yet, so there is nothing to browse.
-			</p>
+			<p class="text-text-2 mt-10 text-sm">No entries yet, so there is nothing to browse.</p>
 		) : (
 			<section class="mt-10">
 				<ul class="grid gap-x-8 gap-y-2 sm:grid-cols-2">
@@ -29,7 +32,7 @@ const topics = topicFacets(posts);
 							>
 								{topic.label}
 							</a>
-							<span class="text-blue font-mono text-xs">{topic.count}</span>
+							<span class="text-blue text-xs">{topic.count}</span>
 						</li>
 					))}
 				</ul>

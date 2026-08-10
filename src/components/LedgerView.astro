@@ -33,7 +33,7 @@ const showSidebar = shouldShowSidebar(allPosts.length);
 
 {heroPosts.length > 0 && <HeroCarousel posts={heroPosts} />}
 
-<div class={showSidebar ? 'grid gap-10 md:grid-cols-[1fr_13rem]' : ''}>
+<div class={showSidebar ? 'grid gap-10 md:grid-cols-[1fr_15rem]' : ''}>
 	<div class="min-w-0">
 		<EntryList posts={pagePosts} label={label} emptyMessage={emptyMessage} />
 		{lastPage > 1 && <Pagination currentPage={currentPage} lastPage={lastPage} />}

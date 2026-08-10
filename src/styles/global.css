@@ -64,6 +64,110 @@ h4 {
 	}
 }
 
+/* Featured card ------------------------------------------------------------
+   One continuous card, one border, one ground. The cover sits behind the copy
+   as an absolutely positioned layer and is faded diagonally into the card's own
+   background, so there is no second panel, no wedge and no dividing edge - the
+   photograph simply stops being visible as it travels left.
+
+   The fade is a gradient stack on the wrapper, so it applies to whatever image
+   is in the card. Nothing is baked into the uploaded file, and a new cover
+   inherits the treatment with no per-image work. */
+
+.featured-card {
+	/* The fade resolves to the card's own ground. Kept as channels so the stops
+	   below can vary only the alpha. Must track --color-surface. */
+	--cover-fade: 10 18 32;
+}
+
+.featured-card__image {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	overflow: hidden;
+}
+
+/* The real cover and the placeholder are sized identically, so the fade lands
+   the same way whichever is present. object-position keeps the subject in the
+   right-hand third, which is the part that stays visible. */
+.featured-card__image :is(img, .featured-card__placeholder) {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center right;
+}
+
+.featured-card__placeholder {
+	background-color: var(--color-surface-2);
+	background-image:
+		repeating-linear-gradient(115deg, rgb(76 141 255 / 0.07) 0 1px, transparent 1px 15px),
+		radial-gradient(120% 95% at 88% 28%, rgb(76 141 255 / 0.18), transparent 62%);
+}
+
+/* The overlay is on the wrapper, never on the <img>: pseudo-elements are not
+   rendered on replaced elements, so an ::after on the image itself would
+   silently do nothing.
+
+   Two layered gradients. The 108deg one does the work and supplies the
+   upper-right to lower-left diagonal; the horizontal one underneath is a floor
+   that keeps the left column dark at the card's full height, which a lone
+   diagonal cannot do (its bottom-left corner clears too early for white type).
+   --cover-scrim is a flat third layer, transparent until mobile needs it. */
+.featured-card__image::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	--cover-scrim: transparent;
+	background:
+		linear-gradient(
+			108deg,
+			rgb(var(--cover-fade) / 0.99) 0%,
+			rgb(var(--cover-fade) / 0.99) 44%,
+			rgb(var(--cover-fade) / 0.9) 51%,
+			rgb(var(--cover-fade) / 0.62) 58%,
+			rgb(var(--cover-fade) / 0.3) 65%,
+			rgb(var(--cover-fade) / 0.09) 71%,
+			rgb(var(--cover-fade) / 0) 78%
+		),
+		linear-gradient(
+			90deg,
+			rgb(var(--cover-fade) / 0.92) 0%,
+			rgb(var(--cover-fade) / 0.85) 33%,
+			rgb(var(--cover-fade) / 0.55) 46%,
+			rgb(var(--cover-fade) / 0.18) 59%,
+			rgb(var(--cover-fade) / 0) 69%
+		),
+		linear-gradient(0deg, var(--cover-scrim), var(--cover-scrim));
+}
+
+.featured-card__content {
+	position: relative;
+	z-index: 1;
+	min-height: 19rem;
+}
+
+/* Cap the copy inside the text-safe left band so it never runs into the part of
+   the cover that is still visible. */
+@media (min-width: 768px) {
+	.featured-card__content {
+		max-width: 47%;
+	}
+}
+
+/* Below the breakpoint the copy spans the whole card, so there is no left band
+   to protect and the diagonal alone cannot keep type legible. The same stack
+   stays in place - the flat scrim just pulls the whole image back. */
+@media (max-width: 767px) {
+	.featured-card__image::after {
+		--cover-scrim: rgb(var(--cover-fade) / 0.72);
+	}
+
+	.featured-card__content {
+		min-height: 15rem;
+	}
+}
+
 /* Readable measure and rhythm for rendered post bodies. Scoped to .prose-body
    so it never leaks into listing pages. */
 .prose-body {

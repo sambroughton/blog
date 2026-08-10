@@ -37,12 +37,13 @@ function countBy<T extends string>(
 		const key = pick(post);
 		counts.set(key, (counts.get(key) ?? 0) + 1);
 	}
-	// Catalogue order is intentional, and empty facets are dropped so a young
+	// Catalogue order is preserved deliberately: TOPICS is ordered by the intended
+	// progression across the discipline, and sorting by volume here would let the
+	// article count dictate the narrative. Empty facets are dropped so a young
 	// blog does not advertise sections with nothing behind them.
 	return catalogue
 		.map(({ id, label }) => ({ id, label, count: counts.get(id) ?? 0 }))
-		.filter((facet) => facet.count > 0)
-		.sort((a, b) => b.count - a.count);
+		.filter((facet) => facet.count > 0);
 }
 
 export function topicFacets(posts: Post[]): Facet<TopicId>[] {

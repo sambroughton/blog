@@ -11,11 +11,11 @@ interface Props {
 
 const { topic, minutes, linked = true } = Astro.props;
 
-const topicClasses = 'font-mono text-[0.63rem] tracking-[0.14em] uppercase text-blue';
+const topicClasses = 'text-[0.68rem] tracking-[0.12em] uppercase text-blue';
 ---
 
 {/* The topic is rendered as text, never colour alone, per WCAG 1.4.1. */}
-<div class="text-text-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[0.65rem]">
+<div class="text-text-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.72rem]">
 	{
 		linked ? (
 			<a

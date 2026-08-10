@@ -28,7 +28,7 @@ const showSidebar = shouldShowSidebar(allPosts.length);
 <BaseLayout title={label} description={`Entries on ${label}.`}>
 	<h1 class="font-display text-text mb-6 text-2xl font-bold">{label}</h1>
 
-	<div class={showSidebar ? 'grid gap-10 md:grid-cols-[1fr_13rem]' : ''}>
+	<div class={showSidebar ? 'grid gap-10 md:grid-cols-[1fr_15rem]' : ''}>
 		<div class="min-w-0">
 			<EntryList posts={posts} label="Entries" />
 		</div>

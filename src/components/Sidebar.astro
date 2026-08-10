@@ -13,26 +13,32 @@ const { posts } = Astro.props;
 const topics = topicFacets(posts);
 const years = archiveYears(posts);
 
-const heading = 'font-mono text-[0.63rem] uppercase tracking-[0.14em] text-text-3';
+const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-text-3';
 ---
 
 <aside class="space-y-8" aria-label="Browse entries">
 	{
+		/* "Domains", not "Topics": the header's Topics link opens the full taxonomy
+		   browser, whereas this is a quick filter over the current listing plus a
+		   snapshot of where the writing is concentrated. Two controls labelled the
+		   same thing read as duplicates even when they do different jobs. */
 		topics.length > 0 && (
-			<nav aria-labelledby="sb-topics">
-				<h2 id="sb-topics" class={heading}>
-					Topics
+			<nav aria-labelledby="sb-domains">
+				<h2 id="sb-domains" class={heading}>
+					Domains
 				</h2>
-				<ul class="mt-2.5 space-y-1.5">
+				<ul class="border-rule mt-3 border-t">
 					{topics.map((topic) => (
-						<li class="flex items-baseline justify-between gap-3">
+						<li class="border-rule border-b">
 							<a
 								href={withBase(`/topics/${topic.id}`)}
-								class="text-text-2 hover:text-blue text-sm transition-colors"
+								class="text-text-2 hover:text-blue flex items-baseline justify-between gap-3 py-2 text-sm transition-colors"
 							>
-								{topic.label}
+								<span>{topic.label}</span>
+								{/* tabular-nums so counts sit in a true column once any domain
+								    reaches double figures. */}
+								<span class="text-blue shrink-0 text-[0.72rem] tabular-nums">{topic.count}</span>
 							</a>
-							<span class="text-blue font-mono text-[0.65rem]">{topic.count}</span>
 						</li>
 					))}
 				</ul>
@@ -46,7 +52,7 @@ const heading = 'font-mono text-[0.63rem] uppercase tracking-[0.14em] text-text-
 				<h2 id="sb-archive" class={heading}>
 					Archive
 				</h2>
-				<ul class="mt-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono text-xs">
+				<ul class="mt-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs">
 					{years.map((entry) => (
 						<li>
 							<a

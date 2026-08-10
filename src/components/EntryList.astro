@@ -20,29 +20,36 @@ const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles
 
 <section aria-label={label}>
 	<div class="border-rule flex flex-wrap items-baseline justify-between gap-2 border-b pb-3">
-		<h2 class="text-blue font-mono text-[0.63rem] font-normal tracking-[0.14em] uppercase">
+		<h2 class="text-blue text-[0.68rem] font-normal tracking-[0.12em] uppercase">
 			{label}
 		</h2>
 		{
 			posts.length > 0 && (
-				<p class="text-text-3 font-mono text-[0.63rem] tracking-[0.14em] uppercase">{countLabel}</p>
+				<p class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">{countLabel}</p>
 			)
 		}
 	</div>
 
 	{
 		posts.length === 0 ? (
-			<p class="text-text-2 py-10 font-mono text-sm">{emptyMessage}</p>
+			<p class="text-text-2 py-10 text-sm">{emptyMessage}</p>
 		) : (
 			<ol class="mt-2">
 				{posts.map((post) => {
 					const minutes = readingTimeMinutes(post.body);
+					// Mini-card hover, ported from sb-blog's .mini: the ground lifts to
+					// surface-2 and the border brightens to rule-bright. Deliberately
+					// without that card's title underline. The border is transparent at
+					// rest rather than absent, so the row materialises under the cursor
+					// without putting a permanent rule in the list and without shifting
+					// layout. -mx-4/px-4 keeps the text aligned with the section heading
+					// while letting the fill bleed past it.
 					return (
-						<li class="py-5">
+						<li class="group hover:border-rule-bright hover:bg-surface-2 -mx-4 border border-transparent px-4 py-5 transition-colors duration-200">
 							<div class="sm:flex sm:gap-6">
 								<time
 									datetime={isoDate(post.data.pubDate)}
-									class="text-text-3 block shrink-0 font-mono text-[0.65rem] leading-5 sm:w-16"
+									class="text-text-3 block shrink-0 text-[0.72rem] leading-5 sm:w-16"
 								>
 									{formatDayMonth(post.data.pubDate)}
 									<span class="block">{post.data.pubDate.getUTCFullYear()}</span>
@@ -50,10 +57,7 @@ const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles
 
 								<div class="mt-1 min-w-0 sm:mt-0">
 									<h3 class="font-display text-base leading-snug font-bold">
-										<a
-											href={withBase(`/posts/${post.id}`)}
-											class="text-text hover:decoration-text-3 underline decoration-transparent decoration-1 underline-offset-[0.18em] transition-colors"
-										>
+										<a href={withBase(`/posts/${post.id}`)} class="text-text no-underline">
 											{post.data.title}
 										</a>
 									</h3>

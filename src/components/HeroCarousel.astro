@@ -23,16 +23,15 @@ const multiple = posts.length > 1;
 		<section
 			class="mb-12"
 			aria-roledescription="carousel"
-			aria-label="Current work"
+			aria-label="Featured"
 			data-carousel
 			tabindex="-1"
 		>
-			<div class="grid gap-4 md:grid-cols-[1.55fr_1fr]">
+			<div>
 				{posts.map((post, index) => {
 					const minutes = readingTimeMinutes(post.body);
 					return (
 						<div
-							class="contents"
 							data-slide
 							data-index={index}
 							hidden={index !== 0}
@@ -40,60 +39,65 @@ const multiple = posts.length > 1;
 							aria-roledescription="slide"
 							aria-label={`${index + 1} of ${posts.length}`}
 						>
-							<div class="bg-surface border-rule flex flex-col justify-between border p-6 sm:p-8">
-								<div>
-									<p class="text-blue font-mono text-[0.63rem] tracking-[0.14em] uppercase">
-										Current work
-										{multiple && (
-											<span class="text-text-3">
-												{' '}
-												· {index + 1} of {posts.length}
-											</span>
-										)}
-									</p>
-
-									<h2 class="font-display text-text mt-4 text-2xl leading-tight font-bold sm:text-3xl">
-										<a
-											href={withBase(`/posts/${post.id}`)}
-											class="hover:decoration-text-3 underline decoration-transparent decoration-1 underline-offset-[0.18em] transition-colors"
-										>
-											{post.data.title}
-										</a>
-									</h2>
-
-									<p class="text-text-2 mt-3 max-w-[44ch] text-sm leading-relaxed">
-										{post.data.description}
-									</p>
+							{/* One continuous card. The cover is a background layer inside it,
+							    not a second panel, so the card keeps a single border and a
+							    single ground. `isolate` gives the z-indexes below their own
+							    stacking context. */}
+							<article class="featured-card bg-surface border-rule relative isolate overflow-hidden border">
+								<div class="featured-card__image">
+									{post.data.cover ? (
+										<Image
+											src={post.data.cover}
+											alt={post.data.coverAlt ?? ''}
+											widths={[640, 1024, 1600]}
+											sizes="(min-width: 1024px) 62rem, 100vw"
+											loading={index === 0 ? 'eager' : 'lazy'}
+										/>
+									) : (
+										/* Stands in for a cover so an entry without one still reads as
+										   a featured card. It takes the identical fade, so the two
+										   states are indistinguishable in treatment. */
+										<div class="featured-card__placeholder" aria-hidden="true" />
+									)}
 								</div>
 
-								<p class="text-text-3 mt-8 font-mono text-[0.65rem]">
-									<time datetime={isoDate(post.data.pubDate)}>{formatDate(post.data.pubDate)}</time>
-									{' · '}
-									{minutes} min
-									{' · '}
-									{topicLabel(post.data.topic)}
-								</p>
-							</div>
+								<div class="featured-card__content flex flex-col justify-between p-6 sm:p-8">
+									<div>
+										<p class="text-blue text-[0.68rem] tracking-[0.12em] uppercase">
+											Featured
+											{multiple && (
+												<span class="text-text-3">
+													{' '}
+													· {index + 1} of {posts.length}
+												</span>
+											)}
+										</p>
 
-							<div class="bg-surface-2 border-rule hidden overflow-hidden border md:block">
-								{post.data.cover ? (
-									<Image
-										src={post.data.cover}
-										alt={post.data.coverAlt ?? ''}
-										widths={[400, 800]}
-										sizes="(min-width: 768px) 33vw, 100vw"
-										class="h-full w-full object-cover"
-										loading={index === 0 ? 'eager' : 'lazy'}
-									/>
-								) : (
-									<div
-										class="flex h-full min-h-52 items-center justify-center p-4"
-										aria-hidden="true"
-									>
-										<span class="text-text-3 font-mono text-[0.63rem]">No cover image</span>
+										<h2 class="font-display text-text mt-4 text-2xl leading-tight font-bold sm:text-3xl">
+											<a
+												href={withBase(`/posts/${post.id}`)}
+												class="hover:decoration-text-3 underline decoration-transparent decoration-1 underline-offset-[0.18em] transition-colors"
+											>
+												{post.data.title}
+											</a>
+										</h2>
+
+										<p class="text-text-2 mt-3 max-w-[44ch] text-sm leading-relaxed">
+											{post.data.description}
+										</p>
 									</div>
-								)}
-							</div>
+
+									<p class="text-text-3 mt-8 text-[0.72rem]">
+										<time datetime={isoDate(post.data.pubDate)}>
+											{formatDate(post.data.pubDate)}
+										</time>
+										{' · '}
+										{minutes} min
+										{' · '}
+										{topicLabel(post.data.topic)}
+									</p>
+								</div>
+							</article>
 						</div>
 					);
 				})}
@@ -120,7 +124,7 @@ const multiple = posts.length > 1;
 							type="button"
 							data-prev
 							aria-label="Previous slide"
-							class="border-rule text-text-2 hover:border-rule-bright hover:text-blue inline-flex h-7 w-7 cursor-pointer items-center justify-center border font-mono text-xs transition-colors"
+							class="border-rule text-text-2 hover:border-rule-bright hover:text-blue inline-flex h-7 w-7 cursor-pointer items-center justify-center border text-xs transition-colors"
 						>
 							‹
 						</button>
@@ -128,7 +132,7 @@ const multiple = posts.length > 1;
 							type="button"
 							data-next
 							aria-label="Next slide"
-							class="border-rule text-text-2 hover:border-rule-bright hover:text-blue inline-flex h-7 w-7 cursor-pointer items-center justify-center border font-mono text-xs transition-colors"
+							class="border-rule text-text-2 hover:border-rule-bright hover:text-blue inline-flex h-7 w-7 cursor-pointer items-center justify-center border text-xs transition-colors"
 						>
 							›
 						</button>
