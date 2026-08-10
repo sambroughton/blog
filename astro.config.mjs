@@ -27,10 +27,18 @@ export default defineConfig({
 		// Starlight applies internally:
 		// https://github.com/withastro/starlight/blob/main/packages/starlight/index.ts
 		astroExpressiveCode({
-			// One dark + one light theme makes Expressive Code emit a
-			// prefers-color-scheme media query automatically.
 			// Docs: https://expressive-code.com/reference/configuration/
 			themes: ['github-dark', 'github-light'],
+
+			// Key code-block themes to the site's own data-theme attribute
+			// ('dark' | 'light') instead of Expressive Code's default
+			// [data-theme='github-dark']. Without this the header toggle would move
+			// the page but leave code blocks following the OS setting.
+			themeCssSelector: (theme) => `[data-theme='${theme.type}']`,
+
+			// The attribute is always present (ThemeScript stamps it pre-paint), so
+			// the media query would be a second, conflicting source of truth.
+			useDarkModeMediaQuery: false,
 			styleOverrides: {
 				borderRadius: '0.375rem',
 				codeFontSize: '0.875rem',

@@ -1,0 +1,37 @@
+---
+import type { GetStaticPaths } from 'astro';
+import EntryList from '../../components/EntryList.astro';
+import Sidebar from '../../components/Sidebar.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublishedPosts, shouldShowSidebar, topicFacets } from '../../lib/collections';
+
+// Only topics that actually have entries get a page, so the sidebar can never
+// link to an empty listing. Filtered listings are not paginated: revisit if any
+// single topic outgrows a comfortable page.
+export const getStaticPaths = (async () => {
+	const posts = await getPublishedPosts();
+
+	return topicFacets(posts).map((facet) => ({
+		params: { topic: facet.id },
+		props: {
+			label: facet.label,
+			posts: posts.filter((post) => post.data.topic === facet.id),
+			allPosts: posts,
+		},
+	}));
+}) satisfies GetStaticPaths;
+
+const { label, posts, allPosts } = Astro.props;
+const showSidebar = shouldShowSidebar(allPosts.length);
+---
+
+<BaseLayout title={label} description={`Entries on ${label}.`}>
+	<h1 class="font-display text-navy-900 dark:text-paper mb-6 text-2xl">{label}</h1>
+
+	<div class={showSidebar ? 'grid gap-10 md:grid-cols-[1fr_13rem]' : ''}>
+		<div class="min-w-0">
+			<EntryList posts={posts} label="Entries" />
+		</div>
+		{showSidebar && <Sidebar posts={allPosts} />}
+	</div>
+</BaseLayout>

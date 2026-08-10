@@ -1,0 +1,43 @@
+---
+import { shouldShowSidebar, type Post } from '../lib/collections';
+import EntryList from './EntryList.astro';
+import HeroCarousel from './HeroCarousel.astro';
+import Pagination from './Pagination.astro';
+import Sidebar from './Sidebar.astro';
+
+interface Props {
+	/** Entries for this page only. */
+	pagePosts: Post[];
+	/** Every published entry, used for sidebar facet counts. */
+	allPosts: Post[];
+	/** Featured entries for the hero. Pass an empty array to omit it. */
+	heroPosts?: Post[];
+	currentPage: number;
+	lastPage: number;
+	label?: string;
+	emptyMessage?: string;
+}
+
+const {
+	pagePosts,
+	allPosts,
+	heroPosts = [],
+	currentPage,
+	lastPage,
+	label = 'Latest',
+	emptyMessage,
+} = Astro.props;
+
+const showSidebar = shouldShowSidebar(allPosts.length);
+---
+
+{heroPosts.length > 0 && <HeroCarousel posts={heroPosts} />}
+
+<div class={showSidebar ? 'grid gap-10 md:grid-cols-[1fr_13rem]' : ''}>
+	<div class="min-w-0">
+		<EntryList posts={pagePosts} label={label} emptyMessage={emptyMessage} />
+		{lastPage > 1 && <Pagination currentPage={currentPage} lastPage={lastPage} />}
+	</div>
+
+	{showSidebar && <Sidebar posts={allPosts} />}
+</div>

@@ -1,0 +1,39 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublishedPosts, topicFacets } from '../../lib/collections';
+import { withBase } from '../../lib/paths';
+
+const posts = await getPublishedPosts();
+const topics = topicFacets(posts);
+---
+
+<BaseLayout title="Topics" description="Browse entries by subject area.">
+	<h1 class="font-display text-navy-900 dark:text-paper text-2xl">Topics</h1>
+	<p class="mt-1.5 max-w-prose text-sm text-slate-600 dark:text-slate-400">
+		Every entry has one subject area. Browse them here.
+	</p>
+
+	{
+		topics.length === 0 ? (
+			<p class="mt-10 font-mono text-sm text-slate-500 dark:text-slate-400">
+				No entries yet, so there is nothing to browse.
+			</p>
+		) : (
+			<section class="mt-10">
+				<ul class="grid gap-x-8 gap-y-2 sm:grid-cols-2">
+					{topics.map((topic) => (
+						<li class="flex items-baseline justify-between gap-3 border-b border-slate-100 py-1.5 dark:border-slate-800">
+							<a
+								href={withBase(`/topics/${topic.id}`)}
+								class="text-navy-800 transition-colors hover:text-amber-700 dark:text-slate-300 dark:hover:text-amber-400"
+							>
+								{topic.label}
+							</a>
+							<span class="font-mono text-xs text-amber-700 dark:text-amber-500">{topic.count}</span>
+						</li>
+					))}
+				</ul>
+			</section>
+		)
+	}
+</BaseLayout>

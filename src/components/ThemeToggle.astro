@@ -1,0 +1,40 @@
+---
+// Flips data-theme on <html> and persists the choice. Expressive Code is
+// configured with themeCssSelector keyed to the same attribute, so code blocks
+// switch with the rest of the page rather than following the OS separately.
+---
+
+<button
+	type="button"
+	id="theme-toggle"
+	class="inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs text-slate-600 transition-colors hover:text-amber-700 dark:text-slate-400 dark:hover:text-amber-400"
+	aria-live="polite"
+>
+	<span aria-hidden="true" class="text-sm leading-none" data-theme-icon>◐</span>
+	<span data-theme-label>Dark</span>
+</button>
+
+<script>
+	const toggle = document.getElementById('theme-toggle');
+	const label = toggle?.querySelector('[data-theme-label]');
+
+	function sync() {
+		const current = document.documentElement.getAttribute('data-theme') === 'dark';
+		// The label names the action, not the state, so it reads as a control.
+		if (label) label.textContent = current ? 'Light' : 'Dark';
+		toggle?.setAttribute('aria-label', current ? 'Switch to light theme' : 'Switch to dark theme');
+	}
+
+	toggle?.addEventListener('click', () => {
+		const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+		document.documentElement.setAttribute('data-theme', next);
+		try {
+			localStorage.setItem('theme', next);
+		} catch {
+			// Persistence is best-effort; the toggle still works for this page.
+		}
+		sync();
+	});
+
+	sync();
+</script>

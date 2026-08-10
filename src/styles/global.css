@@ -1,6 +1,106 @@
 /* Tailwind CSS v4 entrypoint.
-   Docs: https://docs.astro.build/en/guides/styling/
-   Import this file from a layout component: import '../styles/global.css'; */
+   Docs: https://docs.astro.build/en/guides/styling/ */
 @import 'tailwindcss';
 
-/* Project design tokens and base styles go here once the blog UI is built. */
+/* Dark mode is driven by an explicit data-theme attribute on <html> rather than
+   prefers-color-scheme alone, so the header toggle can override the OS setting.
+   ThemeScript.astro stamps the attribute before first paint to avoid a flash.
+   Docs: https://tailwindcss.com/docs/dark-mode#using-a-data-attribute */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme {
+	/* Titles use a serif for character while staying legible at two lines.
+	   Deliberately not the script face from the mockup: entry titles are dense
+	   with acronyms (KQL, XDR, SIEM) where letterform clarity matters most. */
+	--font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+	--font-sans:
+		ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+	--font-mono: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', Menlo, Consolas, monospace;
+
+	/* Surfaces not covered by the default palette. */
+	--color-paper: #fdfdfb;
+	--color-ink: #1b1b19;
+	--color-navy-900: #101f3c;
+	--color-navy-800: #1a2e56;
+	--color-navy-700: #24406f;
+}
+
+/* Respect the OS preference on first visit, before any explicit choice. */
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) {
+		color-scheme: dark;
+	}
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+	}
+}
+
+/* Readable measure and rhythm for rendered post bodies. Scoped to .prose-body
+   so it never leaks into listing pages. */
+.prose-body {
+	font-size: 1.0625rem;
+	line-height: 1.7;
+}
+
+.prose-body > * + * {
+	margin-top: 1.15em;
+}
+
+.prose-body h2,
+.prose-body h3 {
+	font-family: var(--font-display);
+	line-height: 1.25;
+	margin-top: 2em;
+}
+
+.prose-body h2 {
+	font-size: 1.5rem;
+}
+
+.prose-body h3 {
+	font-size: 1.2rem;
+}
+
+.prose-body a {
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.prose-body ul,
+.prose-body ol {
+	padding-left: 1.5rem;
+}
+
+.prose-body ul {
+	list-style: disc;
+}
+
+.prose-body ol {
+	list-style: decimal;
+}
+
+.prose-body blockquote {
+	border-left: 3px solid currentColor;
+	opacity: 0.85;
+	padding-left: 1rem;
+	font-style: italic;
+}
+
+/* Expressive Code owns its own theming; just give its blocks breathing room. */
+.prose-body .expressive-code {
+	margin-top: 1.5em;
+	margin-bottom: 1.5em;
+}

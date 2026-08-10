@@ -1,0 +1,23 @@
+---
+// Stamps data-theme on <html> before first paint so the page never flashes the
+// wrong theme. Must stay `is:inline` and render in <head>: if Astro bundles or
+// defers it, the flash comes back.
+---
+
+<script is:inline>
+	(function () {
+		try {
+			var stored = window.localStorage.getItem('theme');
+			var theme =
+				stored === 'dark' || stored === 'light'
+					? stored
+					: window.matchMedia('(prefers-color-scheme: dark)').matches
+						? 'dark'
+						: 'light';
+			document.documentElement.setAttribute('data-theme', theme);
+		} catch (e) {
+			// Private mode can throw on localStorage access; fall back to light.
+			document.documentElement.setAttribute('data-theme', 'light');
+		}
+	})();
+</script>

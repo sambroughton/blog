@@ -1,0 +1,36 @@
+---
+import { topicLabel, type TopicId } from '../consts';
+import { withBase } from '../lib/paths';
+
+interface Props {
+	topic: TopicId;
+	minutes: number;
+	/** Render the topic as a link to its filtered listing. */
+	linked?: boolean;
+}
+
+const { topic, minutes, linked = true } = Astro.props;
+
+const topicClasses =
+	'rounded-full border border-slate-300 px-2 py-0.5 font-mono text-[0.62rem] tracking-wide uppercase text-slate-600 dark:border-slate-700 dark:text-slate-400';
+---
+
+{/* The topic is rendered as text, never colour alone, per WCAG 1.4.1. */}
+<div
+	class="flex flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-[0.68rem] text-slate-500 dark:text-slate-400"
+>
+	{
+		linked ? (
+			<a
+				href={withBase(`/topics/${topic}`)}
+				class={`${topicClasses} transition-colors hover:border-amber-600 hover:text-amber-700 dark:hover:border-amber-500 dark:hover:text-amber-400`}
+			>
+				{topicLabel(topic)}
+			</a>
+		) : (
+			<span class={topicClasses}>{topicLabel(topic)}</span>
+		)
+	}
+
+	<span>{minutes} min</span>
+</div>

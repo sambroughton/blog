@@ -1,0 +1,39 @@
+---
+import type { GetStaticPaths } from 'astro';
+import LedgerView from '../../components/LedgerView.astro';
+import { SITE } from '../../consts';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublishedPosts } from '../../lib/collections';
+
+// Pages 2..N only. Page 1 is src/pages/index.astro, which also carries the hero,
+// so these pages are a plain continuation of the ledger.
+export const getStaticPaths = (async () => {
+	const posts = await getPublishedPosts();
+	const lastPage = Math.ceil(posts.length / SITE.pageSize);
+
+	return Array.from({ length: Math.max(0, lastPage - 1) }, (_, i) => {
+		const pageNumber = i + 2;
+		const start = (pageNumber - 1) * SITE.pageSize;
+		return {
+			params: { page: String(pageNumber) },
+			props: {
+				pagePosts: posts.slice(start, start + SITE.pageSize),
+				allPosts: posts,
+				currentPage: pageNumber,
+				lastPage,
+			},
+		};
+	});
+}) satisfies GetStaticPaths;
+
+const { pagePosts, allPosts, currentPage, lastPage } = Astro.props;
+---
+
+<BaseLayout title={`Page ${currentPage}`}>
+	<LedgerView
+		pagePosts={pagePosts}
+		allPosts={allPosts}
+		currentPage={currentPage}
+		lastPage={lastPage}
+	/>
+</BaseLayout>
