@@ -1,0 +1,6 @@
+/* Tailwind CSS v4 entrypoint.
+   Docs: https://docs.astro.build/en/guides/styling/
+   Import this file from a layout component: import '../styles/global.css'; */
+@import 'tailwindcss';
+
+/* Project design tokens and base styles go here once the blog UI is built. */

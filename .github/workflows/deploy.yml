@@ -1,0 +1,45 @@
+name: Deploy to GitHub Pages
+
+# Docs: https://docs.astro.build/en/guides/deploy/github/
+# Requires: repository Settings > Pages > Source = "GitHub Actions"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Serialise deployments so two pushes cannot race the Pages API.
+# Docs: https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout your repository using git
+        uses: actions/checkout@v7
+
+      - name: Install, build, and upload your site output
+        uses: withastro/action@v6
+        with:
+          # Pinned to match .nvmrc and the local toolchain. The action defaults
+          # to Node 24; Astro requires >=22.12.0.
+          node-version: 22
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
