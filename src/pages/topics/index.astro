@@ -8,28 +8,28 @@ const topics = topicFacets(posts);
 ---
 
 <BaseLayout title="Topics" description="Browse entries by subject area.">
-	<h1 class="font-display text-navy-900 dark:text-paper text-2xl">Topics</h1>
-	<p class="mt-1.5 max-w-prose text-sm text-slate-600 dark:text-slate-400">
+	<h1 class="font-display text-text text-2xl font-bold">Topics</h1>
+	<p class="text-text-2 mt-1.5 max-w-[52ch] text-sm">
 		Every entry has one subject area. Browse them here.
 	</p>
 
 	{
 		topics.length === 0 ? (
-			<p class="mt-10 font-mono text-sm text-slate-500 dark:text-slate-400">
+			<p class="text-text-2 mt-10 font-mono text-sm">
 				No entries yet, so there is nothing to browse.
 			</p>
 		) : (
 			<section class="mt-10">
 				<ul class="grid gap-x-8 gap-y-2 sm:grid-cols-2">
 					{topics.map((topic) => (
-						<li class="flex items-baseline justify-between gap-3 border-b border-slate-100 py-1.5 dark:border-slate-800">
+						<li class="border-rule flex items-baseline justify-between gap-3 border-b py-1.5">
 							<a
 								href={withBase(`/topics/${topic.id}`)}
-								class="text-navy-800 transition-colors hover:text-amber-700 dark:text-slate-300 dark:hover:text-amber-400"
+								class="text-text-2 hover:text-blue transition-colors"
 							>
 								{topic.label}
 							</a>
-							<span class="font-mono text-xs text-amber-700 dark:text-amber-500">{topic.count}</span>
+							<span class="text-blue font-mono text-xs">{topic.count}</span>
 						</li>
 					))}
 				</ul>

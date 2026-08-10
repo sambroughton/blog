@@ -2,38 +2,54 @@
    Docs: https://docs.astro.build/en/guides/styling/ */
 @import 'tailwindcss';
 
-/* Dark mode is driven by an explicit data-theme attribute on <html> rather than
-   prefers-color-scheme alone, so the header toggle can override the OS setting.
-   ThemeScript.astro stamps the attribute before first paint to avoid a flash.
-   Docs: https://tailwindcss.com/docs/dark-mode#using-a-data-attribute */
-@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
-
+/* Palette and type are ported from the sb-blog project so the two sites read as
+   one publication. That design is dark-only: there is no light counterpart to
+   these values, so this site has no theme toggle and no `dark:` variants. */
 @theme {
-	/* Titles use a serif for character while staying legible at two lines.
-	   Deliberately not the script face from the mockup: entry titles are dense
-	   with acronyms (KQL, XDR, SIEM) where letterform clarity matters most. */
-	--font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
-	--font-sans:
-		ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-	--font-mono: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', Menlo, Consolas, monospace;
+	/* Archivo for headings, Inter for body, Roboto Mono for data. Self-hosted via
+	   @fontsource (imported in BaseLayout), not the Google Fonts CDN. */
+	--font-display: 'Archivo', system-ui, sans-serif;
+	--font-sans: 'Inter', system-ui, sans-serif;
+	--font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-	/* Surfaces not covered by the default palette. */
-	--color-paper: #fdfdfb;
-	--color-ink: #1b1b19;
-	--color-navy-900: #101f3c;
-	--color-navy-800: #1a2e56;
-	--color-navy-700: #24406f;
+	--color-bg: #050a14;
+	--color-surface: #0a1220;
+	--color-surface-2: #0e1828;
+	--color-rule: #1a2740;
+	--color-rule-bright: #25375a;
+	--color-text: #e8eef9;
+	--color-text-2: #93a4c0;
+	--color-text-3: #6b7fa0;
+	--color-blue: #4c8dff;
+	--color-blue-bright: #6ba1ff;
+	--color-amber: #f2b33d;
+	/* Softened off-white for long-form body copy: full-contrast text on a dark
+	   ground causes halation over a long read. */
+	--color-reading: #d6dfee;
 }
 
-/* Respect the OS preference on first visit, before any explicit choice. */
-@media (prefers-color-scheme: dark) {
-	:root:not([data-theme='light']) {
-		color-scheme: dark;
-	}
+:root {
+	color-scheme: dark;
 }
 
 html {
 	scroll-behavior: smooth;
+}
+
+body {
+	/* Inter's cv05 gives lowercase l a tail, separating it from I and 1. On a
+	   blog full of hostnames, cmdlet names and identifiers that is worth the
+	   one line. https://rsms.me/inter/#features */
+	font-feature-settings: 'cv05' 1;
+}
+
+/* Archivo sets tighter than a default sans, so headings take a small negative
+   tracking to match the sb-blog treatment. */
+h1,
+h2,
+h3,
+h4 {
+	letter-spacing: -0.02em;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -51,8 +67,9 @@ html {
 /* Readable measure and rhythm for rendered post bodies. Scoped to .prose-body
    so it never leaks into listing pages. */
 .prose-body {
-	font-size: 1.0625rem;
-	line-height: 1.7;
+	font-size: 1rem;
+	line-height: 1.72;
+	color: var(--color-reading);
 }
 
 .prose-body > * + * {
@@ -62,6 +79,7 @@ html {
 .prose-body h2,
 .prose-body h3 {
 	font-family: var(--font-display);
+	color: var(--color-text);
 	line-height: 1.25;
 	margin-top: 2em;
 }
@@ -75,8 +93,17 @@ html {
 }
 
 .prose-body a {
+	color: var(--color-blue);
 	text-decoration: underline;
-	text-underline-offset: 2px;
+	text-underline-offset: 3px;
+}
+
+.prose-body a:hover {
+	color: var(--color-blue-bright);
+}
+
+.prose-body strong {
+	color: var(--color-text);
 }
 
 .prose-body ul,
@@ -93,10 +120,16 @@ html {
 }
 
 .prose-body blockquote {
-	border-left: 3px solid currentColor;
-	opacity: 0.85;
-	padding-left: 1rem;
-	font-style: italic;
+	border-left: 2px solid var(--color-blue);
+	background: var(--color-surface);
+	color: var(--color-text-2);
+	padding: 0.9rem 1.1rem;
+}
+
+.prose-body hr {
+	border: 0;
+	border-top: 1px solid var(--color-rule);
+	margin: 2rem 0;
 }
 
 /* Expressive Code owns its own theming; just give its blocks breathing room. */

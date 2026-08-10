@@ -28,20 +28,18 @@ export default defineConfig({
 		// https://github.com/withastro/starlight/blob/main/packages/starlight/index.ts
 		astroExpressiveCode({
 			// Docs: https://expressive-code.com/reference/configuration/
-			themes: ['github-dark', 'github-light'],
-
-			// Key code-block themes to the site's own data-theme attribute
-			// ('dark' | 'light') instead of Expressive Code's default
-			// [data-theme='github-dark']. Without this the header toggle would move
-			// the page but leave code blocks following the OS setting.
-			themeCssSelector: (theme) => `[data-theme='${theme.type}']`,
-
-			// The attribute is always present (ThemeScript stamps it pre-paint), so
-			// the media query would be a second, conflicting source of truth.
+			// One theme only: the site is dark-only, so there is no second theme to
+			// switch to and no need for themeCssSelector or the dark-mode media query.
+			themes: ['github-dark'],
 			useDarkModeMediaQuery: false,
 			styleOverrides: {
-				borderRadius: '0.375rem',
-				codeFontSize: '0.875rem',
+				// Square, matching the rest of the site's borders.
+				borderRadius: '0',
+				borderColor: '#1a2740',
+				codeBackground: '#0a1220',
+				codeFontFamily: "'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+				codeFontSize: '0.8rem',
+				codeLineHeight: '1.65',
 			},
 			defaultProps: {
 				wrap: true,
