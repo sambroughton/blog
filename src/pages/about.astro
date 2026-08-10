@@ -1,23 +1,145 @@
 ---
-import { SITE } from '../consts';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-// PLACEHOLDER: rewrite this in your own words before sharing the site.
+// The route stays /about so existing links keep resolving; the page itself is
+// the site disclaimer, and the nav and footer label it as such.
 ---
 
-<BaseLayout title="About" description={`About ${SITE.name}.`}>
+<BaseLayout
+	title="Disclaimer"
+	description="Educational use, professional advice, third-party trademarks, liability and intellectual property terms for this blog."
+>
+	{
+		/* Centred to match the article pages. sb-blog left-aligns its reading columns,
+	    but it fills the right-hand space with a sticky table of contents; with
+	    nothing there, left-aligning would leave half the page empty. */
+	}
 	<div class="mx-auto max-w-2xl">
-		<h1 class="font-display text-text text-3xl font-bold">About</h1>
+		<h1 class="font-display text-text text-3xl font-bold">Disclaimer</h1>
 
 		<div class="prose-body mt-6">
+			<h2>Information and Educational Use</h2>
+
 			<p>
-				I'm Sam Broughton, a cloud and DevOps engineer. I work mostly with Azure, Microsoft 365 and
-				the Microsoft security stack, and this is where I write the notes I wish I'd found first.
+				The content on this blog is published for educational and informational purposes. It
+				documents my ongoing learning, research, lab work, certification studies, technical
+				experiments and observations relating to Microsoft security technologies, XDR, identity,
+				detection engineering and associated security topics.
 			</p>
 
 			<p>
-				This is a personal site. Opinions are mine, not my employer's, and nothing here is
-				affiliated with or endorsed by Microsoft.
+				Although I aim to keep the material accurate and current, technologies, product features,
+				interfaces, documentation and recommended practices can change. I therefore cannot guarantee
+				that every article, configuration, query, diagram or example will remain complete, accurate
+				or suitable for every environment.
+			</p>
+
+			<p>
+				Any use of the information on this blog is at your own discretion and risk. Always validate
+				configurations and technical guidance against current vendor documentation and within an
+				appropriate test environment before applying them to production systems.
+			</p>
+
+			<h2>Professional Advice</h2>
+
+			<p>
+				The views and material published here reflect my own learning, research and experience at
+				the time of writing.
+			</p>
+
+			<p>
+				Nothing on this blog should be considered professional, legal, financial, compliance or
+				security advice, nor does the content create a professional or advisory relationship.
+			</p>
+
+			<p>
+				Examples, architectures, security configurations, KQL queries, detection logic and lab
+				exercises are provided to demonstrate concepts and may require modification before they are
+				suitable for a particular organisation or environment.
+			</p>
+
+			<p>
+				For decisions affecting production systems, organisational security or regulatory
+				obligations, appropriate qualified professionals and current official documentation should
+				be consulted.
+			</p>
+
+			<h2>Microsoft and Other Third Parties</h2>
+
+			<p>
+				This is an independent personal blog and is not affiliated with, sponsored by or endorsed by
+				Microsoft or any other vendor mentioned on the site.
+			</p>
+
+			<p>
+				Microsoft, Microsoft Defender, Microsoft Sentinel, Microsoft Entra and other product names,
+				trademarks and logos remain the property of their respective owners.
+			</p>
+
+			<p>
+				References to third-party products or services are made for educational and informational
+				purposes.
+			</p>
+
+			<h2>Third-Party Links</h2>
+
+			<p>
+				Articles may contain links to Microsoft documentation, technical resources, GitHub
+				repositories or other third-party websites.
+			</p>
+
+			<p>
+				These external resources are maintained independently, and I have no control over their
+				content, availability, security or subsequent changes. A link should not be interpreted as
+				an endorsement of the website, organisation or all material published there.
+			</p>
+
+			<h2>Limitation of Liability</h2>
+
+			<p>
+				To the fullest extent permitted by applicable law, I accept no responsibility for loss,
+				damage, disruption, data loss, security incidents or other consequences arising from the use
+				or misuse of information, code, configurations, queries or techniques published on this
+				blog.
+			</p>
+
+			<p>
+				Readers are responsible for assessing whether material is appropriate for their own systems
+				and circumstances.
+			</p>
+
+			<h2>Changes to This Disclaimer</h2>
+
+			<p>
+				This disclaimer may be updated periodically to reflect changes to the blog, its content or
+				the technologies covered.
+			</p>
+
+			<p>The version published on this page applies to the current use of the site.</p>
+
+			<h2>Intellectual Property</h2>
+
+			<p>
+				Unless otherwise stated, the original written content, lab documentation, diagrams, graphics
+				and other materials created specifically for this blog are my own work and are protected by
+				applicable intellectual property law.
+			</p>
+
+			<p>
+				They may not be reproduced, republished, distributed or materially adapted for another
+				website, publication, training resource or commercial purpose without my prior written
+				permission.
+			</p>
+
+			<p>
+				Third-party trademarks, documentation, screenshots, code, quotations and other referenced
+				materials remain the property of their respective owners and are subject to their own
+				licences and terms.
+			</p>
+
+			<p>
+				Where external material has been used or referenced, I aim to provide appropriate
+				attribution.
 			</p>
 		</div>
 	</div>

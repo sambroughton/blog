@@ -9,10 +9,11 @@ import { withBase } from '../lib/paths';
 	>
 		{/* Brand stacked over its tagline, as in sb-blog's header. */}
 		<div class="min-w-0">
-			<a
-				href={withBase('/')}
-				class="font-display text-text hover:text-blue block text-xl font-bold transition-colors"
-			>
+			{
+				/* No hover colour on the brand: the wordmark should read as the site's
+			    identity, not as another accent link. */
+			}
+			<a href={withBase('/')} class="font-display text-text block text-xl font-bold">
 				{SITE.name}
 			</a>
 			{
@@ -26,8 +27,16 @@ import { withBase } from '../lib/paths';
 
 		<nav aria-label="Primary" class="flex items-center gap-6 text-[0.72rem]">
 			{
+				/* Underline wipes in from the left on hover: a scaleX transform on an
+				   ::after rule, so it animates on the compositor rather than by
+				   changing layout. Mirrored on focus-visible so keyboard users get the
+				   same affordance. The global reduced-motion rule zeroes the duration,
+				   which leaves the underline appearing instantly rather than sweeping. */
 				NAV.map((item) => (
-					<a href={withBase(item.href)} class="text-text-2 hover:text-blue transition-colors">
+					<a
+						href={withBase(item.href)}
+						class="text-text-2 hover:text-blue relative inline-block transition-colors after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 after:content-[''] hover:after:scale-x-100 focus-visible:after:scale-x-100"
+					>
 						{item.label}
 					</a>
 				))

@@ -48,7 +48,9 @@ export function topicLabel(id: TopicId): string {
 	return TOPICS.find((t) => t.id === id)?.label ?? id;
 }
 
+// The disclaimer keeps the /about path so existing links resolve; only the
+// label changed, since the page is no longer a biography.
 export const NAV = [
 	{ href: '/topics', label: 'Topics' },
-	{ href: '/about', label: 'About' },
+	{ href: '/about', label: 'Disclaimer' },
 ] as const;
