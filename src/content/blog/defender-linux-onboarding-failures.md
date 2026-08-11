@@ -2,8 +2,11 @@
 title: 'Defender for Endpoint onboarding on Linux servers: the parts that fail'
 description: Diagnosing onboarding that reports success but leaves the agent unhealthy, from audit framework conflicts to blocked egress.
 pubDate: 2026-05-20
-topic: endpoint-security
-tags: ['defender-for-endpoint', 'linux', 'onboarding']
+domain: endpoint-security
+topics:
+  - device-onboarding
+technologies:
+  - microsoft-defender-for-endpoint
 ---
 
 Linux onboarding tends to fail quietly. The script exits zero, the device appears in the portal, and the agent is not actually protecting anything. Start from the agent's own view rather than the portal's.

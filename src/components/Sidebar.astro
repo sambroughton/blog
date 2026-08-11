@@ -1,5 +1,5 @@
 ---
-import { archiveYears, topicFacets, type Post } from '../lib/collections';
+import { archiveYears, domainFacets, type Post } from '../lib/collections';
 import { withBase } from '../lib/paths';
 
 interface Props {
@@ -9,35 +9,36 @@ interface Props {
 const { posts } = Astro.props;
 
 // Each facet list already excludes empty values, so a section is rendered only
-// when something sits behind it.
-const topics = topicFacets(posts);
+// when something sits behind it, and a domain with nothing published never shows.
+const domains = domainFacets(posts);
 const years = archiveYears(posts);
 
-const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-text-3';
+// Matches the "Latest" heading in EntryList so the sidebar section titles read
+// as the same tier of label.
+const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-blue';
 ---
 
 <aside class="space-y-8" aria-label="Browse entries">
 	{
-		/* "Domains", not "Topics": the header's Topics link opens the full taxonomy
-		   browser, whereas this is a quick filter over the current listing plus a
-		   snapshot of where the writing is concentrated. Two controls labelled the
-		   same thing read as duplicates even when they do different jobs. */
-		topics.length > 0 && (
+		/* Domains, not topics: the header's Topics menu covers the specific subjects,
+		   whereas this is a filter across the broad disciplines plus a snapshot of
+		   where the writing is concentrated. The two never list the same things. */
+		domains.length > 0 && (
 			<nav aria-labelledby="sb-domains">
 				<h2 id="sb-domains" class={heading}>
 					Domains
 				</h2>
 				<ul class="border-rule mt-3 border-t">
-					{topics.map((topic) => (
+					{domains.map((domain) => (
 						<li class="border-rule border-b">
 							<a
-								href={withBase(`/topics/${topic.id}`)}
+								href={withBase(`/domains/${domain.id}`)}
 								class="text-text-2 hover:text-blue flex items-baseline justify-between gap-3 py-2 text-sm transition-colors"
 							>
-								<span>{topic.label}</span>
-								{/* tabular-nums so counts sit in a true column once any domain
-								    reaches double figures. */}
-								<span class="text-blue shrink-0 text-[0.72rem] tabular-nums">{topic.count}</span>
+								<span>{domain.label}</span>
+								{/* Published entries in this domain. tabular-nums so counts sit in
+								    a true column once any of them reaches double figures. */}
+								<span class="text-blue shrink-0 text-[0.72rem] tabular-nums">{domain.count}</span>
 							</a>
 						</li>
 					))}

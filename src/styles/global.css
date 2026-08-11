@@ -74,10 +74,220 @@ h4 {
    is in the card. Nothing is baked into the uploaded file, and a new cover
    inherits the treatment with no per-image work. */
 
+/* Primary nav --------------------------------------------------------------
+   The underline wipes in from the left on hover and focus: a scaleX transform
+   on an ::after rule, so it runs on the compositor and never reflows the text.
+   Shared by the plain links and the dropdown's summary so they behave alike.
+   The rule carries the accent on its own and the label holds its colour, so
+   hover reads as one moving element rather than the whole item changing. */
+.nav-link {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	color: var(--color-text);
+	cursor: pointer;
+}
+
+.nav-link::after {
+	content: '';
+	position: absolute;
+	inset-inline: 0;
+	bottom: -0.125rem;
+	height: 1px;
+	/* Set outright rather than inherited from currentColor: the label stays put
+	   on hover, so there is no text colour for the rule to borrow. */
+	background: var(--color-blue);
+	transform: scaleX(0);
+	transform-origin: left;
+	transition: transform 200ms;
+}
+
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+	transform: scaleX(1);
+}
+
+/* A native <details> disclosure: keyboard operable and fully usable with no
+   JavaScript. The script in SiteHeader only adds Escape and click-outside, so
+   the menu still opens and closes if it never runs. */
+.nav-dropdown {
+	position: relative;
+}
+
+.nav-dropdown > summary {
+	list-style: none;
+}
+
+.nav-dropdown > summary::-webkit-details-marker {
+	display: none;
+}
+
+.nav-dropdown > summary::marker {
+	content: '';
+}
+
+.nav-dropdown > summary svg {
+	transition: transform 160ms ease;
+}
+
+.nav-dropdown[open] > summary {
+	color: var(--color-blue);
+}
+
+.nav-dropdown[open] > summary svg {
+	transform: rotate(180deg);
+}
+
+.nav-menu {
+	position: absolute;
+	top: calc(100% + 0.9rem);
+	right: 0;
+	z-index: 30;
+	padding: 0.9rem;
+	background: var(--color-surface);
+	border: 1px solid var(--color-rule);
+}
+
+/* Columns rather than one tall list, so the menu stays wide and shallow as the
+   topic count grows. Single column on narrow screens, where a wide panel would
+   not fit anyway. */
+.nav-menu__columns {
+	display: grid;
+	gap: 0.35rem 2rem;
+	grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+	.nav-menu__columns {
+		grid-template-columns: repeat(2, minmax(9.5rem, 1fr));
+	}
+}
+
+@media (min-width: 900px) {
+	.nav-menu__columns {
+		grid-template-columns: repeat(3, minmax(9.5rem, 1fr));
+	}
+}
+
+.nav-menu__group + .nav-menu__group {
+	margin-top: 0.4rem;
+}
+
+@media (min-width: 640px) {
+	.nav-menu__group + .nav-menu__group {
+		margin-top: 0;
+	}
+}
+
+/* The domain heading is a label, not a destination: it groups the topics under
+   it rather than competing with them for the click. */
+.nav-menu__heading {
+	padding: 0.35rem 0.7rem;
+	font-size: 0.63rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--color-text-3);
+}
+
+.nav-menu a {
+	display: block;
+	padding: 0.4rem 0.7rem;
+	color: var(--color-text-2);
+	white-space: nowrap;
+	transition:
+		background 150ms,
+		color 150ms;
+}
+
+.nav-menu a:hover,
+.nav-menu a:focus-visible {
+	background: var(--color-surface-2);
+	color: var(--color-blue);
+}
+
+/* The full index is a different kind of destination from a single topic, so it
+   sits below a rule rather than in the same run. */
+.nav-menu__all {
+	margin-top: 0.6rem;
+	border-top: 1px solid var(--color-rule);
+	padding-top: 0.6rem;
+	font-size: 0.72rem;
+}
+
+/* Every slide occupies the same grid cell, so the track's height is the tallest
+   slide rather than the current one. Entries have different title and summary
+   lengths, and removing the inactive ones from layout made the whole page below
+   jump each time a shorter one came round. visibility:hidden keeps the space
+   while still removing the slide from the tab order and the a11y tree. */
+.hero-carousel__track {
+	display: grid;
+}
+
+.hero-carousel__track > [data-slide] {
+	grid-area: 1 / 1;
+	/* Grid, not block: the slide is stretched to the row height by the track, and
+	   this passes that height down so the card fills it. Without it the wrapper
+	   was the right size but the visible bordered box still shrank on shorter
+	   entries. */
+	display: grid;
+
+	/* Crossfade with a slight drift: the incoming card arrives from 10px right,
+	   the outgoing one leaves 6px left, both over 500ms. The whole card moves as
+	   one piece rather than animating headline and summary separately, which
+	   would read as marketing rather than editorial.
+
+	   visibility rather than display keeps both slides rendered during the fade,
+	   while still taking the inactive ones out of the tab order and the a11y
+	   tree once they settle. */
+	opacity: 0;
+	visibility: hidden;
+	transform: translateX(10px);
+	transition:
+		opacity 500ms ease-out,
+		transform 500ms ease-out;
+}
+
+.hero-carousel__track > [data-slide][data-active] {
+	opacity: 1;
+	visibility: visible;
+	transform: translateX(0);
+}
+
+/* Held on the outgoing slide for the length of the fade, then dropped. */
+.hero-carousel__track > [data-slide][data-leaving] {
+	opacity: 0;
+	visibility: visible;
+	transform: translateX(-6px);
+}
+
+/* The indicator doubles as the countdown: the active bar fills across the hold,
+   so the next card is never a surprise. Filled via a scaleX animation driven in
+   script, so the same object is both the clock and its own progress read-out. */
+.hero-dot__fill {
+	position: absolute;
+	inset: 0;
+	transform: scaleX(0);
+	transform-origin: left;
+	background: var(--color-blue);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	/* Opacity-only. The global rule already collapses the duration; this drops
+	   the horizontal drift so nothing slides for those users. */
+	.hero-carousel__track > [data-slide] {
+		transform: none !important;
+	}
+}
+
 .featured-card {
 	/* The fade resolves to the card's own ground. Kept as channels so the stops
 	   below can vary only the alpha. Must track --color-surface. */
 	--cover-fade: 10 18 32;
+	/* Same reason as the slide above: pass the height on to the content block so
+	   its justify-between reaches the real bottom of the card. The cover layer is
+	   absolutely positioned, so it sits outside this flow. */
+	display: grid;
 }
 
 .featured-card__image {

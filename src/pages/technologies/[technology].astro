@@ -3,19 +3,18 @@ import type { GetStaticPaths } from 'astro';
 import EntryList from '../../components/EntryList.astro';
 import Sidebar from '../../components/Sidebar.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getPublishedPosts, shouldShowSidebar, topicFacets } from '../../lib/collections';
+import { getPublishedPosts, shouldShowSidebar, technologyFacets } from '../../lib/collections';
 
-// Only topics with at least one published entry get a page, so the Topics menu
-// can never link to an empty listing. An entry carries several topics, so it can
-// appear under more than one of these.
+// Only technologies with at least one published entry get a page. An entry names
+// several products, so it can appear under more than one of these.
 export const getStaticPaths = (async () => {
 	const posts = await getPublishedPosts();
 
-	return topicFacets(posts).map((facet) => ({
-		params: { topic: facet.id },
+	return technologyFacets(posts).map((facet) => ({
+		params: { technology: facet.id },
 		props: {
 			label: facet.label,
-			posts: posts.filter((post) => post.data.topics.includes(facet.id)),
+			posts: posts.filter((post) => post.data.technologies.includes(facet.id)),
 			allPosts: posts,
 		},
 	}));
@@ -25,8 +24,8 @@ const { label, posts, allPosts } = Astro.props;
 const showSidebar = shouldShowSidebar(allPosts.length);
 ---
 
-<BaseLayout title={label} description={`Entries on ${label}.`}>
-	<p class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Topic</p>
+<BaseLayout title={label} description={`Entries involving ${label}.`}>
+	<p class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Technology</p>
 	<h1 class="font-display text-text mt-1 mb-6 text-2xl font-bold">{label}</h1>
 
 	<div class={showSidebar ? 'grid gap-10 md:grid-cols-[1fr_15rem]' : ''}>

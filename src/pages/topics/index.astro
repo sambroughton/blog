@@ -1,38 +1,75 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getPublishedPosts, topicFacets } from '../../lib/collections';
+import { getPublishedPosts, technologyFacets, topicsByDomain } from '../../lib/collections';
 import { withBase } from '../../lib/paths';
 
 const posts = await getPublishedPosts();
-const topics = topicFacets(posts);
+const groups = topicsByDomain(posts);
+const technologies = technologyFacets(posts);
 ---
 
 {
-	/* The full domain browser. The sidebar's Domains block is the quick filter
-    counterpart; this page is the complete index behind it. */
+	/* The full topic browser behind the header's Topics menu. Grouped by parent
+    domain so the specific subjects are read in the context of the discipline
+    they belong to, rather than as one flat alphabetical list. */
 }
-<BaseLayout title="Topics" description="Browse entries by domain.">
+<BaseLayout title="Topics" description="Browse entries by subject or by the product involved.">
 	<h1 class="font-display text-text text-2xl font-bold">Topics</h1>
 	<p class="text-text-2 mt-1.5 max-w-[52ch] text-sm">
-		Every entry belongs to exactly one domain. These are the domains with something published behind
-		them.
+		The specific subjects covered so far, grouped by the domain they sit in. Domains are the broad
+		disciplines; topics are what an individual entry is actually about.
 	</p>
 
 	{
-		topics.length === 0 ? (
+		groups.length === 0 ? (
 			<p class="text-text-2 mt-10 text-sm">No entries yet, so there is nothing to browse.</p>
 		) : (
-			<section class="mt-10">
-				<ul class="grid gap-x-8 gap-y-2 sm:grid-cols-2">
-					{topics.map((topic) => (
-						<li class="border-rule flex items-baseline justify-between gap-3 border-b py-1.5">
-							<a
-								href={withBase(`/topics/${topic.id}`)}
-								class="text-text-2 hover:text-blue transition-colors"
-							>
-								{topic.label}
+			<div class="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+				{groups.map((group) => (
+					<section>
+						<h2 class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">
+							<a href={withBase(`/domains/${group.id}`)} class="hover:text-blue transition-colors">
+								{group.label}
 							</a>
-							<span class="text-blue text-xs">{topic.count}</span>
+						</h2>
+						<ul class="border-rule mt-3 border-t">
+							{group.topics.map((topic) => (
+								<li class="border-rule border-b">
+									<a
+										href={withBase(`/topics/${topic.id}`)}
+										class="text-text-2 hover:text-blue flex items-baseline justify-between gap-3 py-2 text-sm transition-colors"
+									>
+										<span>{topic.label}</span>
+										<span class="text-blue shrink-0 text-[0.72rem] tabular-nums">
+											{topic.count}
+										</span>
+									</a>
+								</li>
+							))}
+						</ul>
+					</section>
+				))}
+			</div>
+		)
+	}
+
+	{
+		technologies.length > 0 && (
+			<section class="mt-14">
+				<h2 class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Technologies</h2>
+				<p class="text-text-2 mt-1.5 max-w-[52ch] text-sm">
+					The products and services these entries involve.
+				</p>
+				<ul class="mt-3 flex flex-wrap gap-2">
+					{technologies.map((technology) => (
+						<li>
+							<a
+								href={withBase(`/technologies/${technology.id}`)}
+								class="border-rule text-text-2 hover:border-rule-bright hover:text-blue inline-block border px-2.5 py-1 text-[0.72rem] transition-colors"
+							>
+								{technology.label}
+								<span class="text-text-3 tabular-nums"> {technology.count}</span>
+							</a>
 						</li>
 					))}
 				</ul>

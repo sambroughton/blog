@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import { topicLabel } from '../consts';
+import { domainLabel } from '../consts';
 import { formatDate, isoDate, type Post } from '../lib/collections';
 import { withBase } from '../lib/paths';
 import { readingTimeMinutes } from '../lib/readingTime';
@@ -13,8 +13,14 @@ const { posts } = Astro.props;
 const multiple = posts.length > 1;
 
 // Every slide is in the DOM, so all featured entries are crawlable and the
-// no-JS experience still shows the first one. Advance is manual only: an
-// auto-rotating carousel would need a pause control to satisfy WCAG 2.2.2.
+// no-JS experience still shows the first one.
+//
+// Rotation is automatic on a 5s interval, which brings WCAG 2.2.2 into play:
+// anything that moves on its own for longer than five seconds needs a way to
+// stop it. With the explicit Pause control removed, that rests on the slide
+// controls - a click on any dot, prev or next ends rotation for the visit -
+// plus suspend-on-hover, suspend-on-focus, and starting paused under
+// prefers-reduced-motion.
 // https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html
 ---
 
@@ -27,14 +33,19 @@ const multiple = posts.length > 1;
 			data-carousel
 			tabindex="-1"
 		>
-			<div>
+			<div class="hero-carousel__track" data-track aria-live="off">
 				{posts.map((post, index) => {
 					const minutes = readingTimeMinutes(post.body);
 					return (
+						/* Slides stack in one grid cell rather than being removed with
+						   `hidden`, so the track is always as tall as the tallest entry and
+						   the page below never jumps when a shorter one comes round.
+						   Inactive slides are visibility:hidden, which keeps their space but
+						   still takes them out of the tab order and the a11y tree. */
 						<div
 							data-slide
 							data-index={index}
-							hidden={index !== 0}
+							data-active={index === 0 ? '' : undefined}
 							role="group"
 							aria-roledescription="slide"
 							aria-label={`${index + 1} of ${posts.length}`}
@@ -74,10 +85,7 @@ const multiple = posts.length > 1;
 										</p>
 
 										<h2 class="font-display text-text mt-4 text-2xl leading-tight font-bold sm:text-3xl">
-											<a
-												href={withBase(`/posts/${post.id}`)}
-												class="hover:decoration-text-3 underline decoration-transparent decoration-1 underline-offset-[0.18em] transition-colors"
-											>
+											<a href={withBase(`/posts/${post.id}`)} class="no-underline">
 												{post.data.title}
 											</a>
 										</h2>
@@ -94,7 +102,7 @@ const multiple = posts.length > 1;
 										{' · '}
 										{minutes} min
 										{' · '}
-										{topicLabel(post.data.topic)}
+										{domainLabel(post.data.domain)}
 									</p>
 								</div>
 							</article>
@@ -114,8 +122,12 @@ const multiple = posts.length > 1;
 								role="tab"
 								aria-selected={index === 0 ? 'true' : 'false'}
 								aria-label={`Slide ${index + 1}`}
-								class="bg-rule-bright aria-selected:bg-blue h-1.5 w-6 cursor-pointer transition-colors"
-							/>
+								class="bg-rule-bright aria-selected:bg-blue/30 relative h-1.5 w-6 cursor-pointer overflow-hidden transition-colors"
+							>
+								{/* The active bar keeps a dimmed blue ground so it still reads as
+								    selected at zero progress; the fill on top is the countdown. */}
+								<span class="hero-dot__fill" data-dot-fill />
+							</button>
 						))}
 					</div>
 
@@ -144,37 +156,197 @@ const multiple = posts.length > 1;
 }
 
 <script>
+	/** Hold per slide. Long enough to finish a headline plus its summary. */
+	const ROTATE_MS = 8000;
+	/** Must match the transition on [data-slide] in global.css. */
+	const FADE_MS = 500;
+
 	document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((carousel) => {
+		const track = carousel.querySelector<HTMLElement>('[data-track]');
 		const slides = [...carousel.querySelectorAll<HTMLElement>('[data-slide]')];
 		const dots = [...carousel.querySelectorAll<HTMLElement>('[data-dot]')];
-		if (slides.length < 2) return;
+		const fills = [...carousel.querySelectorAll<HTMLElement>('[data-dot-fill]')];
+		if (!track || slides.length < 2) return;
+
+		// An animation that starts on its own is precisely what this preference is
+		// about, so rotation begins stopped. The slide controls still work, so the
+		// carousel remains fully navigable by hand.
+		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 		let current = 0;
+		/**
+		 * Advancement runs on a timer; the indicator fill is the matching visual.
+		 * They are kept in step by deriving the timer's remaining time from the
+		 * animation's currentTime, which pauses with it. Deliberately not driven by
+		 * the animation's `finish` event: that event is not reliably dispatched
+		 * (it does not fire at all under headless virtual time), which would leave
+		 * the carousel stuck on the first slide.
+		 */
+		let clock: Animation | null = null;
+		let timer: number | null = null;
+		/** Milliseconds of the current hold still to run when it was last armed. */
+		let holdLeft = ROTATE_MS;
+		/** When that hold was armed, so elapsed time can be deducted on suspend. */
+		let holdStartedAt = 0;
+		/** Auto-rotation is over for this visit: manual nav or reduced motion. */
+		let stopped = reduced.matches;
+		/** Temporary hold while the pointer or focus is inside the carousel. */
+		let suspended = false;
 
-		function show(next: number) {
-			// Wrap in both directions so the controls never dead-end.
-			current = (next + slides.length) % slides.length;
+		function paint(previous: number) {
 			slides.forEach((slide, i) => {
-				slide.hidden = i !== current;
+				slide.toggleAttribute('data-active', i === current);
 			});
 			dots.forEach((dot, i) => {
 				dot.setAttribute('aria-selected', i === current ? 'true' : 'false');
 			});
+
+			if (previous < 0 || previous === current) return;
+			// Mark the outgoing slide so it drifts left rather than right, then drop
+			// the flag once the fade is done. Guarded in case rapid clicks have made
+			// this slide current again in the meantime.
+			const leaving = slides[previous];
+			leaving.toggleAttribute('data-leaving', true);
+			window.setTimeout(() => {
+				if (!leaving.hasAttribute('data-active')) leaving.removeAttribute('data-leaving');
+			}, FADE_MS);
 		}
 
-		carousel.querySelector('[data-prev]')?.addEventListener('click', () => show(current - 1));
-		carousel.querySelector('[data-next]')?.addEventListener('click', () => show(current + 1));
-		dots.forEach((dot, i) => dot.addEventListener('click', () => show(i)));
+		function clearTimer() {
+			if (timer !== null) {
+				window.clearTimeout(timer);
+				timer = null;
+			}
+		}
+
+		/**
+		 * Start (or restart) the countdown with `ms` left to run.
+		 *
+		 * The remaining time is bookkept here rather than read back off the
+		 * animation. The animation's clock can drift from wall time - it stalls
+		 * whenever frames are not being produced - and resuming from a stalled
+		 * currentTime computes a remainder of zero, which fires immediately and
+		 * then again a full hold later, skipping a slide.
+		 */
+		function armHold(ms: number) {
+			clearTimer();
+			holdLeft = Math.max(0, ms);
+			holdStartedAt = Date.now();
+			timer = window.setTimeout(() => go(current + 1, false), holdLeft);
+		}
+
+		function clearClock() {
+			clearTimer();
+			clock?.cancel();
+			clock = null;
+			fills.forEach((fill) => {
+				fill.style.transform = '';
+			});
+		}
+
+		function startClock() {
+			clearClock();
+			const fill = fills[current];
+			if (!fill) return;
+			clock = fill.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], {
+				duration: ROTATE_MS,
+				easing: 'linear',
+				fill: 'forwards',
+			});
+			if (suspended) {
+				clock.pause();
+				holdLeft = ROTATE_MS;
+			} else {
+				armHold(ROTATE_MS);
+			}
+		}
+
+		/** Not rotating: show the active bar solid so it still reads as selected. */
+		function showStatic() {
+			clearClock();
+			const fill = fills[current];
+			if (fill) fill.style.transform = 'scaleX(1)';
+		}
+
+		function syncLive() {
+			// Announce slide changes only when the reader is driving. A live region
+			// firing every eight seconds unprompted is noise in a screen reader.
+			track!.setAttribute('aria-live', stopped || suspended ? 'polite' : 'off');
+		}
+
+		function sync() {
+			if (stopped) showStatic();
+			else startClock();
+			syncLive();
+		}
+
+		function go(next: number, byUser: boolean) {
+			const previous = current;
+			// Wrap in both directions so the controls never dead-end.
+			current = (next + slides.length) % slides.length;
+			paint(previous);
+			// Someone steering by hand should not have to race the timer, so their
+			// first manual move ends rotation for the rest of the visit.
+			if (byUser) {
+				stopped = true;
+				sync();
+			} else if (!stopped) {
+				startClock();
+			}
+		}
+
+		carousel.querySelector('[data-prev]')?.addEventListener('click', () => go(current - 1, true));
+		carousel.querySelector('[data-next]')?.addEventListener('click', () => go(current + 1, true));
+		dots.forEach((dot, i) => dot.addEventListener('click', () => go(i, true)));
+
+		// Hold while the reader is on it, so a slide cannot change mid-sentence.
+		// Pausing the animation freezes the bar where it is and resumes from there.
+		function setSuspended(value: boolean) {
+			suspended = value;
+			if (!stopped) {
+				if (value) {
+					// Bank the time already served, stand the timer down, freeze the bar.
+					holdLeft = Math.max(0, holdLeft - (Date.now() - holdStartedAt));
+					clearTimer();
+					clock?.pause();
+				} else {
+					// Put the bar exactly where the banked remainder says it should be, so
+					// the two cannot disagree, then run both again.
+					if (clock) {
+						clock.currentTime = ROTATE_MS - holdLeft;
+						clock.play();
+					}
+					armHold(holdLeft);
+				}
+			}
+			syncLive();
+		}
+
+		carousel.addEventListener('mouseenter', () => setSuspended(true));
+		carousel.addEventListener('mouseleave', () => setSuspended(false));
+		carousel.addEventListener('focusin', () => setSuspended(true));
+		carousel.addEventListener('focusout', (event) => {
+			// relatedTarget is where focus went; ignore moves within the carousel.
+			if (!carousel.contains(event.relatedTarget as Node | null)) setSuspended(false);
+		});
 
 		carousel.addEventListener('keydown', (event) => {
 			if (event.key === 'ArrowLeft') {
-				show(current - 1);
+				go(current - 1, true);
 			} else if (event.key === 'ArrowRight') {
-				show(current + 1);
+				go(current + 1, true);
 			} else {
 				return;
 			}
 			event.preventDefault();
 		});
+
+		// Track the preference if it changes mid-session.
+		reduced.addEventListener('change', () => {
+			stopped = reduced.matches;
+			sync();
+		});
+
+		sync();
 	});
 </script>

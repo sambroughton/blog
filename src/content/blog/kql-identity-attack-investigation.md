@@ -2,8 +2,12 @@
 title: Advanced KQL techniques for investigating identity-based attacks in Entra ID sign-in logs
 description: Queries for password spray, failed-then-succeeded sequences, and unfamiliar sign-in properties, with the joins that make them usable.
 pubDate: 2026-07-14
-topic: siem-detection
-tags: ['kql', 'sentinel', 'entra-id']
+domain: siem-detection-engineering
+topics:
+  - kql
+technologies:
+  - microsoft-sentinel
+  - microsoft-entra-id
 series: Identity investigation
 featured: true
 ---

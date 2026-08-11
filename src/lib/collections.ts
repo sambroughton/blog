@@ -1,5 +1,13 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { SITE, TOPICS, type TopicId } from '../consts';
+import {
+	DOMAINS,
+	SITE,
+	TECHNOLOGIES,
+	TOPICS,
+	type DomainId,
+	type TechnologyId,
+	type TopicId,
+} from '../consts';
 
 export type Post = CollectionEntry<'blog'>;
 
@@ -27,17 +35,22 @@ export function selectHeroPosts(posts: Post[], limit = SITE.heroCount): Post[] {
 
 export type Facet<T extends string> = { id: T; label: string; count: number };
 
+/**
+ * `pick` returns a list so the same counter serves the single-valued domain and
+ * the multi-valued topics and technologies.
+ */
 function countBy<T extends string>(
 	posts: Post[],
-	pick: (post: Post) => T,
+	pick: (post: Post) => readonly T[],
 	catalogue: readonly { id: T; label: string }[],
 ): Facet<T>[] {
 	const counts = new Map<T, number>();
 	for (const post of posts) {
-		const key = pick(post);
-		counts.set(key, (counts.get(key) ?? 0) + 1);
+		for (const key of pick(post)) {
+			counts.set(key, (counts.get(key) ?? 0) + 1);
+		}
 	}
-	// Catalogue order is preserved deliberately: TOPICS is ordered by the intended
+	// Catalogue order is preserved deliberately: DOMAINS is ordered by the intended
 	// progression across the discipline, and sorting by volume here would let the
 	// article count dictate the narrative. Empty facets are dropped so a young
 	// blog does not advertise sections with nothing behind them.
@@ -46,8 +59,34 @@ function countBy<T extends string>(
 		.filter((facet) => facet.count > 0);
 }
 
+export function domainFacets(posts: Post[]): Facet<DomainId>[] {
+	return countBy(posts, (p) => [p.data.domain], DOMAINS);
+}
+
 export function topicFacets(posts: Post[]): Facet<TopicId>[] {
-	return countBy(posts, (p) => p.data.topic, TOPICS);
+	return countBy(posts, (p) => p.data.topics, TOPICS);
+}
+
+export function technologyFacets(posts: Post[]): Facet<TechnologyId>[] {
+	return countBy(posts, (p) => p.data.technologies, TECHNOLOGIES);
+}
+
+export type TopicGroup = { id: DomainId; label: string; topics: Facet<TopicId>[] };
+
+/**
+ * Populated topics grouped under their parent domain, both in catalogue order.
+ * Feeds the Topics menu and index. Groups with nothing published are dropped, so
+ * the menu grows as the writing does.
+ */
+export function topicsByDomain(posts: Post[]): TopicGroup[] {
+	const populated = topicFacets(posts);
+	const parentOf = new Map<string, string>(TOPICS.map((t) => [t.id, t.domain]));
+
+	return DOMAINS.map((domain) => ({
+		id: domain.id,
+		label: domain.label,
+		topics: populated.filter((topic) => parentOf.get(topic.id) === domain.id),
+	})).filter((group) => group.topics.length > 0);
 }
 
 /** Years that actually have entries, newest first. */

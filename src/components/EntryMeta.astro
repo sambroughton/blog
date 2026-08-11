@@ -1,31 +1,35 @@
 ---
-import { topicLabel, type TopicId } from '../consts';
+import { domainLabel, type DomainId } from '../consts';
 import { withBase } from '../lib/paths';
 
 interface Props {
-	topic: TopicId;
+	domain: DomainId;
 	minutes: number;
-	/** Render the topic as a link to its filtered listing. */
+	/** Render the domain as a link to its listing. */
 	linked?: boolean;
 }
 
-const { topic, minutes, linked = true } = Astro.props;
+const { domain, minutes, linked = true } = Astro.props;
 
-const topicClasses = 'text-[0.68rem] tracking-[0.12em] uppercase text-blue';
+// Outlined chip, so the domain reads as a label rather than as body text. The
+// listing shows this and the reading time only; topics and technologies are
+// richer than a list row needs and live on the article page instead.
+const chip =
+	'inline-block border border-rule px-2 py-0.5 text-[0.68rem] tracking-[0.12em] uppercase text-blue';
 ---
 
-{/* The topic is rendered as text, never colour alone, per WCAG 1.4.1. */}
+{/* The domain is rendered as text, never colour alone, per WCAG 1.4.1. */}
 <div class="text-text-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.72rem]">
 	{
 		linked ? (
 			<a
-				href={withBase(`/topics/${topic}`)}
-				class={`${topicClasses} hover:text-blue-bright transition-colors`}
+				href={withBase(`/domains/${domain}`)}
+				class={`${chip} hover:border-rule-bright hover:text-blue-bright transition-colors`}
 			>
-				{topicLabel(topic)}
+				{domainLabel(domain)}
 			</a>
 		) : (
-			<span class={topicClasses}>{topicLabel(topic)}</span>
+			<span class={chip}>{domainLabel(domain)}</span>
 		)
 	}
 

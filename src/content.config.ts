@@ -1,13 +1,14 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
-import { TOPIC_IDS } from './consts';
+import { DOMAIN_IDS, TECHNOLOGY_IDS, TOPIC_IDS } from './consts';
 
 // Content collections config.
 // Docs: https://docs.astro.build/en/guides/content-collections/
 //
 // Frontmatter is validated at build time, so a typo in a required field or an
-// unrecognised topic fails the build rather than silently rendering wrong.
+// unrecognised domain, topic or technology fails the build rather than silently
+// rendering wrong.
 
 const blog = defineCollection({
 	loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/blog' }),
@@ -18,11 +19,14 @@ const blog = defineCollection({
 			pubDate: z.coerce.date(),
 			updatedDate: z.coerce.date().optional(),
 
-			/** Subject area. Exactly one, drawn from the closed list in consts.ts. */
-			topic: z.enum(TOPIC_IDS),
+			/** The discipline this belongs to. Exactly one, from DOMAINS in consts.ts. */
+			domain: z.enum(DOMAIN_IDS),
 
-			/** Optional free-form keywords. Not used for navigation, only metadata. */
-			tags: z.array(z.string()).default([]),
+			/** Specific subjects covered. At least one, from TOPICS in consts.ts. */
+			topics: z.array(z.enum(TOPIC_IDS)).nonempty(),
+
+			/** Products involved. At least one, from TECHNOLOGIES in consts.ts. */
+			technologies: z.array(z.enum(TECHNOLOGY_IDS)).nonempty(),
 
 			/** Optional grouping for multi-part write-ups. */
 			series: z.string().optional(),

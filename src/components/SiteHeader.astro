@@ -1,6 +1,15 @@
 ---
 import { NAV, SITE } from '../consts';
+import { getPublishedPosts, topicsByDomain } from '../lib/collections';
 import { withBase } from '../lib/paths';
+
+// Built from the collection, so the menu can never list a topic with nothing
+// published behind it, nor miss one that just gained its first entry.
+//
+// Topics here, domains in the sidebar: the two never list the same things. No
+// counts on purpose - they earn their place on the index page, but in a menu
+// they sit between the reader and the destination.
+const groups = topicsByDomain(await getPublishedPosts());
 ---
 
 <header class="border-rule border-b">
@@ -27,16 +36,50 @@ import { withBase } from '../lib/paths';
 
 		<nav aria-label="Primary" class="flex items-center gap-6 text-[0.72rem]">
 			{
-				/* Underline wipes in from the left on hover: a scaleX transform on an
-				   ::after rule, so it animates on the compositor rather than by
-				   changing layout. Mirrored on focus-visible so keyboard users get the
-				   same affordance. The global reduced-motion rule zeroes the duration,
-				   which leaves the underline appearing instantly rather than sweeping. */
+				groups.length > 0 && (
+					<details class="nav-dropdown" data-topics-menu>
+						<summary class="nav-link" aria-label="Topics menu">
+							Topics
+							<svg
+								width="11"
+								height="11"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"
+							>
+								<path d="m6 9 6 6 6-6" />
+							</svg>
+						</summary>
+
+						{/* Compact mega-menu: topics grouped under the domain they belong to,
+						    laid out in columns so it stays wide and shallow rather than
+						    becoming one long scrolling list as the blog grows. */}
+						<div class="nav-menu">
+							<div class="nav-menu__columns">
+								{groups.map((group) => (
+									<section class="nav-menu__group">
+										<h2 class="nav-menu__heading">{group.label}</h2>
+										{group.topics.map((topic) => (
+											<a href={withBase(`/topics/${topic.id}`)}>{topic.label}</a>
+										))}
+									</section>
+								))}
+							</div>
+							<a class="nav-menu__all" href={withBase('/topics')}>
+								View all topics <span aria-hidden="true">→</span>
+							</a>
+						</div>
+					</details>
+				)
+			}
+
+			{
 				NAV.map((item) => (
-					<a
-						href={withBase(item.href)}
-						class="text-text-2 hover:text-blue relative inline-block transition-colors after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-200 after:content-[''] hover:after:scale-x-100 focus-visible:after:scale-x-100"
-					>
+					<a href={withBase(item.href)} class="nav-link">
 						{item.label}
 					</a>
 				))
@@ -44,3 +87,34 @@ import { withBase } from '../lib/paths';
 		</nav>
 	</div>
 </header>
+
+<script>
+	const menu = document.querySelector('[data-topics-menu]');
+
+	if (menu instanceof HTMLDetailsElement) {
+		const close = () => {
+			menu.open = false;
+		};
+
+		// Clicking anywhere outside dismisses it.
+		document.addEventListener('click', (event) => {
+			if (!menu.open) return;
+			if (event.target instanceof Node && !menu.contains(event.target)) close();
+		});
+
+		// Escape closes and hands focus back to the summary, so keyboard users are
+		// not stranded inside a menu that is no longer on screen.
+		document.addEventListener('keydown', (event) => {
+			if (event.key !== 'Escape' || !menu.open) return;
+			close();
+			menu.querySelector('summary')?.focus();
+		});
+
+		// Tabbing past the last item closes it rather than leaving an open menu
+		// floating over the page.
+		menu.addEventListener('focusout', (event) => {
+			if (event.relatedTarget instanceof Node && menu.contains(event.relatedTarget)) return;
+			close();
+		});
+	}
+</script>
