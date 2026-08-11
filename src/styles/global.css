@@ -85,7 +85,11 @@ h4 {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.3rem;
-	color: var(--color-text);
+	/* A step above --color-text (#e8eef9), the brightest token in the palette:
+	   the nav is small type at 0.72rem and reads as secondary at the body colour.
+	   Pure white is what .nav-menu__row and .entry-row__title already resolve to,
+	   so the ceiling is shared rather than a new value. 18.6:1 on --color-bg. */
+	color: #ffffff;
 	cursor: pointer;
 }
 
@@ -142,11 +146,10 @@ h4 {
 }
 
 /* Open state: the underline the trigger already wipes in on hover, held on, and
-   the caret flipped to point back at the trigger. */
-.nav-topics[data-open] .nav-topics__trigger {
-	color: var(--color-blue);
-}
-
+   the caret flipped to point back at the trigger. The label itself deliberately
+   holds its colour - the underline and the caret are the two signals, and a
+   third one tinting the text would make the trigger the loudest thing in the
+   header while the panel is up. */
 .nav-topics[data-open] .nav-topics__trigger::after {
 	transform: scaleX(1);
 }
@@ -335,9 +338,12 @@ h4 {
 	transition: color 200ms;
 }
 
+/* 17.0:1. Brightens rather than tints: the trail stays monochrome all the way
+   through, so the step you are pointing at reads as lit rather than as a
+   different kind of link from the ones either side of it. */
 .breadcrumb a:hover,
 .breadcrumb a:focus-visible {
-	color: var(--color-blue);
+	color: var(--color-text);
 }
 
 /* 5.74:1. Marginally brighter than the links rather than the brightest thing in
@@ -844,8 +850,13 @@ h4 {
 	text-underline-offset: 3px;
 }
 
+/* Brightens out of the accent instead of deeper into it. The underline above is
+   permanent and is what marks the link, so the colour is free to leave the blue
+   without the element stopping reading as a link - WCAG 1.4.1 is satisfied by
+   the rule, not the hue. https://www.w3.org/WAI/WCAG22/Understanding/use-of-color
+   17.0:1 on --color-bg. */
 .prose-body a:hover {
-	color: var(--color-blue-bright);
+	color: var(--color-text);
 }
 
 .prose-body strong {

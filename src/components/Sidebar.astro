@@ -16,6 +16,10 @@ const years = archiveYears(posts);
 // Matches the "Latest" heading in EntryList so the sidebar section titles read
 // as the same tier of label.
 const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-blue';
+
+// Both facet lists below hover to text-text (--color-text) rather than to the
+// accent: across the site the thing under the pointer lights up, it does not
+// change hue. Same treatment as the breadcrumb and the header nav.
 ---
 
 <aside class="space-y-8" aria-label="Browse entries">
@@ -33,7 +37,7 @@ const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-blue';
 						<li class="border-rule border-b">
 							<a
 								href={withBase(`/domains/${domain.id}`)}
-								class="text-text-2 hover:text-blue flex items-baseline justify-between gap-3 py-2 text-sm transition-colors"
+								class="text-text-2 hover:text-text flex items-baseline justify-between gap-3 py-2 text-sm transition-colors"
 							>
 								<span>{domain.label}</span>
 								{/* Published entries in this domain. tabular-nums so counts sit in
@@ -58,7 +62,7 @@ const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-blue';
 						<li>
 							<a
 								href={withBase(`/archive/${entry.year}`)}
-								class="text-text-2 hover:text-blue transition-colors"
+								class="text-text-2 hover:text-text transition-colors"
 							>
 								{entry.year}
 							</a>
