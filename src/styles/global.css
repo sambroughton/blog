@@ -215,6 +215,343 @@ h4 {
 	font-size: 0.72rem;
 }
 
+/* Breadcrumb ---------------------------------------------------------------
+   The trail is the quietest thing on the page. On an entry it sits directly
+   above an h1 that repeats the title, so anything louder competes with the
+   heading it is meant to orient you towards. Intended order of weight:
+   h1, then the summary, then the domain/date/reading time, then this.
+
+   Three values a step below --color-text-3 (#6b7fa0), deliberately literal
+   rather than @theme tokens: they exist only to sit under that token for this
+   one subordinate element, and the palette is ported wholesale from sb-blog.
+   Contrast is against --color-bg #050a14. */
+.breadcrumb {
+	/* Inherited default only. Nothing but the decorative separators falls back
+	   to it, which matters: at 4.25:1 it is below the 4.5:1 that WCAG 1.4.3 AA
+	   asks of normal text, and is only acceptable on content exempt as pure
+	   decoration. Do not colour real text with it.
+	   https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html */
+	color: #66758f;
+}
+
+/* 4.96:1. */
+.breadcrumb a {
+	color: #71809a;
+	transition: color 200ms;
+}
+
+.breadcrumb a:hover,
+.breadcrumb a:focus-visible {
+	color: var(--color-blue);
+}
+
+/* 5.74:1. Marginally brighter than the links rather than the brightest thing in
+   the trail: where you are is worth distinguishing, but not worth emphasising
+   over the steps that are actually clickable. */
+.breadcrumb [aria-current='page'] {
+	color: #7c8ba4;
+}
+
+/* Held at the rule colour rather than inheriting the base above, which would
+   have made the separators brighter than they were. They carry no meaning -
+   hence aria-hidden in the markup - so they stay at the edge of legibility. */
+.breadcrumb__separator {
+	color: var(--color-rule-bright);
+}
+
+/* Entry row ----------------------------------------------------------------
+   Hovering a row cross-fades a wash of colour in, raises a 1px accent bar up the
+   left edge and slides the copy 10px right. The wash is three layers stacked
+   inside one clipped box:
+
+     tint     a radial gradient, generated per row in lib/entryTints.ts, with a
+              slight scale settle so the colour lands rather than just appears
+     scrim A  left to right - pulls the wash back to the page ground by the
+              right-hand edge, under the longest titles and the reading time
+     scrim B  top to bottom - holds the first and last few pixels dark so the
+              wash never crowds the rule above or below it
+
+   The stack is then held at 0.60 opacity. No text in the row takes a heavier
+   weight, a shadow or a brighter colour to survive it, so the wash has to stay
+   under the copy on its own, and this number is the whole mechanism for that.
+   Measured against the brightest end of the ramp (t = 1, the cyan-ish hue, which
+   carries more luminance than the indigo end at equal lightness):
+
+     title    #fff on hover     ~18:1
+     dek      --color-text-2    ~7.1:1
+     domain   text-3 -> text-2  ~7.1:1  (brightens on hover, so measured lit)
+     date     --color-text-3    ~4.6:1
+     read     --color-text-3    ~4.7:1
+
+   The date and the reading time are the two things that hold --color-text-3 all
+   the way through the hover, so they set the floor. Both clear the 4.5:1 WCAG
+   1.4.3 AA asks of normal text, but only just, and only because this palette is
+   deep: the previous brighter one failed at this opacity. Treat 0.60 and the
+   oklch lightnesses in entryTints.ts as one setting - raising either means
+   rechecking both. At rest, with no wash, text-3 is 4.88:1.
+   https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html
+
+   These are computed from the composited stack, not sampled from a browser, so
+   treat them as within a tenth or so: oklch stops outside sRGB get gamut-mapped
+   by the engine, and gradient interpolation space is not identical across them.
+
+   Only opacity and transform animate, so a ten-row list does no layout work on
+   hover. */
+.entry-row {
+	position: relative;
+	/* The reveal sits at z-index -1, behind the row's own copy. This is what
+	   stops it going behind the page as well, and it keeps the stretched link
+	   below out of the sidebar's and the nav dropdown's stacking order. */
+	isolation: isolate;
+	/* Backstop for the copy sliding 10px right. The tint's overscan is clipped by
+	   .entry-row__reveal instead, which is inset - see the note there. */
+	overflow: hidden;
+	/* Earned: the stretched link below makes the whole row the click target. */
+	cursor: pointer;
+
+	/* Kept as channels so the stops below vary only the alpha. Must track
+	   --color-bg: both scrims and every tint resolve to the page ground, and if
+	   this drifts from it the right-hand end of every row shows as a pale band. */
+	--reveal-ground: 5 10 20;
+}
+
+/* The rule is a pseudo-element inset by the row's own padding rather than a
+   border on the row itself, so it lines up with the rule under the section
+   heading while the wash still bleeds the full -mx-4 width. */
+.entry-row::before {
+	content: '';
+	position: absolute;
+	inset-inline: 1rem;
+	bottom: 0;
+	height: 1px;
+	background: var(--color-rule);
+}
+
+/* A plain cross-fade. No clip-path: the wash has no leading edge to travel, so
+   there is nothing for a wipe to uncover and nothing to mask. */
+.entry-row__reveal {
+	position: absolute;
+	/* Flush with the bottom rule on the right, not the row's bled -mx-4 edge, so
+	   colour and rule share one span.
+
+	   The left edge is held a further 6px in to clear the accent bar. Both are
+	   blue by design, and scrim A is thinnest at its own left edge, so the bar was
+	   standing in the brightest part of the wash and disappearing into it. The bar
+	   keeps the 1rem alignment and the wash yields, because a bar is a line
+	   measurable against the rule below it and a gradient's start point is not. */
+	inset: 0 1rem 0 calc(1rem + 6px);
+	/* Clips the tint's own 2% overscan to this box. Without it the overscan is
+	   clipped by the row instead, which is ~6px wider each side - the whole gutter
+	   above - so the tint would cover the bar again for the first part of every
+	   hover, while the scale settles from 1.02 back to 1. */
+	overflow: hidden;
+	z-index: -1;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 380ms ease;
+}
+
+/* Much slower than the fade it rides, and only 2%, so this reads as the colour
+   settling rather than as a zoom. There is no horizontal drift - the fade carries
+   the arrival on its own.
+
+   The gradient comes in as --entry-tint, set per row from lib/entryTints.ts, so
+   the ramp is generated data rather than a run of selectors here. Falls back to
+   transparent: a row rendered without it loses the colour but keeps the fade and
+   the scrims, rather than inheriting whatever a neighbour had. */
+.entry-row__tint {
+	position: absolute;
+	inset: 0;
+	background: var(--entry-tint, transparent);
+	transform: scale(1.02);
+	transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Grows up from the bottom on enter and collapses up to the top on leave, so the
+   bar reads as one continuous upward gesture in both directions rather than
+   retracing itself. That is the transform-origin swap: bottom while :hover holds,
+   back to top the moment it drops. The origin is not transitioned, but at the
+   instant of leave scaleY is 1 and a full-height bar looks identical either way,
+   so the swap is invisible. Leaving mid-growth is the one case where it shows.
+
+   Kept off the a11y tree and out of the way of the pointer: it repeats what the
+   wash and the title colour already say. */
+.entry-row__bar {
+	position: absolute;
+	/* Aligned with the bottom rule and the copy, not the row's bled -mx-4 edge,
+	   which would leave it floating 1rem outside every other line in the list.
+	   The wash is inset past this on purpose so the bar has dark ground either
+	   side of it - 1rem of bleed margin to the left, the 6px gutter to the right. */
+	left: 1rem;
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	pointer-events: none;
+	background: #4d7cfe;
+	transform: scaleY(0);
+	transform-origin: top;
+	transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The nudge. Transform rather than padding or margin, so ten rows of this cost
+   no layout.
+
+   Consequence worth knowing: a transformed element becomes the containing block
+   for its absolutely positioned descendants, so the stretched link below anchors
+   to this box instead of to .entry-row, and shifts with it. Hence the negative
+   insets there. */
+.entry-row__body {
+	transform: translateX(0);
+	transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.entry-row__scrim {
+	position: absolute;
+	inset: 0;
+}
+
+.entry-row__scrim--x {
+	background: linear-gradient(
+		90deg,
+		rgb(var(--reveal-ground) / 0.62) 0%,
+		rgb(var(--reveal-ground) / 0.74) 38%,
+		rgb(var(--reveal-ground) / 0.9) 72%,
+		rgb(var(--reveal-ground) / 1) 100%
+	);
+}
+
+.entry-row__scrim--y {
+	background: linear-gradient(
+		180deg,
+		rgb(var(--reveal-ground) / 0.5) 0%,
+		rgb(var(--reveal-ground) / 0.18) 40%,
+		rgb(var(--reveal-ground) / 0.6) 100%
+	);
+}
+
+/* Stretches the title's own link over the whole row, so the date, the summary
+   and the empty space to the right all navigate to the entry. Still one anchor
+   per row, with the title as its accessible name: no second tab stop, nothing
+   new in the a11y tree, and no JavaScript. The trade is that text inside a row
+   can no longer be selected with the mouse.
+
+   The insets are negative because .entry-row__body is transformed and so is this
+   pseudo-element's containing block, not .entry-row. They undo the row's py-5 and
+   px-4 to reach the row's real edges. Two consequences of anchoring to the
+   nudging box: the target slides 10px right with the copy on hover, leaving a
+   10px unclickable strip at the far left - which falls in the -mx-4 bleed margin,
+   outside the text column, so it is not dead space anyone aims at. */
+.entry-row__link::after {
+	content: '';
+	position: absolute;
+	inset: -1.25rem -1rem;
+	/* Over the copy, so the whole row is the target. The domain link lifts
+	   itself back above this - see EntryMeta.astro. */
+	z-index: 1;
+}
+
+.entry-row__title,
+.entry-row__tag {
+	transition: color 260ms;
+}
+
+/* Keyboard parity: tabbing to a row brings the same wash up, so the focused row
+   is as findable as the hovered one. Outside the pointer query below, since a
+   keyboard can be attached to a touch device too. */
+.entry-row:focus-within .entry-row__reveal {
+	opacity: 0.6;
+}
+
+.entry-row:focus-within .entry-row__tint {
+	transform: scale(1);
+}
+
+.entry-row:focus-within .entry-row__bar {
+	transform: scaleY(1);
+	transform-origin: bottom;
+}
+
+.entry-row:focus-within .entry-row__body {
+	transform: translateX(10px);
+}
+
+.entry-row:focus-within .entry-row__title {
+	color: #fff;
+}
+
+.entry-row:focus-within .entry-row__tag {
+	color: var(--color-text-2);
+}
+
+/* Gated on a real pointer, and the only such query in this file. On a touch
+   screen :hover latches after a tap, so the wash would stay up on the row you
+   had just left and the list would accumulate lit rows as you scrolled. Those
+   devices get no reveal at all; the rule and the type carry the list alone. */
+@media (hover: hover) and (pointer: fine) {
+	.entry-row:hover .entry-row__reveal {
+		opacity: 0.6;
+	}
+
+	.entry-row:hover .entry-row__tint {
+		transform: scale(1);
+	}
+
+	.entry-row:hover .entry-row__bar {
+		transform: scaleY(1);
+		transform-origin: bottom;
+	}
+
+	.entry-row:hover .entry-row__body {
+		transform: translateX(10px);
+	}
+
+	.entry-row:hover .entry-row__title {
+		color: #fff;
+	}
+
+	.entry-row:hover .entry-row__tag {
+		color: var(--color-text-2);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	/* Nothing in the row moves: no scale settle, no bar growing, no copy sliding.
+	   The cross-fade is kept, because a fade has no motion vector - it is the
+	   substitution this query normally asks for, not the thing it guards against.
+
+	   That means re-asserting a duration against the blanket rule at the top of
+	   this file, which collapses every transition on the page to 0.01ms. That rule
+	   is a deliberately blunt instrument and correct as a default; these two
+	   properties are the exception, and they win on specificity (0,1,0 against the
+	   universal selector's 0,0,0) rather than by being declared later. Everything
+	   else in the row still collapses to instant, which is what we want. */
+	.entry-row__reveal {
+		transition-duration: 380ms !important;
+	}
+
+	.entry-row__tint {
+		transform: none !important;
+	}
+
+	.entry-row__body {
+		transform: none !important;
+	}
+
+	/* The bar fades rather than grows. transform:none would leave scaleY at 1 and
+	   the bar permanently up, so opacity has to carry the whole state here. */
+	.entry-row__bar {
+		opacity: 0;
+		transform: none !important;
+		transition-duration: 420ms !important;
+		transition-property: opacity !important;
+	}
+
+	.entry-row:hover .entry-row__bar,
+	.entry-row:focus-within .entry-row__bar {
+		opacity: 1;
+	}
+}
+
 /* Every slide occupies the same grid cell, so the track's height is the tallest
    slide rather than the current one. Entries have different title and summary
    lengths, and removing the inactive ones from layout made the whole page below

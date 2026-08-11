@@ -25,7 +25,11 @@ const { label, posts, allPosts } = Astro.props;
 const showSidebar = shouldShowSidebar(allPosts.length);
 ---
 
-<BaseLayout title={label} description={`Entries on ${label}.`}>
+<BaseLayout
+	title={label}
+	description={`Entries on ${label}.`}
+	crumbs={[{ label: 'Home', href: '/' }, { label: 'Topics', href: '/topics' }, { label }]}
+>
 	<p class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Topic</p>
 	<h1 class="font-display text-text mt-1 mb-6 text-2xl font-bold">{label}</h1>
 

@@ -3,7 +3,7 @@ import type { GetStaticPaths } from 'astro';
 import { Image } from 'astro:assets';
 import { render } from 'astro:content';
 import EntryMeta from '../../components/EntryMeta.astro';
-import { technologyLabel, topicLabel } from '../../consts';
+import { domainLabel, technologyLabel, topicLabel } from '../../consts';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { formatDate, getPublishedPosts, isoDate } from '../../lib/collections';
 import { withBase } from '../../lib/paths';
@@ -34,6 +34,17 @@ const minutes = readingTimeMinutes(post.body);
 	description={post.data.description}
 	ogType="article"
 	publishedTime={post.data.pubDate}
+	narrow
+	crumbs={[
+		{ label: 'Home', href: '/' },
+		/* The domain, not /posts: an entry has exactly one domain, so it is the only
+		   step that is genuinely above this page. /posts is a route prefix with no
+		   index behind it, and a crumb that leads nowhere is worse than no crumb.
+		   Every published entry's domain has a page, since those pages are generated
+		   from the domains that published entries actually use. */
+		{ label: domainLabel(post.data.domain), href: `/domains/${post.data.domain}` },
+		{ label: post.data.title },
+	]}
 >
 	<article class="mx-auto max-w-2xl">
 		<header>

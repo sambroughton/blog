@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import logo from '../assets/logo.png';
 import { NAV, SITE } from '../consts';
 import { getPublishedPosts, topicsByDomain } from '../lib/collections';
 import { withBase } from '../lib/paths';
@@ -14,25 +16,53 @@ const groups = topicsByDomain(await getPublishedPosts());
 
 <header class="border-rule border-b">
 	<div
-		class="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-5 py-5"
+		class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-5"
 	>
-		{/* Brand stacked over its tagline, as in sb-blog's header. */}
-		<div class="min-w-0">
+		{
+			/* Brand stacked over its tagline, as in sb-blog's header, with the mark set
+			   alongside the pair rather than against either line on its own.
+
+			   One link around the whole brand rather than a separate one on the mark:
+			   two adjacent links to the same page would give keyboard users two tab
+			   stops and screen readers two announcements for a single destination. The
+			   accessible name therefore runs "Sam's Blog Powered by learning...", which
+			   is the visible text verbatim - deliberately not overridden with an
+			   aria-label, since that would drop wording the reader can see. */
+		}
+		<a href={withBase('/')} class="flex min-w-0 items-center gap-3">
 			{
-				/* No hover colour on the brand: the wordmark should read as the site's
-			    identity, not as another accent link. */
+				/* Sized to the exact height of the two lines beside it, so its top and
+				   bottom edges land on theirs: the title's line box (text-xl, 1.25rem at
+				   a 1.4 ratio = 1.75rem) plus the tagline's mt-1 (0.25rem) plus the
+				   tagline's own line box (0.6rem inheriting the 1.5 from preflight =
+				   0.9rem). The file is cropped to the mark, so this is the glyph's
+				   height rather than a padded box. alt is empty because the site name
+				   sits immediately to the right and says the same thing.
+
+				   Eager: it sits in the header on every page, so Astro's lazy default
+				   would only delay a 7KB image that is always in the first viewport. */
 			}
-			<a href={withBase('/')} class="font-display text-text block text-xl font-bold">
-				{SITE.name}
-			</a>
-			{
-				/* Set as authored rather than uppercased, and the 0.1em tracking went with
-			    the caps: that letterspacing exists to open up all-caps and reads as
-			    gappy in mixed case. Short enough to hold one line on a phone, so it is
-			    not hidden below sm. */
-			}
-			<p class="text-text-3 mt-1 text-[0.6rem]">{SITE.tagline}</p>
-		</div>
+			<Image src={logo} alt="" loading="eager" class="h-[2.9rem] w-auto shrink-0" />
+
+			<span class="block min-w-0">
+				{
+					/* No hover colour on the brand: the wordmark should read as the site's
+				    identity, not as another accent link. Spans rather than an h1/p pair,
+				    because this sits inside the anchor now and a heading in the masthead
+				    would compete with each page's own h1. */
+				}
+				<span class="font-display text-text block text-xl font-bold">
+					{SITE.name}
+				</span>
+				{
+					/* Set as authored rather than uppercased, and the 0.1em tracking went with
+				    the caps: that letterspacing exists to open up all-caps and reads as
+				    gappy in mixed case. Short enough to hold one line on a phone, so it is
+				    not hidden below sm. */
+				}
+				<span class="text-text-3 mt-1 block text-[0.6rem]">{SITE.tagline}</span>
+			</span>
+		</a>
 
 		<nav aria-label="Primary" class="flex items-center gap-6 text-[0.72rem]">
 			{

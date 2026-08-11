@@ -8,6 +8,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <BaseLayout
 	title="Disclaimer"
 	description="Educational use, professional advice, third-party trademarks, liability and intellectual property terms for this blog."
+	narrow
+	crumbs={[{ label: 'Home', href: '/' }, { label: 'Disclaimer' }]}
 >
 	{
 		/* Centred to match the article pages. sb-blog left-aligns its reading columns,

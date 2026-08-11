@@ -1,5 +1,6 @@
 ---
 import { formatDayMonth, isoDate, type Post } from '../lib/collections';
+import { entryTint } from '../lib/entryTints';
 import { withBase } from '../lib/paths';
 import { readingTimeMinutes } from '../lib/readingTime';
 import EntryMeta from './EntryMeta.astro';
@@ -35,18 +36,39 @@ const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles
 			<p class="text-text-2 py-10 text-sm">{emptyMessage}</p>
 		) : (
 			<ol class="mt-2">
-				{posts.map((post) => {
+				{posts.map((post, index) => {
 					const minutes = readingTimeMinutes(post.body);
-					// Mini-card hover, ported from sb-blog's .mini: the ground lifts to
-					// surface-2 and the border brightens to rule-bright. Deliberately
-					// without that card's title underline. The border is transparent at
-					// rest rather than absent, so the row materialises under the cursor
-					// without putting a permanent rule in the list and without shifting
-					// layout. -mx-4/px-4 keeps the text aligned with the section heading
-					// while letting the fill bleed past it.
+					// The row is a hover reveal: a colour wash cross-fades in at 0.60
+					// under two scrims, a 1px bar rises up the left edge and the copy
+					// slides 10px right. Geometry and timing are in .entry-row in
+					// global.css; the gradient comes from lib/entryTints.ts and is handed
+					// over as --entry-tint.
+					//
+					// posts.length, not a fixed palette size: the hue ramp spans the whole
+					// list, so the first row is indigo and the last is cyan-ish however
+					// many there are. Nothing cycles.
+					//
+					// This replaces the sb-blog .mini treatment that was here (ground
+					// lifting to surface-2, border brightening to rule-bright). The rule
+					// is now permanent and drawn by .entry-row::before, so it needs no
+					// transparent border holding a slot open against layout shift.
+					// -mx-4/px-4 stays: it keeps the text aligned with the section
+					// heading while letting the wash bleed past it on both sides.
 					return (
-						<li class="group hover:border-rule-bright hover:bg-surface-2 -mx-4 border border-transparent px-4 py-5 transition-colors duration-200">
-							<div class="sm:flex sm:gap-6">
+						<li
+							class="entry-row -mx-4 px-4 py-5"
+							style={`--entry-tint: ${entryTint(index, posts.length)}`}
+						>
+							{/* Decorative. The wash and the bar say nothing the row does not
+							    already say in text, so they are hidden rather than described. */}
+							<div class="entry-row__reveal" aria-hidden="true">
+								<div class="entry-row__tint" />
+								<div class="entry-row__scrim entry-row__scrim--x" />
+								<div class="entry-row__scrim entry-row__scrim--y" />
+							</div>
+							<div class="entry-row__bar" aria-hidden="true" />
+
+							<div class="entry-row__body sm:flex sm:gap-6">
 								<time
 									datetime={isoDate(post.data.pubDate)}
 									class="text-text-3 block shrink-0 text-[0.72rem] leading-5 sm:w-16"
@@ -57,7 +79,13 @@ const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles
 
 								<div class="mt-1 min-w-0 sm:mt-0">
 									<h3 class="font-display text-base leading-snug font-bold">
-										<a href={withBase(`/posts/${post.id}`)} class="text-text no-underline">
+										{/* __link stretches this anchor over the whole row, so the row
+										    is clickable while remaining one link with the title as its
+										    accessible name. */}
+										<a
+											href={withBase(`/posts/${post.id}`)}
+											class="entry-row__title entry-row__link text-text no-underline"
+										>
 											{post.data.title}
 										</a>
 									</h3>
@@ -67,7 +95,7 @@ const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles
 									</p>
 
 									<div class="mt-2.5">
-										<EntryMeta domain={post.data.domain} minutes={minutes} />
+										<EntryMeta domain={post.data.domain} minutes={minutes} subtle />
 									</div>
 								</div>
 							</div>

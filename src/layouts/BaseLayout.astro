@@ -1,6 +1,8 @@
 ---
 import { SITE } from '../consts';
+import type { Crumb } from '../lib/breadcrumbs';
 import { withBase } from '../lib/paths';
+import Breadcrumb from '../components/Breadcrumb.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 
@@ -21,9 +23,28 @@ interface Props {
 	/** Set for article pages so Open Graph reports the right type. */
 	ogType?: 'website' | 'article';
 	publishedTime?: Date;
+	/**
+	 * Trail shown above the content, first crumb to last. Omitted on the home
+	 * page, which is where every trail starts, and on 404, which has nowhere
+	 * meaningful to sit in the hierarchy.
+	 */
+	crumbs?: Crumb[];
+	/**
+	 * Set by pages that centre their content in the 2xl reading column rather
+	 * than filling the 5xl main, so the trail lines up with the copy under it
+	 * instead of starting at the far left of a much wider box.
+	 */
+	narrow?: boolean;
 }
 
-const { title, description = SITE.description, ogType = 'website', publishedTime } = Astro.props;
+const {
+	title,
+	description = SITE.description,
+	ogType = 'website',
+	publishedTime,
+	crumbs = [],
+	narrow = false,
+} = Astro.props;
 
 const pageTitle = title ? `${title} | ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`;
 
@@ -43,8 +64,13 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : As
 		<link rel="canonical" href={canonical} />
 		<meta name="generator" content={Astro.generator} />
 
-		<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
-		<link rel="icon" href={withBase('/favicon.ico')} />
+		{
+			/* The .ico holds 16/32/48 for the tab strip and bookmarks bar; the 512 PNG
+		    is what desktop shortcuts and Android home screens reach for. No SVG
+		    variant, since the mark is raster art rather than paths. */
+		}
+		<link rel="icon" href={withBase('/favicon.ico')} sizes="16x16 32x32 48x48" />
+		<link rel="icon" type="image/png" href={withBase('/favicon.png')} sizes="512x512" />
 		<link
 			rel="alternate"
 			type="application/rss+xml"
@@ -76,6 +102,13 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : As
 		<SiteHeader />
 
 		<main id="main" class="mx-auto max-w-5xl px-5 py-10">
+			{
+				crumbs.length > 0 && (
+					<div class={narrow ? 'mx-auto max-w-2xl' : undefined}>
+						<Breadcrumb crumbs={crumbs} />
+					</div>
+				)
+			}
 			<slot />
 		</main>
 

@@ -1,0 +1,89 @@
+---
+import type { Crumb } from '../lib/breadcrumbs';
+import { absoluteUrl, withBase } from '../lib/paths';
+
+interface Props {
+	crumbs: Crumb[];
+}
+
+const { crumbs } = Astro.props;
+
+// Structured data for the same trail rendered below, built from the same array
+// in the same file. Mirroring is structural rather than a convention someone has
+// to remember: there is no second list to update, so the two cannot disagree.
+//
+// `item` is omitted on the last crumb, which Google reads as the URL of the
+// containing page. Positions are 1-based.
+// https://developers.google.com/search/docs/appearance/structured-data/breadcrumb
+const breadcrumbList = {
+	'@context': 'https://schema.org',
+	'@type': 'BreadcrumbList',
+	itemListElement: crumbs.map((crumb, index) => ({
+		'@type': 'ListItem',
+		position: index + 1,
+		name: crumb.label,
+		// absoluteUrl() applies the same base as the rendered href and returns a
+		// fully-qualified URL, which is the only form the spec's examples use. It
+		// throws if `site` is ever dropped from astro.config.mjs, failing the build
+		// rather than shipping relative URLs no crawler can resolve.
+		...(crumb.href ? { item: absoluteUrl(crumb.href, Astro.site) } : {}),
+	})),
+};
+
+// Escaped to its < form: valid JSON with identical meaning, and it stops a
+// label that happened to contain a closing script tag from ending the element
+// early. Labels come from trusted frontmatter, so this is belt and braces.
+const breadcrumbJson = JSON.stringify(breadcrumbList).replace(/</g, '\\u003c');
+---
+
+{
+	/* A filesystem-style path, set in the mono face the rest of the site uses for
+	   data. An ordered list because the steps are a sequence, not a set, and
+	   aria-label distinguishes it from the primary nav and the entry nav.
+
+	   Colour lives in global.css alongside the other navigation components, since
+	   the trail runs a scale of its own that sits below the palette's quietest
+	   token. Layout stays here.
+
+	   Separators are decorative: they carry no meaning a screen reader needs, and
+	   spelling "slash" between every step is noise, hence aria-hidden. They are
+	   real elements rather than ::before content because generated content is
+	   announced by some screen readers, which would defeat the point. */
+}
+<nav aria-label="Breadcrumb" class="breadcrumb mb-8">
+	<ol class="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-mono text-[0.68rem]">
+		{
+			crumbs.map((crumb, index) => (
+				<li class="flex min-w-0 items-center gap-x-1.5">
+					{index > 0 && (
+						<span class="breadcrumb__separator" aria-hidden="true">
+							/
+						</span>
+					)}
+
+					{crumb.href ? (
+						<a href={withBase(crumb.href)}>{crumb.label}</a>
+					) : (
+						/* The current page. Entry titles run long enough to wrap the trail onto
+						   a second line on a phone, so the label is clipped rather than
+						   shortened in the markup: the full text stays in the DOM for screen
+						   readers and for the structured data, and only the rendering is cut. */
+						<span
+							class="inline-block max-w-[24ch] truncate align-bottom sm:max-w-[42ch]"
+							aria-current="page"
+						>
+							{crumb.label}
+						</span>
+					)}
+				</li>
+			))
+		}
+	</ol>
+</nav>
+
+{
+	/* is:inline so Astro leaves the tag alone rather than treating it as a script
+    to process. Placement in the body is supported:
+    https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data */
+}
+<script type="application/ld+json" is:inline set:html={breadcrumbJson} />

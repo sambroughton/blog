@@ -25,7 +25,15 @@ const { label, posts, allPosts } = Astro.props;
 const showSidebar = shouldShowSidebar(allPosts.length);
 ---
 
-<BaseLayout title={label} description={`Entries in ${label}.`}>
+{
+	/* Two steps, not three: there is no domain index route to sit between home and
+	   a single domain, and the eyebrow above the heading already says "Domain". */
+}
+<BaseLayout
+	title={label}
+	description={`Entries in ${label}.`}
+	crumbs={[{ label: 'Home', href: '/' }, { label }]}
+>
 	<p class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Domain</p>
 	<h1 class="font-display text-text mt-1 mb-6 text-2xl font-bold">{label}</h1>
 

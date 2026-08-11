@@ -24,7 +24,17 @@ const { label, posts, allPosts } = Astro.props;
 const showSidebar = shouldShowSidebar(allPosts.length);
 ---
 
-<BaseLayout title={label} description={`Entries involving ${label}.`}>
+<BaseLayout
+	title={label}
+	description={`Entries involving ${label}.`}
+	crumbs={[
+		{ label: 'Home', href: '/' },
+		/* The technology list lives in a section of the topics index rather than on
+		   a route of its own, so the step up points at that section. */
+		{ label: 'Technologies', href: '/topics#technologies' },
+		{ label },
+	]}
+>
 	<p class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Technology</p>
 	<h1 class="font-display text-text mt-1 mb-6 text-2xl font-bold">{label}</h1>
 

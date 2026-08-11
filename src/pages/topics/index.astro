@@ -13,7 +13,11 @@ const technologies = technologyFacets(posts);
     domain so the specific subjects are read in the context of the discipline
     they belong to, rather than as one flat alphabetical list. */
 }
-<BaseLayout title="Topics" description="Browse entries by subject or by the product involved.">
+<BaseLayout
+	title="Topics"
+	description="Browse entries by subject or by the product involved."
+	crumbs={[{ label: 'Home', href: '/' }, { label: 'Topics' }]}
+>
 	<h1 class="font-display text-text text-2xl font-bold">Topics</h1>
 	<p class="text-text-2 mt-1.5 max-w-[52ch] text-sm">
 		The specific subjects covered so far, grouped by the domain they sit in. Domains are the broad
@@ -55,7 +59,10 @@ const technologies = technologyFacets(posts);
 
 	{
 		technologies.length > 0 && (
-			<section class="mt-14">
+			/* Named so the breadcrumb on a single technology page has a real place to
+			   point at: this list is the technology index, there is no /technologies
+			   route of its own. */
+			<section id="technologies" class="mt-14">
 				<h2 class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Technologies</h2>
 				<p class="text-text-2 mt-1.5 max-w-[52ch] text-sm">
 					The products and services these entries involve.

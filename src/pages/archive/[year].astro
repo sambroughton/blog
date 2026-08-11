@@ -22,7 +22,11 @@ const { year, posts, allPosts } = Astro.props;
 const showSidebar = shouldShowSidebar(allPosts.length);
 ---
 
-<BaseLayout title={`Archive ${year}`} description={`Entries published in ${year}.`}>
+<BaseLayout
+	title={`Archive ${year}`}
+	description={`Entries published in ${year}.`}
+	crumbs={[{ label: 'Home', href: '/' }, { label: `Archive ${year}` }]}
+>
 	<h1 class="font-display text-text mb-6 text-2xl font-bold">{year}</h1>
 
 	<div class={showSidebar ? 'grid gap-10 md:grid-cols-[1fr_15rem]' : ''}>

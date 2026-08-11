@@ -7,25 +7,41 @@ interface Props {
 	minutes: number;
 	/** Render the domain as a link to its listing. */
 	linked?: boolean;
+	/**
+	 * Quiet variant for the ledger rows, where the row's own hover wash is the
+	 * emphasis. Off by default, so the article page is unaffected.
+	 */
+	subtle?: boolean;
 }
 
-const { domain, minutes, linked = true } = Astro.props;
+const { domain, minutes, linked = true, subtle = false } = Astro.props;
 
 // Outlined chip, so the domain reads as a label rather than as body text. The
 // listing shows this and the reading time only; topics and technologies are
 // richer than a list row needs and live on the article page instead.
-const chip =
-	'inline-block border border-rule px-2 py-0.5 text-[0.68rem] tracking-[0.12em] uppercase text-blue';
+//
+// The subtle variant drops the outline for the ledger rows. Two reasons: a blue
+// chip on every row competes with the hover wash for the same attention, and the
+// outline stacked under the row's permanent bottom rule read as two boxes. Mono
+// and uppercase at the row's quiet grey is enough to keep it a label rather than
+// body text, which is what the outline was for. It also lifts itself back above
+// the row's stretched link, or it would stop being clickable.
+const chip = subtle
+	? 'entry-row__tag relative z-[2] inline-block font-mono text-[0.68rem] tracking-[0.14em] uppercase text-text-3'
+	: 'inline-block border border-rule px-2 py-0.5 text-[0.68rem] tracking-[0.12em] uppercase text-blue';
+
+// The subtle chip's timing lives with the rest of the row's hover in global.css,
+// so it brightens in step with the title rather than on its own clock.
+const chipHover = subtle
+	? 'hover:text-text-2'
+	: 'hover:border-rule-bright hover:text-blue-bright transition-colors';
 ---
 
 {/* The domain is rendered as text, never colour alone, per WCAG 1.4.1. */}
 <div class="text-text-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.72rem]">
 	{
 		linked ? (
-			<a
-				href={withBase(`/domains/${domain}`)}
-				class={`${chip} hover:border-rule-bright hover:text-blue-bright transition-colors`}
-			>
+			<a href={withBase(`/domains/${domain}`)} class={`${chip} ${chipHover}`}>
 				{domainLabel(domain)}
 			</a>
 		) : (

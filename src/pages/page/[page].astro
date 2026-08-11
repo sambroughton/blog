@@ -29,7 +29,10 @@ export const getStaticPaths = (async () => {
 const { pagePosts, allPosts, currentPage, lastPage } = Astro.props;
 ---
 
-<BaseLayout title={`Page ${currentPage}`}>
+<BaseLayout
+	title={`Page ${currentPage}`}
+	crumbs={[{ label: 'Home', href: '/' }, { label: `Page ${currentPage}` }]}
+>
 	<LedgerView
 		pagePosts={pagePosts}
 		allPosts={allPosts}
