@@ -65,12 +65,22 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : As
 		<meta name="generator" content={Astro.generator} />
 
 		{
-			/* The .ico holds 16/32/48 for the tab strip and bookmarks bar; the 512 PNG
-		    is what desktop shortcuts and Android home screens reach for. No SVG
-		    variant, since the mark is raster art rather than paths. */
+			/* The SVG is the mark itself and scales to any tab or bookmark size, so it is
+		    declared with `sizes="any"` and wins wherever it is understood. Everything
+		    below it is the fallback for browsers that ignore SVG icons, Safari among
+		    them: the .ico for the Windows tab strip and bookmarks bar, the PNGs for
+		    everything that would rather have one. 512 is what desktop shortcuts and
+		    Android home screens reach for. Order is not what decides between them -
+		    a browser picks by type support and declared size, not by position.
+
+		    Every one of these is generated from favicon.svg by `npm run favicons`,
+		    so the mark cannot drift between formats. Do not hand-edit them. */
 		}
+		<link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} sizes="any" />
 		<link rel="icon" href={withBase('/favicon.ico')} sizes="16x16 32x32 48x48" />
-		<link rel="icon" type="image/png" href={withBase('/favicon.png')} sizes="512x512" />
+		<link rel="icon" type="image/png" href={withBase('/favicon-512.png')} sizes="512x512" />
+		<link rel="icon" type="image/png" href={withBase('/favicon-32.png')} sizes="32x32" />
+		<link rel="icon" type="image/png" href={withBase('/favicon-16.png')} sizes="16x16" />
 		<link
 			rel="alternate"
 			type="application/rss+xml"

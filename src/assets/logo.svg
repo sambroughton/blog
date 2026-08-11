@@ -1,0 +1,19 @@
+<!-- White SB monogram with a two-tone blue detached lower-left accent.
+
+     Inlined by SiteHeader as decoration beside the wordmark, which already says
+     "Sam's Blog", so the file carries no role/aria-labelledby/title/desc: named
+     twice is worse than not named at all, and the usage site passes
+     aria-hidden="true". Anything reusing this standalone must label it there.
+
+     Paths and the blueAccent gradient are identical to public/favicon.svg,
+     which is the same mark on a plate. Change one, change both. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 702 521">
+  <defs>
+    <linearGradient id="blueAccent" x1="18" y1="502" x2="314" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1746B8"/>
+      <stop offset="1" stop-color="#3B82F6"/>
+    </linearGradient>
+  </defs>
+  <path d="M 140 59 L 121 95 L 89 234 L 96 265 L 124 278 L 327 274 L 345 185 L 200 180 L 206 132 L 222 114 L 544 113 L 512 147 L 468 173 L 385 186 L 365 276 L 501 278 L 514 292 L 509 320 L 493 335 L 350 336 L 326 431 L 538 434 L 572 422 L 601 395 L 616 367 L 638 284 L 637 248 L 609 228 L 516 225 L 565 203 L 616 157 L 658 89 L 683 18 L 220 18 L 171 33 Z" fill="#FFFFFF" fill-rule="evenodd"/>
+  <path d="M 313 322 L 310 320 L 263 321 L 216 330 L 166 347 L 135 363 L 94 393 L 61 427 L 36 464 L 18 502 L 69 471 L 101 457 L 139 444 L 160 439 L 199 434 L 287 433 L 291 428 L 314 332 Z" fill="url(#blueAccent)" fill-rule="evenodd"/>
+</svg>

@@ -1,6 +1,9 @@
 ---
-import { Image } from 'astro:assets';
-import logo from '../assets/logo.png';
+// Imported as a component rather than through <Image />, which does not accept
+// SVG: Astro inlines the file's markup at build time instead of optimising it as
+// a raster asset. Stable since Astro 5.7.
+// https://docs.astro.build/en/guides/images/#svg-components
+import Logo from '../assets/logo.svg';
 import { NAV, SITE } from '../consts';
 import { getPublishedPosts, topicsByDomain } from '../lib/collections';
 import { withBase } from '../lib/paths';
@@ -55,14 +58,27 @@ const groups = topicsByDomain(await getPublishedPosts());
 				   bottom edges land on theirs: the title's line box (text-xl, 1.25rem at
 				   a 1.4 ratio = 1.75rem) plus the tagline's mt-1 (0.25rem) plus the
 				   tagline's own line box (0.6rem inheriting the 1.5 from preflight =
-				   0.9rem). The file is cropped to the mark, so this is the glyph's
-				   height rather than a padded box. alt is empty because the site name
-				   sits immediately to the right and says the same thing.
+				   0.9rem). The viewBox is cropped to the mark, so this is the glyph's
+				   height rather than a padded box, and w-auto lets the 702x521 ratio set
+				   the width.
 
-				   Eager: it sits in the header on every page, so Astro's lazy default
-				   would only delay a 7KB image that is always in the first viewport. */
+				   aria-hidden rather than the alt="" this carried as a raster image, and
+				   the inline equivalent of it: the site name sits immediately to the right
+				   and says the same thing, so the mark is decoration. The asset carries no
+				   title/desc of its own to be announced instead - that decision lives here,
+				   at the point of use, because it is a fact about this placement.
+
+				   Nothing to lazy-load or preload any more - the markup ships inside the
+				   document, so the mark costs no request on any page.
+
+				   width/height repeat the viewBox and are overridden by the classes above;
+				   they are here so the element has intrinsic dimensions of its own. As a
+				   raster <img> that came from the file, which is what let w-auto resolve
+				   against the real ratio. An inline <svg> carrying only a viewBox leaves
+				   that to the engine deriving a ratio from it, and an engine that does not
+				   falls back to width:auto meaning "fill the line". */
 			}
-			<Image src={logo} alt="" loading="eager" class="h-[2.9rem] w-auto shrink-0" />
+			<Logo width={702} height={521} class="h-[2.9rem] w-auto shrink-0" aria-hidden="true" />
 
 			<span class="block min-w-0">
 				{
