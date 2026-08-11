@@ -46,7 +46,7 @@ const {
 	narrow = false,
 } = Astro.props;
 
-const pageTitle = title ? `${title} | ${SITE.name}` : `${SITE.name} — ${SITE.tagline}`;
+const pageTitle = title ? `${title} | ${SITE.name}` : `${SITE.name} - ${SITE.shortTagline}`;
 
 // Astro.url.pathname already includes `base`, so this must NOT go through
 // withBase() or the prefix would be doubled.

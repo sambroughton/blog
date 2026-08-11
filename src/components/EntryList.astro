@@ -35,7 +35,11 @@ const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles
 		posts.length === 0 ? (
 			<p class="text-text-2 py-10 text-sm">{emptyMessage}</p>
 		) : (
-			<ol class="mt-2">
+			<ol>
+				{/* No top margin: the first row sits flush under the heading's border-b so
+				    that rule is its separator, exactly as each row's own bottom rule is the
+				    separator for the row beneath it. Every row then has the same 1.25rem
+				    (py-5) between the rule above it and its own copy. */}
 				{posts.map((post, index) => {
 					const minutes = readingTimeMinutes(post.body);
 					// The row is a hover reveal: a colour wash cross-fades in at 0.60
