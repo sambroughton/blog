@@ -31,7 +31,26 @@ const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-blue';
 // /topics.
 ---
 
-<aside class="space-y-8" aria-label="Browse entries">
+{
+	/* Sticky from md up, which is where the rail becomes a column beside the list
+	   rather than a block stacked under it. Below that it is the last thing on the
+	   page and there is nothing left to scroll past, so pinning it there would only
+	   park it over the footer.
+
+	   self-start is what makes the sticking work at all, and is easy to lose: a
+	   grid item stretches to the height of its row by default, so the box would
+	   already be as tall as the entry list beside it and have no travel to stick
+	   through. Shrinking it to its own content is what leaves room to move.
+
+	   top-10 matches the py-10 on <main>, so the gap above it once pinned is the
+	   same as the gap it starts with. No offset for the header, which scrolls away
+	   rather than sticking.
+
+	   No max-height or overflow guard: the rail is one heading and a wrapped row of
+	   years, so it cannot outgrow the viewport and become partly unreachable. That
+	   changes if a section is ever added back to it. */
+}
+<aside class="space-y-8 md:sticky md:top-10 md:self-start" aria-label="Browse entries">
 	{
 		years.length > 0 && (
 			<nav aria-labelledby="sb-archive">
