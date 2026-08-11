@@ -13,6 +13,8 @@
 export const SITE = {
 	name: "Sam's Blog",
 	tagline: 'Powered by learning. Engineered for defence.',
+	/** Short form of the tagline, for the browser tab where space is tight. */
+	shortTagline: 'Powered by learning',
 	description:
 		'Field reports, detection queries and deployment notes on Microsoft security engineering: Entra ID, Defender XDR, Sentinel and Azure.',
 	author: 'Sam Broughton',
