@@ -2,12 +2,13 @@
 import type { GetStaticPaths } from 'astro';
 import { Image } from 'astro:assets';
 import { render } from 'astro:content';
-import EntryMeta from '../../components/EntryMeta.astro';
-import { domainLabel, technologyLabel, topicLabel } from '../../consts';
+import CategoryTag from '../../components/CategoryTag.astro';
+import TopicLink from '../../components/TopicLink.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { formatDate, getPublishedPosts, isoDate } from '../../lib/collections';
+import { formatDate, getPublishedPosts, isoDate, primaryCategory } from '../../lib/collections';
 import { withBase } from '../../lib/paths';
 import { readingTimeMinutes } from '../../lib/readingTime';
+import { slugify } from '../../lib/slug';
 
 export const getStaticPaths = (async () => {
 	const posts = await getPublishedPosts();
@@ -37,12 +38,16 @@ const minutes = readingTimeMinutes(post.body);
 	narrow
 	crumbs={[
 		{ label: 'Home', href: '/' },
-		/* The domain, not /posts: an entry has exactly one domain, so it is the only
-		   step that is genuinely above this page. /posts is a route prefix with no
-		   index behind it, and a crumb that leads nowhere is worse than no crumb.
-		   Every published entry's domain has a page, since those pages are generated
-		   from the domains that published entries actually use. */
-		{ label: domainLabel(post.data.domain), href: `/domains/${post.data.domain}` },
+		/* The primary category, not /posts: /posts is a route prefix with no index
+		   behind it, and a crumb that leads nowhere is worse than no crumb. An entry
+		   can name several categories, so this trail picks the first - the one the
+		   entry is about - rather than offering a fork. Every published entry's
+		   categories have a page, since those pages are generated from the categories
+		   published entries actually use. */
+		{
+			label: primaryCategory(post),
+			href: `/categories/${slugify(primaryCategory(post))}`,
+		},
 		{ label: post.data.title },
 	]}
 >
@@ -63,53 +68,44 @@ const minutes = readingTimeMinutes(post.body);
 			</p>
 
 			<div class="border-rule mt-5 border-b pb-5">
-				<div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-					<time datetime={isoDate(post.data.pubDate)} class="text-text-3 text-[0.72rem]">
+				{
+					/* Date and reading time only on this line. The category is not repeated
+				    here the way it is on a ledger row: it sits in the list below with the
+				    topics, where the two vocabularies can be read against each other. */
+				}
+				<div class="text-text-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.72rem]">
+					<time datetime={isoDate(post.data.pubDate)}>
 						{formatDate(post.data.pubDate)}
 					</time>
-					<EntryMeta domain={post.data.domain} minutes={minutes} />
+					<span>{minutes} min</span>
 				</div>
 
 				{
-					/* The richer taxonomy belongs here rather than in the listing: a row in a
-				    list needs only the discipline, but a reader who has opened the entry
-				    is the one who might follow a specific subject or product sideways.
-				    A description list, since each row is a name and its values. */
+					/* Both vocabularies in full, which is what separates this page from a
+				    ledger row: a row shows the primary category alone, but a reader who
+				    has opened the entry is the one who might follow a specific subject or
+				    product sideways. A description list, since each row is a name and its
+				    values.
+
+				    Categories first and tagged, topics second and plainer, which is the
+				    same order of weight the rest of the site gives them. */
 				}
-				<dl class="mt-4 grid gap-y-1.5 text-[0.72rem]">
-					<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+				<dl class="mt-4 grid gap-y-2 text-[0.72rem]">
+					<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
 						<dt class="text-text-3 w-24 shrink-0 text-[0.63rem] tracking-[0.12em] uppercase">
-							Topics
+							Categories
 						</dt>
-						<dd class="flex flex-wrap gap-x-3 gap-y-1">
-							{
-								post.data.topics.map((topic) => (
-									<a
-										href={withBase(`/topics/${topic}`)}
-										class="text-text-2 hover:text-blue transition-colors"
-									>
-										{topicLabel(topic)}
-									</a>
-								))
-							}
+						<dd class="flex flex-wrap gap-1.5">
+							{post.data.categories.map((category) => <CategoryTag label={category} />)}
 						</dd>
 					</div>
 
-					<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+					<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
 						<dt class="text-text-3 w-24 shrink-0 text-[0.63rem] tracking-[0.12em] uppercase">
-							Technologies
+							Topics
 						</dt>
-						<dd class="flex flex-wrap gap-x-3 gap-y-1">
-							{
-								post.data.technologies.map((technology) => (
-									<a
-										href={withBase(`/technologies/${technology}`)}
-										class="text-text-2 hover:text-blue transition-colors"
-									>
-										{technologyLabel(technology)}
-									</a>
-								))
-							}
+						<dd class="flex flex-wrap gap-1.5">
+							{post.data.topics.map((topic) => <TopicLink label={topic} />)}
 						</dd>
 					</div>
 				</dl>

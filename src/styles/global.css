@@ -112,18 +112,18 @@ h4 {
 	transform: scaleX(1);
 }
 
-/* Topics menu -------------------------------------------------------------
+/* Categories menu -----------------------------------------------------------
    A button plus a floating panel rather than a native <details>: the design
    calls for opening on hover, an enter and exit transition, and pointer-events
    off while closed, none of which <details> can give, since it hides its own
    content outright rather than styling it away. The trade is that the menu now
    needs JavaScript, so the header carries a <noscript> fallback that swaps the
-   trigger for a plain link to the topics index.
+   trigger for a plain link to the categories index.
 
    Colours in this block are literal rather than @theme tokens: the panel is
    specified as its own small palette, a touch deeper and cooler than
    --color-surface, and is not shared with anything else on the site. */
-.nav-topics {
+.nav-dropdown {
 	position: relative;
 	display: flex;
 	align-items: center;
@@ -134,14 +134,16 @@ h4 {
 	align-self: stretch;
 }
 
-.nav-topics__trigger {
+.nav-dropdown__trigger {
 	padding: 0;
 	border: 0;
 	background: none;
 	font: inherit;
 }
 
-.nav-topics__trigger svg {
+/* The caret only. Scoped to the direct child so the glyphs inside the panel's
+   rows, which are also svg, are not caught by it and do not rotate with it. */
+.nav-dropdown__trigger > svg {
 	transition: transform 160ms ease;
 }
 
@@ -150,11 +152,11 @@ h4 {
    holds its colour - the underline and the caret are the two signals, and a
    third one tinting the text would make the trigger the loudest thing in the
    header while the panel is up. */
-.nav-topics[data-open] .nav-topics__trigger::after {
+.nav-dropdown[data-open] .nav-dropdown__trigger::after {
 	transform: scaleX(1);
 }
 
-.nav-topics[data-open] .nav-topics__trigger svg {
+.nav-dropdown[data-open] .nav-dropdown__trigger > svg {
 	transform: rotate(180deg);
 }
 
@@ -163,12 +165,13 @@ h4 {
 	top: calc(100% + 1.25rem + 10px);
 	right: 0;
 	z-index: 30;
-	width: 300px;
-	/* Only bites if the taxonomy ever outgrows the viewport; until then the panel
-	   is sized by its content and never scrolls. */
-	max-height: 70vh;
-	overflow-y: auto;
-	padding: 10px 0 6px;
+	/* Sized to hold the longest label on one line. That is "Defender for Office
+	   365" since the "Microsoft " prefix came off the catalogue - with it the
+	   labels had to wrap onto two lines and this was 232px. The list is built from
+	   published categories, so it can grow at build time; max-height is omitted
+	   because the catalogue is eight entries. */
+	width: 204px;
+	padding: 6px 0;
 	background: #0b101b;
 	border: 1px solid #1b2740;
 	border-radius: 5px;
@@ -186,7 +189,7 @@ h4 {
 		visibility 0s linear 220ms;
 }
 
-.nav-topics[data-open] .nav-menu {
+.nav-dropdown[data-open] .nav-menu {
 	opacity: 1;
 	transform: translateY(0);
 	visibility: visible;
@@ -201,36 +204,23 @@ h4 {
    already cut the durations. */
 @media (prefers-reduced-motion: reduce) {
 	.nav-menu,
-	.nav-topics[data-open] .nav-menu {
+	.nav-dropdown[data-open] .nav-menu {
 		transform: none;
 	}
-}
-
-/* 6px below one section and 10px above the next is the 16px that separates
-   them, so they read as groups without needing rules drawn between them. */
-.nav-menu__section {
-	padding: 10px 0 6px;
-}
-
-/* A label, not a destination: it groups the topics under it rather than
-   competing with them for the click. Hidden from assistive tech because the
-   same string is the group's aria-label, so it is announced as the group's name
-   rather than read twice. */
-.nav-menu__label {
-	padding: 0 18px 8px;
-	font-family: var(--font-mono);
-	font-size: 10px;
-	letter-spacing: 0.14em;
-	text-transform: uppercase;
-	color: #5b6a86;
 }
 
 /* Padding rather than margin, so the whole width of the panel is the hit area
    and not just the label. */
 .nav-menu__row {
-	display: block;
-	padding: 8px 18px;
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 9px 18px;
 	font-size: 14px;
+	/* Tighter than the 1.5 preflight leaves, because most of these rows are two
+	   lines: at the default the workload name drifts away from the "Microsoft
+	   Defender for" above it and the pair stops reading as one label. */
+	line-height: 1.35;
 	color: #c3d0e6;
 	transition:
 		background 150ms,
@@ -243,6 +233,31 @@ h4 {
 	color: #ffffff;
 }
 
+/* The section heading above the rows. The panel lists one vocabulary now rather
+   than the three dimensions it used to, so it says which one. */
+.nav-menu__label {
+	padding: 6px 18px 8px;
+	font-size: 0.68rem;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--color-blue);
+}
+
+/* The category glyph, wherever it appears: the header menu, the categories index
+   and the tag. One class rather than one per context, because the behaviour is
+   the same in all three - hold the product's colour while whatever is around it
+   changes.
+
+   Set outright rather than inherited, which is the point: the row's label
+   brightens to white on hover and the tag's label is the accent, so a glyph on
+   currentColor would lose the product in both. The fallback covers a caller that
+   sets no --category-color, which is a bug rather than a mode, but an accent
+   glyph is a better failure than a black one. */
+.category-glyph {
+	flex-shrink: 0;
+	color: var(--category-color, #6f9bff);
+}
+
 /* Its own ring rather than leaning on the hover tint: at 10% the tint is too
    quiet to say "the keyboard is here", and hover and focus should not be
    indistinguishable anyway. */
@@ -251,33 +266,17 @@ h4 {
 	outline-offset: -2px;
 }
 
-/* The full index is a different kind of destination from a single topic, so it
-   sits below the one rule in the panel. */
-.nav-menu__footer {
-	border-top: 1px solid #16203a;
-}
-
-.nav-menu__all {
-	display: block;
-	padding: 12px 18px 8px;
-	font-family: var(--font-mono);
-	font-size: 11px;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
-	color: #6f9bff;
-}
-
-/* Below the panel's own width there is nowhere for it to float, so Topics
+/* Below the panel's own width there is nowhere for it to float, so Explore
    expands inline instead: the nav takes a full-width row of its own and the
-   panel opens beneath the links as the same labelled sections. display:contents
-   lifts the trigger and the panel into the nav's flex flow, which is what lets
-   the panel claim a row rather than being trapped in a content-width wrapper. */
+   panel opens beneath the links as the same rows. display:contents lifts the
+   trigger and the panel into the nav's flex flow, which is what lets the panel
+   claim a row rather than being trapped in a content-width wrapper. */
 @media (max-width: 767.98px) {
 	.site-nav {
 		width: 100%;
 	}
 
-	.nav-topics {
+	.nav-dropdown {
 		display: contents;
 	}
 
@@ -291,8 +290,6 @@ h4 {
 		   above it. */
 		order: 1;
 		width: 100%;
-		max-height: none;
-		overflow: visible;
 		box-shadow: none;
 		opacity: 1;
 		transform: none;
@@ -300,15 +297,12 @@ h4 {
 		pointer-events: auto;
 	}
 
-	.nav-topics[data-open] .nav-menu {
+	.nav-dropdown[data-open] .nav-menu {
 		display: block;
 	}
 
 	/* 44px, the usual floor for a touch target. */
-	.nav-menu__row,
-	.nav-menu__all {
-		display: flex;
-		align-items: center;
+	.nav-menu__row {
 		min-height: 44px;
 	}
 }
@@ -317,7 +311,7 @@ h4 {
    The trail is the quietest thing on the page. On an entry it sits directly
    above an h1 that repeats the title, so anything louder competes with the
    heading it is meant to orient you towards. Intended order of weight:
-   h1, then the summary, then the domain/date/reading time, then this.
+   h1, then the summary, then the category/date/reading time, then this.
 
    Three values a step below --color-text-3 (#6b7fa0), deliberately literal
    rather than @theme tokens: they exist only to sit under that token for this
@@ -358,6 +352,83 @@ h4 {
    hence aria-hidden in the markup - so they stay at the edge of legibility. */
 .breadcrumb__separator {
 	color: var(--color-rule-bright);
+}
+
+/* Taxonomy tags ------------------------------------------------------------
+   Two weights for the two vocabularies, because they are not peers: a category
+   is the primary classification and a topic qualifies it. Making both look like
+   the same control would throw that away, and making either look like a button
+   would put a call to action under every headline on the site.
+
+   Both read as metadata: small, square-ish, no fill, no shadow, no glow. Hover
+   brightens the border and the text and does nothing else. Same 3px/8px box on
+   both so a category and a topic sitting on one line share a baseline and an
+   optical height, and only their colour and border separate them.
+
+   Deliberately not letter-spaced uppercase like the section labels elsewhere:
+   these carry product and subject names that are read as words, and "MICROSOFT
+   DEFENDER FOR OFFICE 365" at 0.12em is a banner rather than a tag. */
+.tag-category {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.32rem;
+	padding: 3px 8px;
+	/* The accent at low alpha rather than --color-rule: the border is what marks
+	   this as the primary vocabulary, and at full strength it would be the
+	   loudest edge in a ledger row. */
+	border: 1px solid rgb(76 141 255 / 0.32);
+	border-radius: 2px;
+	background: var(--color-surface);
+	color: var(--color-blue);
+	font-size: 0.7rem;
+	line-height: 1.35;
+	transition:
+		border-color 200ms ease,
+		color 200ms ease;
+}
+
+/* Scoped to the anchor: both tags render as a plain <span> where nothing is
+   being linked to - an unlinked tag that lights up under the pointer is telling
+   the reader it is clickable when it is not. */
+a.tag-category:hover,
+a.tag-category:focus-visible {
+	border-color: rgb(107 161 255 / 0.62);
+	color: var(--color-blue-bright);
+}
+
+/* The glyph inside a tag is .category-glyph, defined with the nav menu above,
+   since the same rule serves both. Its colour is the product's own, set inline
+   per category. Purely decorative - the glyph is aria-hidden and its label is the
+   text immediately beside it - so it is exempt from the contrast floor the
+   surrounding text is held to (WCAG 1.4.1, and 1.4.11 for non-text contrast).
+   https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html */
+
+/* The quieter half of the pair. Transparent ground and a border at the rule
+   colour, which is the faintest edge the palette has, against the category's
+   tinted ground and accent border. Text at --color-text-2 rather than the accent
+   so a row of topics does not read as a row of links competing with the one
+   category beside them. */
+.tag-topic {
+	display: inline-flex;
+	align-items: center;
+	padding: 3px 8px;
+	border: 1px solid var(--color-rule);
+	border-radius: 2px;
+	color: var(--color-text-2);
+	font-size: 0.7rem;
+	line-height: 1.35;
+	transition:
+		border-color 200ms ease,
+		color 200ms ease;
+}
+
+/* Brightens rather than tints, the same rule the breadcrumb, the sidebar and the
+   header nav follow: the thing under the pointer lights up, it does not change
+   hue. Colour is reserved for the category tag, which is the point of the pair. */
+a.tag-topic:hover,
+a.tag-topic:focus-visible {
+	border-color: var(--color-rule-bright);
+	color: var(--color-text);
 }
 
 /* Entry row ----------------------------------------------------------------
@@ -546,14 +617,23 @@ h4 {
 	content: '';
 	position: absolute;
 	inset: -1.25rem -1rem;
-	/* Over the copy, so the whole row is the target. The domain link lifts
+	/* Over the copy, so the whole row is the target. The category tag lifts
 	   itself back above this - see EntryMeta.astro. */
 	z-index: 1;
 }
 
-.entry-row__title,
-.entry-row__tag {
+.entry-row__title {
 	transition: color 260ms;
+}
+
+/* The category tag carries its own 200ms hover in the tags block above. This
+   restates the timing at the row's 260ms so that pointing anywhere on the row
+   brightens the tag on the same clock as the title, rather than the two arriving
+   a beat apart. */
+.entry-row__tag {
+	transition:
+		border-color 260ms,
+		color 260ms;
 }
 
 /* Keyboard parity: tabbing to a row brings the same wash up, so the focused row
@@ -580,8 +660,22 @@ h4 {
 	color: #fff;
 }
 
-.entry-row:focus-within .entry-row__tag {
-	color: var(--color-text-2);
+/* The same values each tag's own hover uses, so pointing at the tag and pointing
+   at the row around it land on one appearance rather than two.
+
+   Split by tag class because the row can carry either vocabulary - the category
+   on a mixed listing, the topic on a category archive where every row would
+   otherwise repeat the heading - and the two do not brighten alike. The category
+   goes to the accent; the topic lights up without changing hue, which is the
+   rule the breadcrumb, the sidebar and the header nav all follow. */
+.entry-row:focus-within .tag-category {
+	border-color: rgb(107 161 255 / 0.62);
+	color: var(--color-blue-bright);
+}
+
+.entry-row:focus-within .tag-topic {
+	border-color: var(--color-rule-bright);
+	color: var(--color-text);
 }
 
 /* Gated on a real pointer, and the only such query in this file. On a touch
@@ -610,8 +704,14 @@ h4 {
 		color: #fff;
 	}
 
-	.entry-row:hover .entry-row__tag {
-		color: var(--color-text-2);
+	.entry-row:hover .tag-category {
+		border-color: rgb(107 161 255 / 0.62);
+		color: var(--color-blue-bright);
+	}
+
+	.entry-row:hover .tag-topic {
+		border-color: var(--color-rule-bright);
+		color: var(--color-text);
 	}
 }
 

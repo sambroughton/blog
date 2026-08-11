@@ -1,86 +1,55 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getPublishedPosts, technologyFacets, topicsByDomain } from '../../lib/collections';
+import { getPublishedPosts, topicFacets } from '../../lib/collections';
 import { withBase } from '../../lib/paths';
 
+// A flat index of the subjects covered so far.
+//
+// This page previously grouped topics under a parent domain. Domains are gone
+// from the information architecture, and regrouping these under categories instead
+// would be wrong rather than merely different: a topic like KQL turns up under
+// Sentinel and Defender XDR both, so it would have to be listed twice, and the
+// grouping would imply a hierarchy the data does not have.
+//
+// Flat and alphabetical is also the right shape for how this page is used. It is
+// looked at by someone checking whether a specific subject has been covered, not
+// browsed for a progression - which is what the categories index is for.
 const posts = await getPublishedPosts();
-const groups = topicsByDomain(posts);
-const technologies = technologyFacets(posts);
+const topics = topicFacets(posts);
 ---
 
-{
-	/* The full topic browser behind the header's Topics menu. Grouped by parent
-    domain so the specific subjects are read in the context of the discipline
-    they belong to, rather than as one flat alphabetical list. */
-}
 <BaseLayout
 	title="Topics"
-	description="Browse entries by subject or by the product involved."
+	description="The technical subjects covered so far."
 	crumbs={[{ label: 'Home', href: '/' }, { label: 'Topics' }]}
 >
-	<h1 class="font-display text-text text-2xl font-bold">Topics</h1>
-	<p class="text-text-2 mt-1.5 max-w-[52ch] text-sm">
-		The specific subjects covered so far, grouped by the domain they sit in. Domains are the broad
-		disciplines; topics are what an individual entry is actually about.
+	<p class="text-blue text-[0.68rem] tracking-[0.12em] uppercase">Browse</p>
+	<h1 class="font-display text-text mt-1 text-2xl leading-tight font-bold sm:text-3xl">Topics</h1>
+	<p class="text-text-2 mt-3 max-w-[52ch] text-sm leading-relaxed">
+		The specific subjects these entries cover, within the categories they sit in.
 	</p>
 
 	{
-		groups.length === 0 ? (
+		topics.length === 0 ? (
 			<p class="text-text-2 mt-10 text-sm">No entries yet, so there is nothing to browse.</p>
 		) : (
-			<div class="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-				{groups.map((group) => (
-					<section>
-						<h2 class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">
-							<a href={withBase(`/domains/${group.id}`)} class="hover:text-blue transition-colors">
-								{group.label}
-							</a>
-						</h2>
-						<ul class="border-rule mt-3 border-t">
-							{group.topics.map((topic) => (
-								<li class="border-rule border-b">
-									<a
-										href={withBase(`/topics/${topic.id}`)}
-										class="text-text-2 hover:text-blue flex items-baseline justify-between gap-3 py-2 text-sm transition-colors"
-									>
-										<span>{topic.label}</span>
-										<span class="text-blue shrink-0 text-[0.72rem] tabular-nums">
-											{topic.count}
-										</span>
-									</a>
-								</li>
-							))}
-						</ul>
-					</section>
+			/* Three columns on a wide screen, two at sm, one below that. The grid cell
+			   is a single topic here rather than a whole group, so the list flows down
+			   the columns as one alphabetical run and the reader's eye does not have to
+			   restart at each heading - there are no headings any more. */
+			<ul class="border-rule mt-8 grid border-t sm:grid-cols-2 sm:gap-x-10 lg:grid-cols-3">
+				{topics.map((topic) => (
+					<li class="border-rule border-b">
+						<a
+							href={withBase(`/topics/${topic.slug}`)}
+							class="text-text-2 hover:text-text flex items-baseline justify-between gap-3 py-2 text-sm transition-colors"
+						>
+							<span>{topic.label}</span>
+							<span class="text-blue shrink-0 text-[0.72rem] tabular-nums">{topic.count}</span>
+						</a>
+					</li>
 				))}
-			</div>
-		)
-	}
-
-	{
-		technologies.length > 0 && (
-			/* Named so the breadcrumb on a single technology page has a real place to
-			   point at: this list is the technology index, there is no /technologies
-			   route of its own. */
-			<section id="technologies" class="mt-14">
-				<h2 class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Technologies</h2>
-				<p class="text-text-2 mt-1.5 max-w-[52ch] text-sm">
-					The products and services these entries involve.
-				</p>
-				<ul class="mt-3 flex flex-wrap gap-2">
-					{technologies.map((technology) => (
-						<li>
-							<a
-								href={withBase(`/technologies/${technology.id}`)}
-								class="border-rule text-text-2 hover:border-rule-bright hover:text-blue inline-block border px-2.5 py-1 text-[0.72rem] transition-colors"
-							>
-								{technology.label}
-								<span class="text-text-3 tabular-nums"> {technology.count}</span>
-							</a>
-						</li>
-					))}
-				</ul>
-			</section>
+			</ul>
 		)
 	}
 </BaseLayout>

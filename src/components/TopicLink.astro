@@ -1,0 +1,30 @@
+---
+import type { TopicLabel } from '../consts';
+import { withBase } from '../lib/paths';
+import { slugify } from '../lib/slug';
+
+interface Props {
+	label: TopicLabel;
+	/** Render as a link to the topic archive. Off for previews and mockups. */
+	linked?: boolean;
+	class?: string;
+}
+
+const { label, linked = true, class: className = '' } = Astro.props;
+
+// No catalogue lookup, unlike CategoryTag: a topic carries no glyph and no
+// colour, so its label is the whole of it and the slug is derived rather than
+// stored. That difference is the point - the secondary vocabulary is plainer in
+// the data as well as on the page.
+const href = withBase(`/topics/${slugify(label)}`);
+---
+
+{
+	linked ? (
+		<a href={href} class={`tag-topic ${className}`}>
+			{label}
+		</a>
+	) : (
+		<span class={`tag-topic ${className}`}>{label}</span>
+	)
+}

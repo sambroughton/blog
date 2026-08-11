@@ -4,11 +4,11 @@
 title: Rolling out attack surface reduction rules without breaking line-of-business apps
 description: Audit mode as a measurement exercise, per-rule exclusions over global ones, and the order that keeps the rollout reversible.
 pubDate: 2026-06-24
-domain: endpoint-security
+categories:
+  - Defender for Endpoint
 topics:
-  - attack-surface-reduction
-technologies:
-  - microsoft-defender-for-endpoint
+  - Attack Surface Reduction
+  - Endpoint Hardening
 draft: true
 ---
 

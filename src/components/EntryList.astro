@@ -1,5 +1,11 @@
 ---
-import { formatDayMonth, isoDate, type Post } from '../lib/collections';
+import {
+	formatDayMonth,
+	isoDate,
+	primaryCategory,
+	primaryTopic,
+	type Post,
+} from '../lib/collections';
 import { entryTint } from '../lib/entryTints';
 import { withBase } from '../lib/paths';
 import { readingTimeMinutes } from '../lib/readingTime';
@@ -11,9 +17,15 @@ interface Props {
 	label: string;
 	/** Shown when there is nothing to list. */
 	emptyMessage?: string;
+	/**
+	 * Which vocabulary each row's tag comes from. Defaults to the category, which
+	 * is right everywhere the list is mixed. A category archive passes 'topic',
+	 * because there every row's category is the page's own heading.
+	 */
+	tag?: 'category' | 'topic';
 }
 
-const { posts, label, emptyMessage = 'No entries yet.' } = Astro.props;
+const { posts, label, emptyMessage = 'No entries yet.', tag = 'category' } = Astro.props;
 
 // Honest count, correctly pluralised. A blog with one post says "1 article".
 const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles'}`;
@@ -99,7 +111,11 @@ const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles
 									</p>
 
 									<div class="mt-2.5">
-										<EntryMeta domain={post.data.domain} minutes={minutes} subtle />
+										{tag === 'category' ? (
+											<EntryMeta tag="category" label={primaryCategory(post)} minutes={minutes} />
+										) : (
+											<EntryMeta tag="topic" label={primaryTopic(post)} minutes={minutes} />
+										)}
 									</div>
 								</div>
 							</div>

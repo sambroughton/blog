@@ -5,35 +5,72 @@
 // https://docs.astro.build/en/guides/images/#svg-components
 import Logo from '../assets/logo.svg';
 import { NAV, SITE } from '../consts';
-import { getPublishedPosts, topicsByDomain } from '../lib/collections';
+import { getPublishedPosts, categoryFacets } from '../lib/collections';
 import { withBase } from '../lib/paths';
 import Chevron from './Chevron.astro';
+import Icon from './Icon.astro';
 
-// Built from the collection, so the menu can never list a topic with nothing
-// published behind it, nor miss one that just gained its first entry.
+// One menu, listing the categories themselves rather than the vocabularies they
+// belong to.
 //
-// Topics here, domains in the sidebar: the two never list the same things. No
-// counts on purpose - they earn their place on the index page, but in a menu
-// they sit between the reader and the destination.
-const groups = topicsByDomain(await getPublishedPosts());
+// This was three fixed rows to three Explore views, one per taxonomy dimension,
+// which cost a reader two clicks to reach any actual listing and asked them to
+// pick a classification scheme before they had seen anything classified.
+// Categories are now the primary vocabulary, so the header names them outright and
+// the reader arrives at a listing in one click.
+//
+// It reads the collection again as a result: only categories with something
+// published are in here, so the menu can never offer an empty archive and it
+// grows as the writing does. No counts - the panel is a way through, and the
+// numbers are on the index it ends with.
+const categories = categoryFacets(await getPublishedPosts());
 ---
 
 <noscript>
 	{
-		/* The Topics panel is JavaScript-driven, so with scripting off its trigger is
-		   swapped for the plain link further down that goes straight to the topics
-		   index, and nothing is stranded behind a dead control.
+		/* With scripting off, the trigger goes and the panel stays: it drops out of
+		   its floating box and sits under the header links as a plain list, which is
+		   the same treatment the narrow breakpoint already gives it.
 
-		   Up here rather than beside that link because the markup down there sits
-		   inside a {} expression, where the braces of a CSS rule would be read as
-		   another expression. is:inline keeps the rule in the <noscript>, which is
-		   the whole point: hoisted into the stylesheet it would hide the trigger for
-		   everyone. */
+		   This used to hide both and offer a link to the categories index instead.
+		   That index has been removed - the menu lists every category, so a page
+		   repeating them was a second copy of the same list - which left the fallback
+		   link with nowhere to point. Showing the list itself is the honest answer,
+		   and it is why the menu semantics are applied in JavaScript rather than
+		   baked into the markup: with scripting off these are ordinary links in
+		   ordinary tab order, and only the script turns them into a menu with roving
+		   focus. Nothing is stranded behind a dead control either way.
+
+		   Up here rather than beside the panel because that markup sits inside a {}
+		   expression, where the braces of a CSS rule would be read as another
+		   expression. is:inline keeps the rule in the <noscript>, which is the whole
+		   point: hoisted into the stylesheet it would hide the trigger for everyone. */
 	}
 	<style is:inline>
-		.nav-topics__trigger,
-		.nav-menu {
+		.nav-dropdown__trigger {
 			display: none;
+		}
+
+		.site-nav {
+			width: 100%;
+		}
+
+		.nav-dropdown {
+			display: contents;
+		}
+
+		.nav-menu {
+			position: static;
+			order: 1;
+			width: 100%;
+			padding-left: 0;
+			border: 0;
+			box-shadow: none;
+			opacity: 1;
+			transform: none;
+			visibility: visible;
+			pointer-events: auto;
+			transition: none;
 		}
 	</style>
 </noscript>
@@ -110,89 +147,60 @@ const groups = topicsByDomain(await getPublishedPosts());
 			aria-label="Primary"
 			class="site-nav flex flex-wrap items-center gap-x-6 gap-y-2 self-stretch text-[0.72rem]"
 		>
-			{
-				groups.length > 0 && (
-					<div class="nav-topics" data-topics>
-						{/* Shown only when the rule in the <noscript> at the top of this file
-						    has hidden the trigger and the panel. */}
-						<noscript>
-							<a href={withBase('/topics')} class="nav-link">
-								Topics
-							</a>
-						</noscript>
+			<div class="nav-dropdown" data-dropdown>
+				<button
+					type="button"
+					id="categories-trigger"
+					class="nav-link nav-dropdown__trigger"
+					aria-haspopup="menu"
+					aria-expanded="false"
+					aria-controls="categories-menu"
+					data-dropdown-trigger
+				>
+					Categories
+					{
+						/* Rotated to point back at the trigger while the panel is open, by the
+					    rule in global.css. */
+					}
+					<Chevron direction="down" class="h-3 w-3 shrink-0" />
+				</button>
 
-						<button
-							type="button"
-							id="topics-trigger"
-							class="nav-link nav-topics__trigger"
-							aria-haspopup="menu"
-							aria-expanded="false"
-							aria-controls="topics-menu"
-							data-topics-trigger
-						>
-							Topics
-							<svg
-								width="11"
-								height="11"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2.5"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								aria-hidden="true"
+				{
+					/* Every published category, in catalogue order, and nothing after them.
+					   There is no "view all" row because there is nothing further to see:
+					   this list is the complete one, so a link to an index repeating it was
+					   sending the reader to a second copy of what they were already reading.
+
+					   Topics are deliberately not in here: they are the secondary
+					   vocabulary, there are far more of them, and putting both in the header
+					   would restate the browsing problem this menu exists to simplify.
+
+					   No role or tabindex in the markup - the script adds them. See the
+					   <noscript> at the top of this file: without it these have to stay
+					   ordinary links in ordinary tab order. */
+				}
+				<div id="categories-menu" class="nav-menu" data-dropdown-menu>
+					{
+						/* Presentational: with scripting on, the panel's accessible name comes
+						   from the trigger via the aria-labelledby the script sets, so
+						   announcing this as a second label would repeat it. */
+					}
+					<p class="nav-menu__label" aria-hidden="true">Categories</p>
+
+					{
+						categories.map((category) => (
+							<a
+								class="nav-menu__row"
+								href={withBase(`/categories/${category.slug}`)}
+								style={`--category-color: ${category.color}`}
 							>
-								<path d="m6 9 6 6 6-6" />
-							</svg>
-						</button>
-
-						{/* One narrow column, topics stacked under the domain they belong to
-						    in taxonomy order. Sections are ARIA groups rather than headings:
-						    inside a menu the domain names label the runs of items, and a
-						    heading here would show up in the page's outline. */}
-						<div
-							id="topics-menu"
-							class="nav-menu"
-							role="menu"
-							aria-labelledby="topics-trigger"
-							data-topics-menu
-						>
-							{groups.map((group) => (
-								<div class="nav-menu__section" role="group" aria-label={group.label}>
-									<p class="nav-menu__label" aria-hidden="true">
-										{group.label}
-									</p>
-									{group.topics.map((topic) => (
-										<a
-											class="nav-menu__row"
-											role="menuitem"
-											tabindex="-1"
-											href={withBase(`/topics/${topic.id}`)}
-										>
-											{topic.label}
-										</a>
-									))}
-								</div>
-							))}
-
-							{/* In the arrow-key run as the last item, since from the keyboard it
-							    is just the row after the final topic. */}
-							<div class="nav-menu__footer">
-								<a class="nav-menu__all" role="menuitem" tabindex="-1" href={withBase('/topics')}>
-									{/* Smaller than elsewhere: this row sets 11px, so the 1rem box the
-									    pagination and carousel controls use would tower over it. The
-									    explicit space survives whatever prettier does to the line break,
-									    and align pulls the glyph onto the mono baseline - the row turns
-									    into a flex container below the panel's breakpoint, where
-									    align-items handles it instead. */}
-									View all topics{' '}
-									<Chevron direction="right" class="inline-block h-3.5 w-3.5 align-[-0.2em]" />
-								</a>
-							</div>
-						</div>
-					</div>
-				)
-			}
+								<Icon name={category.icon} class="category-glyph h-4 w-4" />
+								{category.label}
+							</a>
+						))
+					}
+				</div>
+			</div>
 
 			{
 				NAV.map((item) => (
@@ -209,16 +217,28 @@ const groups = topicsByDomain(await getPublishedPosts());
 	// Open state lives as one attribute on the wrapper, so every rule in the
 	// stylesheet only ever has to look at [data-open]. The trigger and the panel
 	// are both inside it, which also makes them a single hover region.
-	const wrapper = document.querySelector('[data-topics]');
-	const trigger = wrapper?.querySelector('[data-topics-trigger]');
-	const menu = wrapper?.querySelector('[data-topics-menu]');
+	const wrapper = document.querySelector('[data-dropdown]');
+	const trigger = wrapper?.querySelector('[data-dropdown-trigger]');
+	const menu = wrapper?.querySelector('[data-dropdown-menu]');
 
 	if (
 		wrapper instanceof HTMLElement &&
 		trigger instanceof HTMLButtonElement &&
 		menu instanceof HTMLElement
 	) {
-		const items = Array.from(menu.querySelectorAll<HTMLAnchorElement>('[role="menuitem"]'));
+		// The panel ships as a plain list of links and becomes a menu here, because
+		// the menu contract is one this script is what honours: roving focus needs
+		// tabindex="-1" on every item, and with scripting off that would be a list of
+		// links nothing could reach by keyboard. Selecting on .nav-menu__row rather
+		// than on the role it is about to be given, for the same reason.
+		const items = Array.from(menu.querySelectorAll<HTMLAnchorElement>('.nav-menu__row'));
+
+		menu.setAttribute('role', 'menu');
+		menu.setAttribute('aria-labelledby', trigger.id);
+		for (const item of items) {
+			item.setAttribute('role', 'menuitem');
+			item.tabIndex = -1;
+		}
 
 		// A diagonal path from the trigger down to the panel crosses the gap between
 		// them and leaves the hover region on the way. Closing on a short delay

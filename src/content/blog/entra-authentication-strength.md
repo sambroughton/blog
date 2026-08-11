@@ -4,12 +4,11 @@
 title: Choosing authentication strengths instead of blanket MFA requirements
 description: Where a strength requirement says something a generic MFA grant cannot, and how to introduce one without stranding users mid-rollout.
 pubDate: 2026-08-05
-domain: identity-security
+categories:
+  - Entra ID
 topics:
-  - authentication
-  - conditional-access
-technologies:
-  - microsoft-entra-id
+  - Authentication
+  - Conditional Access
 draft: true
 ---
 

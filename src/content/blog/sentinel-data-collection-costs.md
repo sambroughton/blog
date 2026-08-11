@@ -2,11 +2,10 @@
 title: 'Microsoft Sentinel data collection rules: what actually costs you money'
 description: Where ingestion spend concentrates, and how transformations and table plans change the bill without losing the detections you rely on.
 pubDate: 2026-06-12
-domain: siem-detection-engineering
+categories:
+  - Sentinel
 topics:
-  - data-collection
-technologies:
-  - microsoft-sentinel
+  - Data Collection
 ---
 
 Sentinel spend is dominated by ingestion, and ingestion is dominated by a small number of tables. Before changing anything, find out which.

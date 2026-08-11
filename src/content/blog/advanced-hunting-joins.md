@@ -4,12 +4,11 @@
 title: Joins in advanced hunting that stay fast as the time range grows
 description: Reducing before joining, choosing the smaller side deliberately, and why a working query still gets slower every month you leave it alone.
 pubDate: 2026-05-28
-domain: endpoint-security
+categories:
+  - Defender for Endpoint
 topics:
-  - advanced-hunting
-  - kql
-technologies:
-  - microsoft-defender-xdr
+  - Advanced Hunting
+  - KQL
 draft: true
 ---
 

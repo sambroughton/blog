@@ -1,7 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import { domainLabel } from '../consts';
-import { formatDate, isoDate, type Post } from '../lib/collections';
+import { formatDate, isoDate, primaryCategory, type Post } from '../lib/collections';
 import { withBase } from '../lib/paths';
 import { readingTimeMinutes } from '../lib/readingTime';
 import Chevron from './Chevron.astro';
@@ -103,7 +102,7 @@ const multiple = posts.length > 1;
 										{' · '}
 										{minutes} min
 										{' · '}
-										{domainLabel(post.data.domain)}
+										{primaryCategory(post)}
 									</p>
 								</div>
 							</article>

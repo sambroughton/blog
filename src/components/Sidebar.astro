@@ -1,5 +1,5 @@
 ---
-import { archiveYears, domainFacets, type Post } from '../lib/collections';
+import { archiveYears, type Post } from '../lib/collections';
 import { withBase } from '../lib/paths';
 
 interface Props {
@@ -8,55 +8,39 @@ interface Props {
 
 const { posts } = Astro.props;
 
-// Each facet list already excludes empty values, so a section is rendered only
-// when something sits behind it, and a domain with nothing published never shows.
-const domains = domainFacets(posts);
+// Years that actually have entries, so a year with nothing behind it is never
+// offered.
 const years = archiveYears(posts);
 
-// Matches the "Latest" heading in EntryList so the sidebar section titles read
-// as the same tier of label.
+// Matches the "Latest" heading in EntryList so the rail's section title reads as
+// the same tier of label. Kept as a const rather than inlined: it is the contract
+// with that component, and a second section here would have to share it.
 const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-blue';
 
-// Both facet lists below hover to text-text (--color-text) rather than to the
-// accent: across the site the thing under the pointer lights up, it does not
-// change hue. Same treatment as the breadcrumb and the header nav.
+// The rail is the archive and nothing else now.
+//
+// It carried a facet list of the primary vocabulary for as long as that
+// vocabulary had no other way in: first domains and technologies as two lists,
+// then categories as one. The header menu now lists every published category on
+// every page, so the rail was restating it beside each listing - and doing it in
+// a 15rem column that forced the long "Microsoft Defender for ..." labels into a
+// narrower measure than the menu gives them.
+//
+// Time is the one axis the header does not carry, which is what is left here.
+// Topics were never in this rail and still are not: they have their own index at
+// /topics.
 ---
 
 <aside class="space-y-8" aria-label="Browse entries">
-	{
-		/* Domains, not topics: the header's Topics menu covers the specific subjects,
-		   whereas this is a filter across the broad disciplines plus a snapshot of
-		   where the writing is concentrated. The two never list the same things. */
-		domains.length > 0 && (
-			<nav aria-labelledby="sb-domains">
-				<h2 id="sb-domains" class={heading}>
-					Domains
-				</h2>
-				<ul class="border-rule mt-3 border-t">
-					{domains.map((domain) => (
-						<li class="border-rule border-b">
-							<a
-								href={withBase(`/domains/${domain.id}`)}
-								class="text-text-2 hover:text-text flex items-baseline justify-between gap-3 py-2 text-sm transition-colors"
-							>
-								<span>{domain.label}</span>
-								{/* Published entries in this domain. tabular-nums so counts sit in
-								    a true column once any of them reaches double figures. */}
-								<span class="text-blue shrink-0 text-[0.72rem] tabular-nums">{domain.count}</span>
-							</a>
-						</li>
-					))}
-				</ul>
-			</nav>
-		)
-	}
-
 	{
 		years.length > 0 && (
 			<nav aria-labelledby="sb-archive">
 				<h2 id="sb-archive" class={heading}>
 					Archive
 				</h2>
+				{/* Hovers to text-text (--color-text) rather than to the accent: across the
+				    site the thing under the pointer lights up, it does not change hue. Same
+				    treatment as the breadcrumb and the header nav. */}
 				<ul class="mt-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs">
 					{years.map((entry) => (
 						<li>

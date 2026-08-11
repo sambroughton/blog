@@ -1,6 +1,7 @@
 ---
-// Material Symbols Outlined `keyboard_arrow_left` / `keyboard_arrow_right`, in the
-// default variant: FILL 0, wght 400, GRAD 0, opsz 24.
+// Material Symbols Outlined `keyboard_arrow_left` / `keyboard_arrow_right` /
+// `keyboard_arrow_down`, in the default variant: FILL 0, wght 400, GRAD 0,
+// opsz 24.
 //
 // Path data copied verbatim from Google's own repository, so it is the same
 // outline the font ships rather than an approximation:
@@ -22,7 +23,7 @@
 // same thing.
 
 interface Props {
-	direction: 'left' | 'right';
+	direction: 'left' | 'right' | 'down';
 	/** Overrides the default box. Tailwind sizing wins over the attributes below. */
 	class?: string;
 }
@@ -30,9 +31,15 @@ interface Props {
 const { direction, class: className = 'h-4 w-4' } = Astro.props;
 
 // The -960 960 viewBox is the Material Symbols coordinate system, not a mistake.
+//
+// `down` is the caret on the header's Explore trigger, which the stylesheet flips
+// to rotate(180deg) while the panel is open. No `up` glyph for that reason: one
+// caret rotated is one element to keep in sync with the open state, and it can
+// animate between the two.
 const PATHS = {
 	left: 'M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z',
 	right: 'M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z',
+	down: 'M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z',
 } as const;
 ---
 

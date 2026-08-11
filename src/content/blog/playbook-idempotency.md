@@ -4,11 +4,10 @@
 title: Automation playbooks have to survive running twice
 description: Replays, retries and duplicate triggers are normal, so every action a playbook takes needs to be safe on the second attempt.
 pubDate: 2026-02-17
-domain: automation-soar
+categories:
+  - Sentinel
 topics:
-  - analytics-rules
-technologies:
-  - microsoft-sentinel
+  - Analytics Rules
 draft: true
 ---
 

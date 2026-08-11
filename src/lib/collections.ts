@@ -1,13 +1,13 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import {
-	DOMAINS,
 	SITE,
-	TECHNOLOGIES,
+	CATEGORIES,
 	TOPICS,
-	type DomainId,
-	type TechnologyId,
-	type TopicId,
+	type CategoryIcon,
+	type CategoryLabel,
+	type TopicLabel,
 } from '../consts';
+import { slugify } from './slug';
 
 export type Post = CollectionEntry<'blog'>;
 
@@ -33,60 +33,104 @@ export function selectHeroPosts(posts: Post[], limit = SITE.heroCount): Post[] {
 	return (featured.length > 0 ? featured : posts).slice(0, limit);
 }
 
-export type Facet<T extends string> = { id: T; label: string; count: number };
+/**
+ * The category a ledger row shows. An entry lists every category it touches, but
+ * a list row has space for one, and the schema documents the first as primary.
+ *
+ * Total, not optional: `categories` is a nonempty() array in the schema, so there
+ * is always a first element and callers need no fallback.
+ */
+export function primaryCategory(post: Post): CategoryLabel {
+	return post.data.categories[0];
+}
 
 /**
- * `pick` returns a list so the same counter serves the single-valued domain and
- * the multi-valued topics and technologies.
+ * The topic a row shows when the category is the one thing every row on the page
+ * has in common. Same rule as primaryCategory - first in the list, and total,
+ * because `topics` is nonempty() in the schema too - so an entry's frontmatter
+ * decides which of its subjects leads, in both vocabularies.
+ */
+export function primaryTopic(post: Post): TopicLabel {
+	return post.data.topics[0];
+}
+
+/**
+ * A taxonomy value that something has been published under.
+ *
+ * Keyed by `slug` rather than by the label, because the slug is what the routes
+ * are built from and what links are compared against - carrying both means no
+ * caller has to slugify a label a second time and get it subtly different.
+ */
+export type Facet = { slug: string; label: string; count: number };
+
+/** A category facet, with the catalogue's glyph and product colour joined on. */
+export type CategoryFacet = Facet & { icon: CategoryIcon; color: string };
+
+/**
+ * `pick` returns a list so the same counter serves both vocabularies, each of
+ * which is multi-valued.
+ *
+ * Walks the catalogue and looks each count up, rather than the reverse, so the
+ * deliberate CATEGORIES/TOPICS order carries through to every list. Catalogue
+ * order is preserved on purpose: sorting by volume here would let the article
+ * count dictate the narrative. Empty facets are dropped so a young blog does not
+ * advertise sections with nothing behind them, and so no index can link to a
+ * listing that generates no page.
  */
 function countBy<T extends string>(
 	posts: Post[],
 	pick: (post: Post) => readonly T[],
-	catalogue: readonly { id: T; label: string }[],
-): Facet<T>[] {
+	catalogue: readonly { label: T }[],
+): Facet[] {
 	const counts = new Map<T, number>();
 	for (const post of posts) {
-		for (const key of pick(post)) {
-			counts.set(key, (counts.get(key) ?? 0) + 1);
+		for (const label of pick(post)) {
+			counts.set(label, (counts.get(label) ?? 0) + 1);
 		}
 	}
-	// Catalogue order is preserved deliberately: DOMAINS is ordered by the intended
-	// progression across the discipline, and sorting by volume here would let the
-	// article count dictate the narrative. Empty facets are dropped so a young
-	// blog does not advertise sections with nothing behind them.
+
 	return catalogue
-		.map(({ id, label }) => ({ id, label, count: counts.get(id) ?? 0 }))
+		.map(({ label }) => ({ slug: slugify(label), label, count: counts.get(label) ?? 0 }))
 		.filter((facet) => facet.count > 0);
 }
 
-export function domainFacets(posts: Post[]): Facet<DomainId>[] {
-	return countBy(posts, (p) => [p.data.domain], DOMAINS);
+/**
+ * Published categories, in catalogue order, with their glyph and colour.
+ *
+ * This is the single source for the header menu, the sidebar rail, the
+ * /categories index and the getStaticPaths behind every category archive, so
+ * those four can never disagree about which categories exist or what a count is.
+ */
+export function categoryFacets(posts: Post[]): CategoryFacet[] {
+	const counted = new Map(
+		countBy(posts, (p) => p.data.categories, CATEGORIES).map((facet) => [facet.label, facet]),
+	);
+
+	return CATEGORIES.flatMap((category) => {
+		const facet = counted.get(category.label);
+		if (facet === undefined) return [];
+		return [{ ...facet, icon: category.icon, color: category.color }];
+	});
 }
 
-export function topicFacets(posts: Post[]): Facet<TopicId>[] {
+/** Published topics, in catalogue order. Feeds the /topics index and archives. */
+export function topicFacets(posts: Post[]): Facet[] {
 	return countBy(posts, (p) => p.data.topics, TOPICS);
 }
 
-export function technologyFacets(posts: Post[]): Facet<TechnologyId>[] {
-	return countBy(posts, (p) => p.data.technologies, TECHNOLOGIES);
+/**
+ * Entries under one category, newest first because `posts` already is.
+ *
+ * Takes the slug rather than the label so the archive route can filter with the
+ * same value it was routed by, without slugifying in two places.
+ */
+export function postsByCategory(posts: Post[], slug: string): Post[] {
+	return posts.filter((post) => post.data.categories.some((label) => slugify(label) === slug));
 }
 
-export type TopicGroup = { id: DomainId; label: string; topics: Facet<TopicId>[] };
-
-/**
- * Populated topics grouped under their parent domain, both in catalogue order.
- * Feeds the Topics menu and index. Groups with nothing published are dropped, so
- * the menu grows as the writing does.
- */
-export function topicsByDomain(posts: Post[]): TopicGroup[] {
-	const populated = topicFacets(posts);
-	const parentOf = new Map<string, string>(TOPICS.map((t) => [t.id, t.domain]));
-
-	return DOMAINS.map((domain) => ({
-		id: domain.id,
-		label: domain.label,
-		topics: populated.filter((topic) => parentOf.get(topic.id) === domain.id),
-	})).filter((group) => group.topics.length > 0);
+/** Entries under one topic, newest first. Slug-keyed, as postsByCategory is. */
+export function postsByTopic(posts: Post[], slug: string): Post[] {
+	return posts.filter((post) => post.data.topics.some((label) => slugify(label) === slug));
 }
 
 /** Years that actually have entries, newest first. */
@@ -127,3 +171,5 @@ export function formatDayMonth(date: Date): string {
 export function isoDate(date: Date): string {
 	return date.toISOString().slice(0, 10);
 }
+
+export type { CategoryLabel, TopicLabel };

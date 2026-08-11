@@ -4,12 +4,11 @@
 title: Risk-based policies that remediate rather than merely block
 description: Wiring user and sign-in risk into a response that clears itself, instead of a block that turns into a helpdesk queue.
 pubDate: 2026-07-21
-domain: identity-security
+categories:
+  - Entra ID
 topics:
-  - identity-protection
-  - conditional-access
-technologies:
-  - microsoft-entra-id
+  - Identity Protection
+  - Conditional Access
 draft: true
 ---
 

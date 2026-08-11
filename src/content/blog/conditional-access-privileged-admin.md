@@ -2,12 +2,11 @@
 title: Designing Conditional Access policies for privileged administrator access
 description: A policy set for admin roles, the order to deploy it in, and the exclusions you must get right before you enable anything.
 pubDate: 2026-07-28
-domain: identity-security
+categories:
+  - Entra ID
 topics:
-  - conditional-access
-  - privileged-access
-technologies:
-  - microsoft-entra-id
+  - Conditional Access
+  - Privileged Access
 featured: true
 ---
 

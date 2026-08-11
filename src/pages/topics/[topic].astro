@@ -3,19 +3,24 @@ import type { GetStaticPaths } from 'astro';
 import EntryList from '../../components/EntryList.astro';
 import Sidebar from '../../components/Sidebar.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getPublishedPosts, shouldShowSidebar, topicFacets } from '../../lib/collections';
+import {
+	getPublishedPosts,
+	postsByTopic,
+	shouldShowSidebar,
+	topicFacets,
+} from '../../lib/collections';
 
-// Only topics with at least one published entry get a page, so the Topics menu
+// Only topics with at least one published entry get a page, so the topics index
 // can never link to an empty listing. An entry carries several topics, so it can
 // appear under more than one of these.
 export const getStaticPaths = (async () => {
 	const posts = await getPublishedPosts();
 
 	return topicFacets(posts).map((facet) => ({
-		params: { topic: facet.id },
+		params: { topic: facet.slug },
 		props: {
 			label: facet.label,
-			posts: posts.filter((post) => post.data.topics.includes(facet.id)),
+			posts: postsByTopic(posts, facet.slug),
 			allPosts: posts,
 		},
 	}));

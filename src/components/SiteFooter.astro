@@ -2,6 +2,11 @@
 import { SITE } from '../consts';
 import { withBase } from '../lib/paths';
 
+// Topics but not Categories, which is not an omission: categories have no index
+// page - the header menu lists all of them on every page, so a page repeating
+// that list was a second copy of it - while topics have one and nothing else
+// links to it. The rail carries no vocabulary at all now, so this is the only
+// route to the topics index outside the tags on an entry.
 const links = [
 	{ href: '/topics', label: 'Topics' },
 	{ href: '/about', label: 'Disclaimer' },
