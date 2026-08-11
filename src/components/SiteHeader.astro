@@ -14,6 +14,26 @@ import { withBase } from '../lib/paths';
 const groups = topicsByDomain(await getPublishedPosts());
 ---
 
+<noscript>
+	{
+		/* The Topics panel is JavaScript-driven, so with scripting off its trigger is
+		   swapped for the plain link further down that goes straight to the topics
+		   index, and nothing is stranded behind a dead control.
+
+		   Up here rather than beside that link because the markup down there sits
+		   inside a {} expression, where the braces of a CSS rule would be read as
+		   another expression. is:inline keeps the rule in the <noscript>, which is
+		   the whole point: hoisted into the stylesheet it would hide the trigger for
+		   everyone. */
+	}
+	<style is:inline>
+		.nav-topics__trigger,
+		.nav-menu {
+			display: none;
+		}
+	</style>
+</noscript>
+
 <header class="border-rule border-b">
 	<div
 		class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-5"
@@ -64,11 +84,35 @@ const groups = topicsByDomain(await getPublishedPosts());
 			</span>
 		</a>
 
-		<nav aria-label="Primary" class="flex items-center gap-6 text-[0.72rem]">
+		{
+			/* self-stretch so the dropdown can be offset from the header's bottom
+			   border rather than from the trigger's own box; wrapping so the menu can
+			   drop onto a row of its own on a phone. */
+		}
+		<nav
+			aria-label="Primary"
+			class="site-nav flex flex-wrap items-center gap-x-6 gap-y-2 self-stretch text-[0.72rem]"
+		>
 			{
 				groups.length > 0 && (
-					<details class="nav-dropdown" data-topics-menu>
-						<summary class="nav-link" aria-label="Topics menu">
+					<div class="nav-topics" data-topics>
+						{/* Shown only when the rule in the <noscript> at the top of this file
+						    has hidden the trigger and the panel. */}
+						<noscript>
+							<a href={withBase('/topics')} class="nav-link">
+								Topics
+							</a>
+						</noscript>
+
+						<button
+							type="button"
+							id="topics-trigger"
+							class="nav-link nav-topics__trigger"
+							aria-haspopup="menu"
+							aria-expanded="false"
+							aria-controls="topics-menu"
+							data-topics-trigger
+						>
 							Topics
 							<svg
 								width="11"
@@ -83,27 +127,46 @@ const groups = topicsByDomain(await getPublishedPosts());
 							>
 								<path d="m6 9 6 6 6-6" />
 							</svg>
-						</summary>
+						</button>
 
-						{/* Compact mega-menu: topics grouped under the domain they belong to,
-						    laid out in columns so it stays wide and shallow rather than
-						    becoming one long scrolling list as the blog grows. */}
-						<div class="nav-menu">
-							<div class="nav-menu__columns">
-								{groups.map((group) => (
-									<section class="nav-menu__group">
-										<h2 class="nav-menu__heading">{group.label}</h2>
-										{group.topics.map((topic) => (
-											<a href={withBase(`/topics/${topic.id}`)}>{topic.label}</a>
-										))}
-									</section>
-								))}
+						{/* One narrow column, topics stacked under the domain they belong to
+						    in taxonomy order. Sections are ARIA groups rather than headings:
+						    inside a menu the domain names label the runs of items, and a
+						    heading here would show up in the page's outline. */}
+						<div
+							id="topics-menu"
+							class="nav-menu"
+							role="menu"
+							aria-labelledby="topics-trigger"
+							data-topics-menu
+						>
+							{groups.map((group) => (
+								<div class="nav-menu__section" role="group" aria-label={group.label}>
+									<p class="nav-menu__label" aria-hidden="true">
+										{group.label}
+									</p>
+									{group.topics.map((topic) => (
+										<a
+											class="nav-menu__row"
+											role="menuitem"
+											tabindex="-1"
+											href={withBase(`/topics/${topic.id}`)}
+										>
+											{topic.label}
+										</a>
+									))}
+								</div>
+							))}
+
+							{/* In the arrow-key run as the last item, since from the keyboard it
+							    is just the row after the final topic. */}
+							<div class="nav-menu__footer">
+								<a class="nav-menu__all" role="menuitem" tabindex="-1" href={withBase('/topics')}>
+									View all topics <span aria-hidden="true">→</span>
+								</a>
 							</div>
-							<a class="nav-menu__all" href={withBase('/topics')}>
-								View all topics <span aria-hidden="true">→</span>
-							</a>
 						</div>
-					</details>
+					</div>
 				)
 			}
 
@@ -119,31 +182,102 @@ const groups = topicsByDomain(await getPublishedPosts());
 </header>
 
 <script>
-	const menu = document.querySelector('[data-topics-menu]');
+	// Open state lives as one attribute on the wrapper, so every rule in the
+	// stylesheet only ever has to look at [data-open]. The trigger and the panel
+	// are both inside it, which also makes them a single hover region.
+	const wrapper = document.querySelector('[data-topics]');
+	const trigger = wrapper?.querySelector('[data-topics-trigger]');
+	const menu = wrapper?.querySelector('[data-topics-menu]');
 
-	if (menu instanceof HTMLDetailsElement) {
-		const close = () => {
-			menu.open = false;
+	if (
+		wrapper instanceof HTMLElement &&
+		trigger instanceof HTMLButtonElement &&
+		menu instanceof HTMLElement
+	) {
+		const items = Array.from(menu.querySelectorAll<HTMLAnchorElement>('[role="menuitem"]'));
+
+		// A diagonal path from the trigger down to the panel crosses the gap between
+		// them and leaves the hover region on the way. Closing on a short delay
+		// rides that out; coming back cancels it.
+		const GRACE_MS = 150;
+		let closeTimer = 0;
+
+		const isOpen = () => wrapper.hasAttribute('data-open');
+
+		const open = () => {
+			window.clearTimeout(closeTimer);
+			wrapper.setAttribute('data-open', '');
+			trigger.setAttribute('aria-expanded', 'true');
 		};
+
+		const close = () => {
+			window.clearTimeout(closeTimer);
+			wrapper.removeAttribute('data-open');
+			trigger.setAttribute('aria-expanded', 'false');
+		};
+
+		// Wraps at both ends, as a menu is expected to. Negative indices count back
+		// from the last item, so -1 is "the bottom of the list".
+		const focusItem = (index: number) => {
+			if (items.length === 0) return;
+			items[((index % items.length) + items.length) % items.length].focus();
+		};
+
+		trigger.addEventListener('click', () => {
+			if (isOpen()) close();
+			else open();
+		});
+
+		// Mouse only. A touch reports as a pointerenter too, and opening on it would
+		// leave the tap that follows to toggle the menu straight back shut - and
+		// (hover: hover) is no help, since a touchscreen laptop matches it.
+		wrapper.addEventListener('pointerenter', (event) => {
+			if (event.pointerType === 'mouse') open();
+		});
+
+		wrapper.addEventListener('pointerleave', (event) => {
+			if (event.pointerType !== 'mouse') return;
+			window.clearTimeout(closeTimer);
+			closeTimer = window.setTimeout(close, GRACE_MS);
+		});
+
+		// Enter and Space are the button's own doing. Arrows open the menu and land
+		// on an end of it, and are swallowed so the page does not scroll out from
+		// under what just opened.
+		trigger.addEventListener('keydown', (event) => {
+			if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+			event.preventDefault();
+			open();
+			focusItem(event.key === 'ArrowDown' ? 0 : -1);
+		});
+
+		menu.addEventListener('keydown', (event) => {
+			if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+			event.preventDefault();
+			const current = items.findIndex((item) => item === document.activeElement);
+			focusItem(current + (event.key === 'ArrowDown' ? 1 : -1));
+		});
+
+		// Escape closes, and hands focus back to the trigger only if it was inside
+		// the menu to begin with: a panel opened by hover can be dismissed from the
+		// keyboard without dragging the reader's focus up into the header.
+		document.addEventListener('keydown', (event) => {
+			if (event.key !== 'Escape' || !isOpen()) return;
+			const wasInside = wrapper.contains(document.activeElement);
+			close();
+			if (wasInside) trigger.focus();
+		});
 
 		// Clicking anywhere outside dismisses it.
 		document.addEventListener('click', (event) => {
-			if (!menu.open) return;
-			if (event.target instanceof Node && !menu.contains(event.target)) close();
-		});
-
-		// Escape closes and hands focus back to the summary, so keyboard users are
-		// not stranded inside a menu that is no longer on screen.
-		document.addEventListener('keydown', (event) => {
-			if (event.key !== 'Escape' || !menu.open) return;
-			close();
-			menu.querySelector('summary')?.focus();
+			if (!isOpen()) return;
+			if (event.target instanceof Node && !wrapper.contains(event.target)) close();
 		});
 
 		// Tabbing past the last item closes it rather than leaving an open menu
 		// floating over the page.
-		menu.addEventListener('focusout', (event) => {
-			if (event.relatedTarget instanceof Node && menu.contains(event.relatedTarget)) return;
+		wrapper.addEventListener('focusout', (event) => {
+			if (event.relatedTarget instanceof Node && wrapper.contains(event.relatedTarget)) return;
 			close();
 		});
 	}

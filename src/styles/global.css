@@ -108,111 +108,206 @@ h4 {
 	transform: scaleX(1);
 }
 
-/* A native <details> disclosure: keyboard operable and fully usable with no
-   JavaScript. The script in SiteHeader only adds Escape and click-outside, so
-   the menu still opens and closes if it never runs. */
-.nav-dropdown {
+/* Topics menu -------------------------------------------------------------
+   A button plus a floating panel rather than a native <details>: the design
+   calls for opening on hover, an enter and exit transition, and pointer-events
+   off while closed, none of which <details> can give, since it hides its own
+   content outright rather than styling it away. The trade is that the menu now
+   needs JavaScript, so the header carries a <noscript> fallback that swaps the
+   trigger for a plain link to the topics index.
+
+   Colours in this block are literal rather than @theme tokens: the panel is
+   specified as its own small palette, a touch deeper and cooler than
+   --color-surface, and is not shared with anything else on the site. */
+.nav-topics {
 	position: relative;
+	display: flex;
+	align-items: center;
+	/* Stretched to the full height of the header row, so the panel can be offset
+	   from the header's bottom border rather than from the trigger's own box.
+	   The 1.25rem in the panel's `top` below is that row's py-5 bottom padding,
+	   which is all that sits between this box and the border. */
+	align-self: stretch;
 }
 
-.nav-dropdown > summary {
-	list-style: none;
+.nav-topics__trigger {
+	padding: 0;
+	border: 0;
+	background: none;
+	font: inherit;
 }
 
-.nav-dropdown > summary::-webkit-details-marker {
-	display: none;
-}
-
-.nav-dropdown > summary::marker {
-	content: '';
-}
-
-.nav-dropdown > summary svg {
+.nav-topics__trigger svg {
 	transition: transform 160ms ease;
 }
 
-.nav-dropdown[open] > summary {
+/* Open state: the underline the trigger already wipes in on hover, held on, and
+   the caret flipped to point back at the trigger. */
+.nav-topics[data-open] .nav-topics__trigger {
 	color: var(--color-blue);
 }
 
-.nav-dropdown[open] > summary svg {
+.nav-topics[data-open] .nav-topics__trigger::after {
+	transform: scaleX(1);
+}
+
+.nav-topics[data-open] .nav-topics__trigger svg {
 	transform: rotate(180deg);
 }
 
 .nav-menu {
 	position: absolute;
-	top: calc(100% + 0.9rem);
+	top: calc(100% + 1.25rem + 10px);
 	right: 0;
 	z-index: 30;
-	padding: 0.9rem;
-	background: var(--color-surface);
-	border: 1px solid var(--color-rule);
+	width: 300px;
+	/* Only bites if the taxonomy ever outgrows the viewport; until then the panel
+	   is sized by its content and never scrolls. */
+	max-height: 70vh;
+	overflow-y: auto;
+	padding: 10px 0 6px;
+	background: #0b101b;
+	border: 1px solid #1b2740;
+	border-radius: 5px;
+	box-shadow: 0 26px 50px -18px rgba(0, 0, 0, 0.85);
+	opacity: 0;
+	transform: translateY(-6px);
+	/* visibility keeps the closed panel out of the accessibility tree as well as
+	   off the hit test; the delay holds it visible until the fade has finished,
+	   and drops to 0s on the way in so it is there for the fade to happen to. */
+	visibility: hidden;
+	pointer-events: none;
+	transition:
+		opacity 180ms ease,
+		transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+		visibility 0s linear 220ms;
 }
 
-/* Columns rather than one tall list, so the menu stays wide and shallow as the
-   topic count grows. Single column on narrow screens, where a wide panel would
-   not fit anyway. */
-.nav-menu__columns {
-	display: grid;
-	gap: 0.35rem 2rem;
-	grid-template-columns: 1fr;
+.nav-topics[data-open] .nav-menu {
+	opacity: 1;
+	transform: translateY(0);
+	visibility: visible;
+	pointer-events: auto;
+	transition:
+		opacity 180ms ease,
+		transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+		visibility 0s;
 }
 
-@media (min-width: 640px) {
-	.nav-menu__columns {
-		grid-template-columns: repeat(2, minmax(9.5rem, 1fr));
+/* Movement off, the fade left alone. The blanket reduced-motion rule above has
+   already cut the durations. */
+@media (prefers-reduced-motion: reduce) {
+	.nav-menu,
+	.nav-topics[data-open] .nav-menu {
+		transform: none;
 	}
 }
 
-@media (min-width: 900px) {
-	.nav-menu__columns {
-		grid-template-columns: repeat(3, minmax(9.5rem, 1fr));
-	}
+/* 6px below one section and 10px above the next is the 16px that separates
+   them, so they read as groups without needing rules drawn between them. */
+.nav-menu__section {
+	padding: 10px 0 6px;
 }
 
-.nav-menu__group + .nav-menu__group {
-	margin-top: 0.4rem;
-}
-
-@media (min-width: 640px) {
-	.nav-menu__group + .nav-menu__group {
-		margin-top: 0;
-	}
-}
-
-/* The domain heading is a label, not a destination: it groups the topics under
-   it rather than competing with them for the click. */
-.nav-menu__heading {
-	padding: 0.35rem 0.7rem;
-	font-size: 0.63rem;
-	letter-spacing: 0.12em;
+/* A label, not a destination: it groups the topics under it rather than
+   competing with them for the click. Hidden from assistive tech because the
+   same string is the group's aria-label, so it is announced as the group's name
+   rather than read twice. */
+.nav-menu__label {
+	padding: 0 18px 8px;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--color-text-3);
+	color: #5b6a86;
 }
 
-.nav-menu a {
+/* Padding rather than margin, so the whole width of the panel is the hit area
+   and not just the label. */
+.nav-menu__row {
 	display: block;
-	padding: 0.4rem 0.7rem;
-	color: var(--color-text-2);
-	white-space: nowrap;
+	padding: 8px 18px;
+	font-size: 14px;
+	color: #c3d0e6;
 	transition:
 		background 150ms,
 		color 150ms;
 }
 
-.nav-menu a:hover,
+.nav-menu__row:hover,
+.nav-menu__row:focus-visible {
+	background: rgba(77, 124, 254, 0.1);
+	color: #ffffff;
+}
+
+/* Its own ring rather than leaning on the hover tint: at 10% the tint is too
+   quiet to say "the keyboard is here", and hover and focus should not be
+   indistinguishable anyway. */
 .nav-menu a:focus-visible {
-	background: var(--color-surface-2);
-	color: var(--color-blue);
+	outline: 2px solid #4d7cfe;
+	outline-offset: -2px;
 }
 
 /* The full index is a different kind of destination from a single topic, so it
-   sits below a rule rather than in the same run. */
+   sits below the one rule in the panel. */
+.nav-menu__footer {
+	border-top: 1px solid #16203a;
+}
+
 .nav-menu__all {
-	margin-top: 0.6rem;
-	border-top: 1px solid var(--color-rule);
-	padding-top: 0.6rem;
-	font-size: 0.72rem;
+	display: block;
+	padding: 12px 18px 8px;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #6f9bff;
+}
+
+/* Below the panel's own width there is nowhere for it to float, so Topics
+   expands inline instead: the nav takes a full-width row of its own and the
+   panel opens beneath the links as the same labelled sections. display:contents
+   lifts the trigger and the panel into the nav's flex flow, which is what lets
+   the panel claim a row rather than being trapped in a content-width wrapper. */
+@media (max-width: 767.98px) {
+	.site-nav {
+		width: 100%;
+	}
+
+	.nav-topics {
+		display: contents;
+	}
+
+	.nav-menu {
+		position: static;
+		/* Out of the flow while closed, so it leaves no gap in the nav. The
+		   transition goes with it: this is an inline disclosure now, not a panel
+		   arriving over the page. */
+		display: none;
+		/* Last on the row regardless of source order, so the links stay together
+		   above it. */
+		order: 1;
+		width: 100%;
+		max-height: none;
+		overflow: visible;
+		box-shadow: none;
+		opacity: 1;
+		transform: none;
+		visibility: visible;
+		pointer-events: auto;
+	}
+
+	.nav-topics[data-open] .nav-menu {
+		display: block;
+	}
+
+	/* 44px, the usual floor for a touch target. */
+	.nav-menu__row,
+	.nav-menu__all {
+		display: flex;
+		align-items: center;
+		min-height: 44px;
+	}
 }
 
 /* Breadcrumb ---------------------------------------------------------------
