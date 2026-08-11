@@ -4,6 +4,7 @@ import { domainLabel } from '../consts';
 import { formatDate, isoDate, type Post } from '../lib/collections';
 import { withBase } from '../lib/paths';
 import { readingTimeMinutes } from '../lib/readingTime';
+import Chevron from './Chevron.astro';
 
 interface Props {
 	posts: Post[];
@@ -138,7 +139,7 @@ const multiple = posts.length > 1;
 							aria-label="Previous slide"
 							class="border-rule text-text-2 hover:border-rule-bright hover:text-blue inline-flex h-7 w-7 cursor-pointer items-center justify-center border text-xs transition-colors"
 						>
-							‹
+							<Chevron direction="left" />
 						</button>
 						<button
 							type="button"
@@ -146,7 +147,7 @@ const multiple = posts.length > 1;
 							aria-label="Next slide"
 							class="border-rule text-text-2 hover:border-rule-bright hover:text-blue inline-flex h-7 w-7 cursor-pointer items-center justify-center border text-xs transition-colors"
 						>
-							›
+							<Chevron direction="right" />
 						</button>
 					</div>
 				</div>

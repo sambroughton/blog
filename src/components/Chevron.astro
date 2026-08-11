@@ -1,0 +1,48 @@
+---
+// Material Symbols Outlined `keyboard_arrow_left` / `keyboard_arrow_right`, in the
+// default variant: FILL 0, wght 400, GRAD 0, opsz 24.
+//
+// Path data copied verbatim from Google's own repository, so it is the same
+// outline the font ships rather than an approximation:
+// https://github.com/google/material-design-icons/blob/master/symbols/web/keyboard_arrow_right/materialsymbolsoutlined/keyboard_arrow_right_24px.svg
+// Licensed Apache-2.0: https://github.com/google/material-design-icons/blob/master/LICENSE
+//
+// Inlined rather than pulled from fonts.googleapis.com as an icon font. Every
+// typeface here is self-hosted through @fontsource, so the site makes no
+// third-party request on any page, and an icon font would reintroduce one on all
+// of them for two glyphs. Inline markup also costs no request at all and cannot
+// flash unstyled text while a font loads.
+//
+// The only edit to the source files is fill="currentColor" in place of their
+// hardcoded hex, so these inherit the colour of whatever control they sit in -
+// which is what lets the pagination and carousel buttons keep their hover state.
+//
+// aria-hidden throughout: every caller is a control that carries its own
+// aria-label, so an accessible name here would be a second announcement of the
+// same thing.
+
+interface Props {
+	direction: 'left' | 'right';
+	/** Overrides the default box. Tailwind sizing wins over the attributes below. */
+	class?: string;
+}
+
+const { direction, class: className = 'h-4 w-4' } = Astro.props;
+
+// The -960 960 viewBox is the Material Symbols coordinate system, not a mistake.
+const PATHS = {
+	left: 'M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z',
+	right: 'M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z',
+} as const;
+---
+
+<svg
+	width="24"
+	height="24"
+	viewBox="0 -960 960 960"
+	fill="currentColor"
+	class={className}
+	aria-hidden="true"
+>
+	<path d={PATHS[direction]}></path>
+</svg>

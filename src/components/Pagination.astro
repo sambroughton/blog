@@ -1,5 +1,6 @@
 ---
 import { withBase } from '../lib/paths';
+import Chevron from './Chevron.astro';
 
 interface Props {
 	currentPage: number;
@@ -53,11 +54,11 @@ const disabled = 'border-rule text-text-3/40';
 					class={`${cell} ${idle}`}
 					aria-label="Previous page"
 				>
-					‹
+					<Chevron direction="left" />
 				</a>
 			) : (
 				<span class={`${cell} ${disabled}`} aria-hidden="true">
-					‹
+					<Chevron direction="left" />
 				</span>
 			)}
 
@@ -84,11 +85,11 @@ const disabled = 'border-rule text-text-3/40';
 					class={`${cell} ${idle}`}
 					aria-label="Next page"
 				>
-					›
+					<Chevron direction="right" />
 				</a>
 			) : (
 				<span class={`${cell} ${disabled}`} aria-hidden="true">
-					›
+					<Chevron direction="right" />
 				</span>
 			)}
 		</nav>

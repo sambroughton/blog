@@ -7,6 +7,7 @@ import Logo from '../assets/logo.svg';
 import { NAV, SITE } from '../consts';
 import { getPublishedPosts, topicsByDomain } from '../lib/collections';
 import { withBase } from '../lib/paths';
+import Chevron from './Chevron.astro';
 
 // Built from the collection, so the menu can never list a topic with nothing
 // published behind it, nor miss one that just gained its first entry.
@@ -178,7 +179,14 @@ const groups = topicsByDomain(await getPublishedPosts());
 							    is just the row after the final topic. */}
 							<div class="nav-menu__footer">
 								<a class="nav-menu__all" role="menuitem" tabindex="-1" href={withBase('/topics')}>
-									View all topics <span aria-hidden="true">→</span>
+									{/* Smaller than elsewhere: this row sets 11px, so the 1rem box the
+									    pagination and carousel controls use would tower over it. The
+									    explicit space survives whatever prettier does to the line break,
+									    and align pulls the glyph onto the mono baseline - the row turns
+									    into a flex container below the panel's breakpoint, where
+									    align-items handles it instead. */}
+									View all topics{' '}
+									<Chevron direction="right" class="inline-block h-3.5 w-3.5 align-[-0.2em]" />
 								</a>
 							</div>
 						</div>
