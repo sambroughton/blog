@@ -3,10 +3,12 @@ import type { GetStaticPaths } from 'astro';
 import LedgerView from '../../components/LedgerView.astro';
 import { SITE } from '../../consts';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getPublishedPosts } from '../../lib/collections';
+import { getPublishedPosts, selectHeroPosts } from '../../lib/collections';
 
-// Pages 2..N only. Page 1 is src/pages/index.astro, which also carries the hero,
-// so these pages are a plain continuation of the ledger.
+// Pages 2..N only; page 1 is src/pages/index.astro, which is a static route so
+// the homepage exists even with nothing published. These pages are not a stripped
+// continuation of the ledger: they carry the same hero as page 1, so paging
+// forward keeps the home page's shape rather than dropping the featured block.
 export const getStaticPaths = (async () => {
 	const posts = await getPublishedPosts();
 	const lastPage = Math.ceil(posts.length / SITE.pageSize);
@@ -27,6 +29,12 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const { pagePosts, allPosts, currentPage, lastPage } = Astro.props;
+
+// Derived here rather than in getStaticPaths: allPosts already comes through as a
+// prop, already sorted newest-first. Same helper as index.astro, so the fallback
+// to the newest entries when nothing is featured is identical on every page and
+// the hero cannot differ between page 1 and the rest.
+const heroPosts = selectHeroPosts(allPosts);
 ---
 
 <BaseLayout
@@ -36,6 +44,7 @@ const { pagePosts, allPosts, currentPage, lastPage } = Astro.props;
 	<LedgerView
 		pagePosts={pagePosts}
 		allPosts={allPosts}
+		heroPosts={heroPosts}
 		currentPage={currentPage}
 		lastPage={lastPage}
 	/>

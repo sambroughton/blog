@@ -18,8 +18,13 @@ export const SITE = {
 	description:
 		'Field reports, detection queries and deployment notes on Microsoft security engineering: Entra ID, Defender XDR, Sentinel and Azure.',
 	author: 'Sam Broughton',
-	/** Entries per page in the ledger. The mockup implied 6; 10 means fewer pagination hops. */
-	pageSize: 10,
+	/**
+	 * Entries per page in the ledger, as the mockup implied. Each row carries a
+	 * date, title, description and meta line, and the hero sits above the list on
+	 * every page including the paginated ones, so a longer list would make for a
+	 * tall page. The trade is more pagination hops, which is the cheaper cost.
+	 */
+	pageSize: 6,
 	/** Below this many published entries the sidebar is noise, so it is hidden. */
 	sidebarMinEntries: 3,
 	/** How many entries the hero carousel shows at most. */

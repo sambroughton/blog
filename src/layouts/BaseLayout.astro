@@ -81,12 +81,6 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : As
 		<link rel="icon" type="image/png" href={withBase('/favicon-512.png')} sizes="512x512" />
 		<link rel="icon" type="image/png" href={withBase('/favicon-32.png')} sizes="32x32" />
 		<link rel="icon" type="image/png" href={withBase('/favicon-16.png')} sizes="16x16" />
-		<link
-			rel="alternate"
-			type="application/rss+xml"
-			title={`${SITE.name} RSS`}
-			href={withBase('/rss.xml')}
-		/>
 
 		<meta property="og:site_name" content={SITE.name} />
 		<meta property="og:type" content={ogType} />
