@@ -10,6 +10,7 @@ import { entryTint } from '../lib/entryTints';
 import { withBase } from '../lib/paths';
 import { readingTimeMinutes } from '../lib/readingTime';
 import EntryMeta from './EntryMeta.astro';
+import EntryThumb from './EntryThumb.astro';
 
 interface Props {
 	posts: Post[];
@@ -92,6 +93,14 @@ const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles
 									{formatDayMonth(post.data.pubDate)}
 									<span class="block">{post.data.pubDate.getUTCFullYear()}</span>
 								</time>
+
+								{/* Third column in the row from sm up, between the date and the
+								    copy. Below that breakpoint the row is stacked, so the tile
+								    takes margins of its own: mt-3 off the date, mb-3 to stand off
+								    the title, both dropped at sm where the flex gap takes over.
+								    The copy's own mt-1 below is for the stacked case and is
+								    harmless underneath these. */}
+								<EntryThumb post={post} class="mt-3 mb-3 sm:mt-0 sm:mb-0" />
 
 								<div class="mt-1 min-w-0 sm:mt-0">
 									<h3 class="font-display text-base leading-snug font-bold">

@@ -694,6 +694,10 @@ a.tag-topic:focus-visible {
 		border-color: var(--color-rule-bright);
 		color: var(--color-text);
 	}
+
+	.entry-row:hover .entry-thumb {
+		border-color: var(--color-rule-bright);
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -732,6 +736,83 @@ a.tag-topic:focus-visible {
 	.entry-row:focus-within .entry-row__bar {
 		opacity: 1;
 	}
+}
+
+/* Entry thumbnail ----------------------------------------------------------
+   The tile at the head of a ledger row, holding either the entry's cover or the
+   placeholder below. Both are sized and framed here rather than in either state,
+   so a row with art and a row without are the same shape and the list keeps one
+   rhythm across a mixed catalogue.
+
+   No z-index, deliberately. The row's stretched link sits at z-index 1 over the
+   whole body, and leaving this at auto is what keeps the tile part of that target
+   instead of a hole in it - the opposite of the category tag, which lifts itself
+   to z-[2] precisely so it can be clicked separately.
+
+   aspect-ratio rather than a height: the ratio holds while the width changes
+   across the breakpoint, so a cover crops identically at both sizes, and the row
+   reserves its space before any image arrives. Nothing in the list reflows as
+   they decode. 16/10 is the mockup's tile, near enough - 185x113 measured. */
+.entry-thumb {
+	position: relative;
+	/* The other two columns are a fixed-width date and a min-w-0 copy block, so
+	   without this the tile would be the one that gives up width to a long title. */
+	flex: none;
+	width: 100%;
+	aspect-ratio: 16 / 10;
+	overflow: hidden;
+	/* 5px, as .nav-menu. Those are the only two panels on the site with a radius;
+	   the tags use 2px because they are text-sized rather than surfaces. */
+	border-radius: 5px;
+	border: 1px solid var(--color-rule);
+	/* Ground under a cover with transparency, and the base the placeholder builds
+	   its layers on. */
+	background: var(--color-surface);
+	transition: border-color 260ms;
+}
+
+/* A 190px rail from sm up, where the row reads date | tile | copy. Below that the
+   row is stacked and the tile spans the column above the title: 190px of art
+   floating over a full-width heading reads as an orphan rather than a rail. */
+@media (min-width: 640px) {
+	.entry-thumb {
+		width: 11.875rem;
+	}
+}
+
+/* Applies to the <img> Astro emits and to the placeholder alike, which is what
+   makes the two states interchangeable. */
+.entry-thumb :is(img, .entry-thumb__placeholder) {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* The coverless state, which today is every row. Same three layers as
+   .featured-card__placeholder - the surface-2 ground, accent hairlines at 7%, one
+   accent bloom - retuned for a tile a sixth of the width: the hairline period
+   tightens from 15px to 11px so the ruling still reads at this size, and the
+   bloom moves left of centre because, unlike the featured card, there is no copy
+   over this tile for it to stay clear of.
+
+   Decorative and marked so at the point of use, so nothing here is described to a
+   screen reader. It carries no information the row does not already state in
+   text. */
+.entry-thumb__placeholder {
+	background-color: var(--color-surface-2);
+	background-image:
+		repeating-linear-gradient(115deg, rgb(76 141 255 / 0.07) 0 1px, transparent 1px 11px),
+		radial-gradient(105% 95% at 32% 34%, rgb(76 141 255 / 0.16), transparent 66%);
+}
+
+/* Brightens with the row on the row's own 260ms clock, the same value and the
+   same timing as the topic tag, so pointing anywhere on a row lands on one
+   appearance rather than several arriving a beat apart. Border only: the tile is
+   the largest thing in the row, and lifting its ground as well would make the
+   art, not the title, the thing the hover picks out. */
+.entry-row:focus-within .entry-thumb {
+	border-color: var(--color-rule-bright);
 }
 
 /* Every slide occupies the same grid cell, so the track's height is the tallest

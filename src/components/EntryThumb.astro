@@ -1,0 +1,55 @@
+---
+import { Image } from 'astro:assets';
+import type { Post } from '../lib/collections';
+
+interface Props {
+	post: Post;
+	/** Extra classes for the point of use, e.g. the row's own vertical rhythm. */
+	class?: string;
+}
+
+const { post, class: className = '' } = Astro.props;
+
+// The tile at the head of a ledger row. Two states, framed and sized identically
+// by .entry-thumb in global.css so the list keeps one rhythm either way: the
+// entry's own cover when frontmatter carries one, and a generated placeholder
+// when it does not.
+//
+// The placeholder is not a missing image. Nothing in the catalogue has art yet,
+// so it is the state every row is in today and the one the design has to hold
+// up under - hence the same three-layer treatment as .featured-card__placeholder
+// rather than a grey box or a glyph. Setting `cover:` on an entry upgrades its
+// row on its own, one entry at a time, with no change here.
+//
+// Deliberately no per-category mark inside the tile. consts.ts records why the
+// last set came out: they were generic shapes standing in for product marks that
+// cannot be shipped, so they identified nothing while still asking to be learnt.
+// A tinted ground says "this row has art pending" without making that claim.
+//
+// Alt text comes from `coverAlt`, defaulting to empty - the same contract the
+// featured card and the entry page use. Empty is right for the common case: the
+// tile sits inside a row whose accessible name is already the entry title, so an
+// alt repeating it would have a screen reader read every row twice.
+//
+// All lazy, no eager escape hatch. The ledger sits below the hero on the home
+// page and below a page header everywhere else, so no row's tile is the LCP
+// element, and browsers fetch lazy images that are near the viewport anyway.
+// https://docs.astro.build/en/guides/images/
+---
+
+<div class={`entry-thumb ${className}`}>
+	{
+		post.data.cover ? (
+			<Image
+				src={post.data.cover}
+				alt={post.data.coverAlt ?? ''}
+				widths={[190, 380, 760]}
+				sizes="(min-width: 640px) 11.875rem, 100vw"
+				loading="lazy"
+				decoding="async"
+			/>
+		) : (
+			<div class="entry-thumb__placeholder" aria-hidden="true" />
+		)
+	}
+</div>
