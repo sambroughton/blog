@@ -1,6 +1,7 @@
 ---
 import { archiveYears, type Post } from '../lib/collections';
 import { withBase } from '../lib/paths';
+import Chevron from './Chevron.astro';
 
 interface Props {
 	posts: Post[];
@@ -46,9 +47,12 @@ const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-blue';
 	   same as the gap it starts with. No offset for the header, which scrolls away
 	   rather than sticking.
 
-	   No max-height or overflow guard: the rail is one heading and a wrapped row of
-	   years, so it cannot outgrow the viewport and become partly unreachable. That
-	   changes if a section is ever added back to it. */
+	   No max-height or overflow guard: the rail is one heading and one row per year.
+	   That is a lower ceiling than the wrapped run of years it replaces - the list
+	   now grows down at roughly 2rem a year instead of wrapping - but it still takes
+	   a couple of decades of publishing to reach the bottom of a viewport, and a
+	   sticky box only becomes partly unreachable once it is taller than one. Worth
+	   revisiting if a second section is ever added back beside it. */
 }
 <aside class="space-y-8 md:sticky md:top-10 md:self-start" aria-label="Browse entries">
 	{
@@ -57,17 +61,35 @@ const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-blue';
 				<h2 id="sb-archive" class={heading}>
 					Archive
 				</h2>
-				{/* Hovers to text-text (--color-text) rather than to the accent: across the
+				{/* One year per row, the year against the left edge and a chevron against
+				    the right, rather than the wrapped inline run of years this was. The
+				    row is what changes: the years used to sit as a line of small links
+				    reading as one sentence of numbers, and at that size and spacing there
+				    was nothing to say they were destinations rather than a caption. A full
+				    -width row with a chevron at the end of it is the same affordance the
+				    header menu and the pagination controls already use.
+
+				    Hovers to text-text (--color-text) rather than to the accent: across the
 				    site the thing under the pointer lights up, it does not change hue. Same
-				    treatment as the breadcrumb and the header nav. */}
-				<ul class="mt-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs">
+				    treatment as the breadcrumb and the header nav. Colour is the whole
+				    hover here, with no nudge on the chevron, because that is the rail's
+				    stated convention - and the chevron takes currentColor, so it brightens
+				    with the year rather than needing a rule of its own.
+
+				    The anchor carries the padding, not the li, so the empty middle of the
+				    row is part of the target and the chevron is not a separate thing to
+				    aim at. min-h-11 is the usual 44px touch floor, the same one
+				    .nav-menu__row takes, and is dropped at md where the rail becomes a
+				    pointer-driven column beside the list. */}
+				<ul class="mt-1.5">
 					{years.map((entry) => (
 						<li>
 							<a
 								href={withBase(`/archive/${entry.year}`)}
-								class="text-text-2 hover:text-text transition-colors"
+								class="text-text-2 hover:text-text flex min-h-11 items-center justify-between gap-3 py-1.5 text-sm transition-colors md:min-h-0"
 							>
 								{entry.year}
+								<Chevron direction="right" class="h-4 w-4 shrink-0" />
 							</a>
 						</li>
 					))}
