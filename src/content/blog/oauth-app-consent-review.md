@@ -5,7 +5,7 @@ title: Reviewing OAuth application consent as a standing control
 description: Application permissions age badly, nobody owns them, and the review that catches this has to be routine rather than reactive.
 pubDate: 2026-03-04
 categories:
-  - Entra ID
+  - Microsoft Entra ID
 topics:
   - Privileged Access
 draft: true

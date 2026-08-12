@@ -3,8 +3,8 @@ title: Advanced KQL techniques for investigating identity-based attacks in Entra
 description: Queries for password spray, failed-then-succeeded sequences, and unfamiliar sign-in properties, with the joins that make them usable.
 pubDate: 2026-07-14
 categories:
-  - Defender XDR
-  - Sentinel
+  - Microsoft Sentinel
+  - Microsoft Entra ID
 topics:
   - KQL
   - Advanced Hunting

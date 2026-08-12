@@ -8,7 +8,6 @@ import { NAV, SITE } from '../consts';
 import { getPublishedPosts, categoryFacets } from '../lib/collections';
 import { withBase } from '../lib/paths';
 import Chevron from './Chevron.astro';
-import Icon from './Icon.astro';
 
 // One menu, listing the categories themselves rather than the vocabularies they
 // belong to.
@@ -189,12 +188,7 @@ const categories = categoryFacets(await getPublishedPosts());
 
 					{
 						categories.map((category) => (
-							<a
-								class="nav-menu__row"
-								href={withBase(`/categories/${category.slug}`)}
-								style={`--category-color: ${category.color}`}
-							>
-								<Icon name={category.icon} class="category-glyph h-4 w-4" />
+							<a class="nav-menu__row" href={withBase(`/categories/${category.slug}`)}>
 								{category.label}
 							</a>
 						))

@@ -1,12 +1,5 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
-import {
-	SITE,
-	CATEGORIES,
-	TOPICS,
-	type CategoryIcon,
-	type CategoryLabel,
-	type TopicLabel,
-} from '../consts';
+import { SITE, CATEGORIES, TOPICS, type CategoryLabel, type TopicLabel } from '../consts';
 import { slugify } from './slug';
 
 export type Post = CollectionEntry<'blog'>;
@@ -63,9 +56,6 @@ export function primaryTopic(post: Post): TopicLabel {
  */
 export type Facet = { slug: string; label: string; count: number };
 
-/** A category facet, with the catalogue's glyph and product colour joined on. */
-export type CategoryFacet = Facet & { icon: CategoryIcon; color: string };
-
 /**
  * `pick` returns a list so the same counter serves both vocabularies, each of
  * which is multi-valued.
@@ -95,22 +85,20 @@ function countBy<T extends string>(
 }
 
 /**
- * Published categories, in catalogue order, with their glyph and colour.
+ * Published categories, in catalogue order.
  *
- * This is the single source for the header menu, the sidebar rail, the
- * /categories index and the getStaticPaths behind every category archive, so
- * those four can never disagree about which categories exist or what a count is.
+ * This is the single source for the header menu and the getStaticPaths behind
+ * every category archive, so the two can never disagree about which categories
+ * exist or what a count is.
+ *
+ * A thin wrapper over countBy rather than a re-implementation of it: this used
+ * to walk CATEGORIES a second time to join each entry's glyph and product colour
+ * onto its facet, and with those fields gone there is nothing left to join.
+ * Kept as a named function because it is what the callers import and because it
+ * is where the categories-specific accessor lives.
  */
-export function categoryFacets(posts: Post[]): CategoryFacet[] {
-	const counted = new Map(
-		countBy(posts, (p) => p.data.categories, CATEGORIES).map((facet) => [facet.label, facet]),
-	);
-
-	return CATEGORIES.flatMap((category) => {
-		const facet = counted.get(category.label);
-		if (facet === undefined) return [];
-		return [{ ...facet, icon: category.icon, color: category.color }];
-	});
+export function categoryFacets(posts: Post[]): Facet[] {
+	return countBy(posts, (p) => p.data.categories, CATEGORIES);
 }
 
 /** Published topics, in catalogue order. Feeds the /topics index and archives. */

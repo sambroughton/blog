@@ -3,7 +3,7 @@ title: Reducing alert fatigue in Microsoft Defender without hiding real threats
 description: Why suppression rules are the wrong first instinct, and what to do instead when the queue is unmanageable.
 pubDate: 2026-06-30
 categories:
-  - Defender for Endpoint
+  - Microsoft Defender for Endpoint
 topics:
   - Detection Tuning
 featured: true

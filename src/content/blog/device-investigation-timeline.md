@@ -5,7 +5,7 @@ title: Reading a device timeline when the alert tells you almost nothing
 description: Working outwards from a single process event to a defensible account of what ran, what it touched and what it talked to.
 pubDate: 2026-06-05
 categories:
-  - Defender for Endpoint
+  - Microsoft Defender for Endpoint
 topics:
   - Device Investigation
   - Advanced Hunting

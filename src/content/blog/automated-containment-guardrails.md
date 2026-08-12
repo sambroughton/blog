@@ -5,7 +5,7 @@ title: Guardrails for automated user and device containment
 description: What to automate, what to gate behind a human, and how to make an automated containment action reversible before you enable it.
 pubDate: 2026-01-28
 categories:
-  - Entra ID
+  - Microsoft Entra ID
 topics:
   - Privileged Access
   - Detection Tuning

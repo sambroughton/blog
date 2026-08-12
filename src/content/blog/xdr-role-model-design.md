@@ -5,7 +5,7 @@ title: Designing an XDR role model that survives an audit
 description: Mapping analyst work to least-privilege roles, and why the exceptions are where every role model actually fails.
 pubDate: 2025-12-10
 categories:
-  - Entra ID
+  - Microsoft Entra ID
 topics:
   - Privileged Access
 draft: true

@@ -55,22 +55,27 @@ export default defineConfig({
 	// sambroughton.github.io/categories/... with no /blog in it - which 404s. The
 	// docs do not cover the interaction, so this is from the build output.
 	//
-	// Note the slugs differ on the two sides. Category slugs are derived from the
-	// display label, and the labels dropped their "Microsoft " prefix - every value
-	// carried it, so it distinguished nothing - which moved the archives from
-	// /categories/microsoft-entra-id to /categories/entra-id. The old technology
-	// paths keep the prefix because that is what was published.
+	// The slug is now identical on both sides, so each of these is the old path
+	// with /technologies swapped for /categories. That is a coincidence worth
+	// naming rather than a rule to lean on: category slugs are derived from the
+	// display label by slugify(), and the labels carry the full product name -
+	// "Microsoft Entra ID" - which happens to be exactly what the hand-written
+	// technology ids were. The labels briefly dropped the "Microsoft " prefix,
+	// which moved these archives to /categories/entra-id and left the three
+	// destinations below pointing at pages that did not exist; restoring the
+	// prefix restored them. Re-derive rather than assume if the labels move again.
 	//
 	// Verify after changing: dist/technologies/microsoft-entra-id/index.html should
-	// refresh to /blog/categories/entra-id, not /categories/entra-id.
+	// refresh to /blog/categories/microsoft-entra-id - with the /blog, and against
+	// a path that appears in the build's "generating static routes" list.
 	redirects: {
 		// The bare path went to the categories index, which no longer exists: the
 		// header menu lists every category on every page, so the index was a second
 		// copy of that list. Home is where a reader following this wanted to end up.
 		'/technologies': `${BASE}/`,
-		'/technologies/microsoft-sentinel': `${BASE}/categories/sentinel`,
-		'/technologies/microsoft-entra-id': `${BASE}/categories/entra-id`,
-		'/technologies/microsoft-defender-for-endpoint': `${BASE}/categories/defender-for-endpoint`,
+		'/technologies/microsoft-sentinel': `${BASE}/categories/microsoft-sentinel`,
+		'/technologies/microsoft-entra-id': `${BASE}/categories/microsoft-entra-id`,
+		'/technologies/microsoft-defender-for-endpoint': `${BASE}/categories/microsoft-defender-for-endpoint`,
 
 		// Domains have no equivalent to land on: they were disciplines cutting
 		// across the products, and the nearest thing to any one of them is the

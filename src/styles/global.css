@@ -212,9 +212,10 @@ h4 {
 /* Padding rather than margin, so the whole width of the panel is the hit area
    and not just the label. */
 .nav-menu__row {
-	display: flex;
-	align-items: center;
-	gap: 0.6rem;
+	/* Was a flex row with a 0.6rem gap, which existed to seat a glyph beside the
+	   label and centre the two against each other. The glyph is gone and the row
+	   is a single run of text, so block is what it actually is. */
+	display: block;
 	padding: 9px 18px;
 	font-size: 14px;
 	/* Tighter than the 1.5 preflight leaves, because most of these rows are two
@@ -241,21 +242,6 @@ h4 {
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	color: var(--color-blue);
-}
-
-/* The category glyph, wherever it appears: the header menu, the categories index
-   and the tag. One class rather than one per context, because the behaviour is
-   the same in all three - hold the product's colour while whatever is around it
-   changes.
-
-   Set outright rather than inherited, which is the point: the row's label
-   brightens to white on hover and the tag's label is the accent, so a glyph on
-   currentColor would lose the product in both. The fallback covers a caller that
-   sets no --category-color, which is a bug rather than a mode, but an accent
-   glyph is a better failure than a black one. */
-.category-glyph {
-	flex-shrink: 0;
-	color: var(--category-color, #6f9bff);
 }
 
 /* Its own ring rather than leaning on the hover tint: at 10% the tint is too
@@ -371,7 +357,9 @@ h4 {
 .tag-category {
 	display: inline-flex;
 	align-items: center;
-	gap: 0.32rem;
+	/* No gap, unlike the 0.32rem this held while the tag carried a glyph: the box
+	   is now label-only, which is also what .tag-topic below is, so the two are
+	   declared identically apart from their colour and border. */
 	padding: 3px 8px;
 	/* The accent at low alpha rather than --color-rule: the border is what marks
 	   this as the primary vocabulary, and at full strength it would be the
@@ -395,13 +383,6 @@ a.tag-category:focus-visible {
 	border-color: rgb(107 161 255 / 0.62);
 	color: var(--color-blue-bright);
 }
-
-/* The glyph inside a tag is .category-glyph, defined with the nav menu above,
-   since the same rule serves both. Its colour is the product's own, set inline
-   per category. Purely decorative - the glyph is aria-hidden and its label is the
-   text immediately beside it - so it is exempt from the contrast floor the
-   surrounding text is held to (WCAG 1.4.1, and 1.4.11 for non-text contrast).
-   https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html */
 
 /* The quieter half of the pair. Transparent ground and a border at the rule
    colour, which is the faintest edge the palette has, against the category's

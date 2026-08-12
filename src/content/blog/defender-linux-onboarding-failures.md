@@ -3,7 +3,7 @@ title: 'Defender for Endpoint onboarding on Linux servers: the parts that fail'
 description: Diagnosing onboarding that reports success but leaves the agent unhealthy, from audit framework conflicts to blocked egress.
 pubDate: 2026-05-20
 categories:
-  - Defender for Endpoint
+  - Microsoft Defender for Endpoint
 topics:
   - Device Onboarding
 ---

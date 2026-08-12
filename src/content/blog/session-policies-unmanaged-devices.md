@@ -5,8 +5,8 @@ title: Session policies for unmanaged devices that stop short of blocking
 description: Read-only access as the middle option between trust and refusal, and the parts of app control that surprise people after it is switched on.
 pubDate: 2026-01-14
 categories:
-  - Defender for Cloud Apps
-  - Entra ID
+  - Microsoft Defender for Cloud Apps
+  - Microsoft Entra ID
 topics:
   - Conditional Access
   - External Access

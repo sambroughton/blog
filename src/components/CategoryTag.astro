@@ -1,8 +1,7 @@
 ---
-import { CATEGORIES, type CategoryLabel } from '../consts';
+import type { CategoryLabel } from '../consts';
 import { withBase } from '../lib/paths';
 import { slugify } from '../lib/slug';
-import Icon from './Icon.astro';
 
 interface Props {
 	label: CategoryLabel;
@@ -14,32 +13,20 @@ interface Props {
 
 const { label, linked = true, class: className = '' } = Astro.props;
 
-// Total by construction: `categories` is a z.enum over exactly these labels, so a
-// value that reaches here is in the catalogue. Throwing rather than falling back
-// to a default glyph because the only way to get here is for the catalogue and
-// the enum built from it to have drifted apart, and a build failure naming the
-// value is a better report of that than a wrong icon on a live page.
-const category = CATEGORIES.find((entry) => entry.label === label);
-if (!category) throw new Error(`No catalogue entry for category "${label}"`);
-
+// No catalogue lookup any more, and none needed: the tag carried a glyph and a
+// product colour that had to be read off the CATEGORIES entry, and with both
+// gone the label is the whole tag. `label` is typed as CategoryLabel and the
+// href is derived from it by the same slugify() the archive routes are built
+// from, so there is nothing left here the catalogue could answer.
 const href = withBase(`/categories/${slugify(label)}`);
-
-// The product colour travels as a custom property rather than an inline `color`,
-// so the rule in global.css owns which element it lands on - the glyph, not the
-// label, which stays the accent so the tag matches every other one on the page.
-const style = `--category-color: ${category.color}`;
 ---
 
 {
 	linked ? (
-		<a href={href} class={`tag-category ${className}`} style={style}>
-			<Icon name={category.icon} class="category-glyph h-3.5 w-3.5" />
+		<a href={href} class={`tag-category ${className}`}>
 			{label}
 		</a>
 	) : (
-		<span class={`tag-category ${className}`} style={style}>
-			<Icon name={category.icon} class="category-glyph h-3.5 w-3.5" />
-			{label}
-		</span>
+		<span class={`tag-category ${className}`}>{label}</span>
 	)
 }

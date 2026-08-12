@@ -5,7 +5,7 @@ title: Treating analytics rules as code, including the parts that resist it
 description: Version control, review and promotion for detection logic, and an honest account of what portal-authored rules cost you later.
 pubDate: 2026-05-12
 categories:
-  - Sentinel
+  - Microsoft Sentinel
 topics:
   - Analytics Rules
   - Detection Engineering

@@ -54,34 +54,44 @@ export const SITE = {
  * rather than removed from this list, so one can be written towards before it
  * appears anywhere.
  *
- * `icon` names a glyph in Icon.astro. The literal types tie the two together:
- * CategoryIcon below is the union of exactly these strings and Icon's prop only
- * accepts keys of its own PATHS map, so naming a glyph that component does not
- * carry fails the build rather than rendering nothing.
+ * Named workloads only. "Microsoft Defender XDR" was here and came out: the
+ * umbrella covers every Defender workload below it, so tagging an entry with it
+ * said little beyond "this is a security product" while competing with the
+ * specific workload the writing was actually about. If a future entry really is
+ * about the unified portal rather than a workload in it, that is the point to
+ * reconsider.
  *
- * `color` is the glyph's colour, approximating the product's own mark so the
- * menu is scannable by shape and hue rather than by reading six labels that all
- * begin "Defender for". Deliberately NOT a --color-* token in global.css: these
- * are product marks, not part of the site's palette, and promoting them to
- * tokens would invite their use on site chrome. Every glyph is aria-hidden with
- * its label immediately beside it, so colour never carries meaning on its own
- * (WCAG 1.4.1).
+ * Full product names, "Microsoft " prefix included. A category names a product,
+ * so it should name it the way its vendor does rather than in a shorthand the
+ * reader has to expand. The pair to watch is Defender for Cloud Apps and
+ * Defender for Cloud - near-identical names for different products - and the
+ * prefix does nothing to separate those two; only reading to the last word does,
+ * which is a cost this vocabulary carries either way.
  *
- * The "Microsoft " prefix is deliberately not carried here. Every value would
- * have it, so it distinguishes nothing and costs the width of the word in every
- * menu row, tag and breadcrumb - and the site's own description already says
- * these are Microsoft products. Note that the labels are the URLs: dropping it
- * makes the archive /categories/entra-id, not /categories/microsoft-entra-id.
+ * Spelled as Microsoft spells them, checked against Microsoft's own lists rather
+ * than from memory:
+ * https://learn.microsoft.com/defender-xdr/microsoft-365-defender
+ * https://learn.microsoft.com/azure/sentinel/overview
+ *
+ * These entries carried an `icon` and a `color` too - a Material glyph, tinted
+ * per product, drawn beside the label in the header menu and inside the tag.
+ * Both are gone, along with the component that held the glyphs. They were
+ * generic shapes standing in for marks that cannot be shipped, so they
+ * identified nothing on their own, and three of the seven colours were the same
+ * slate, so the tint was a mapping no reader could learn. Removing them is also
+ * what makes the longer labels affordable: the width the glyph gives back pays
+ * for part of the prefix.
+ *
+ * Note that the labels are the URLs: the archive is /categories/microsoft-entra-id.
  */
 export const CATEGORIES = [
-	{ label: 'Defender XDR', icon: 'dashboard', color: '#7a8cf0' },
-	{ label: 'Sentinel', icon: 'shield', color: '#3aa0e0' },
-	{ label: 'Entra ID', icon: 'diamond', color: '#4cc2ff' },
-	{ label: 'Defender for Endpoint', icon: 'computer', color: '#8fa3c4' },
-	{ label: 'Defender for Identity', icon: 'person', color: '#8fa3c4' },
-	{ label: 'Defender for Office 365', icon: 'mail', color: '#e0553f' },
-	{ label: 'Defender for Cloud Apps', icon: 'cloud', color: '#8fa3c4' },
-	{ label: 'Defender for Cloud', icon: 'security', color: '#8fa3c4' },
+	{ label: 'Microsoft Sentinel' },
+	{ label: 'Microsoft Entra ID' },
+	{ label: 'Microsoft Defender for Endpoint' },
+	{ label: 'Microsoft Defender for Identity' },
+	{ label: 'Microsoft Defender for Office 365' },
+	{ label: 'Microsoft Defender for Cloud Apps' },
+	{ label: 'Microsoft Defender for Cloud' },
 ] as const;
 
 /**
@@ -122,9 +132,6 @@ export const TOPICS = [
 export type Category = (typeof CATEGORIES)[number];
 export type CategoryLabel = Category['label'];
 export type TopicLabel = (typeof TOPICS)[number]['label'];
-
-/** The glyphs the category lists need Icon.astro to carry. */
-export type CategoryIcon = Category['icon'];
 
 // z.enum() needs a non-empty tuple, hence the assertions.
 export const CATEGORY_LABELS = CATEGORIES.map((s) => s.label) as [

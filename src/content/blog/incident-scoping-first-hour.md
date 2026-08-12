@@ -5,7 +5,7 @@ title: Scoping an incident in the first hour
 description: What to establish before containment, what to leave alone, and the questions that decide whether this is one host or a hundred.
 pubDate: 2026-04-15
 categories:
-  - Defender for Endpoint
+  - Microsoft Defender for Endpoint
 topics:
   - Incident Investigation
   - Device Investigation
