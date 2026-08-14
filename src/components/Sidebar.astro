@@ -1,29 +1,35 @@
 ---
 import { SITE } from '../consts';
-import { archiveYears, type Post } from '../lib/collections';
+import { archiveYears, postsInProjects, type Post } from '../lib/collections';
 import { withBase } from '../lib/paths';
 import Chevron from './Chevron.astro';
 
 interface Props {
+	/**
+	 * Every published entry, projects included. Not the caller's page slice, and
+	 * not the ledger's filtered list: this rail is built from the whole catalogue.
+	 * The ledger pages hand over both lists for exactly this reason - see the note
+	 * in index.astro.
+	 */
 	posts: Post[];
 }
 
 const { posts } = Astro.props;
 
-// The newest few entries. `posts` is already newest-first out of
-// getPublishedPosts(), so this is a slice and not a sort.
+// The newest few projects. `posts` is already newest-first out of
+// getPublishedPosts(), so this is a filter and a slice, not a sort.
 //
-// Headed "Recent Labs", and the heading now links to /labs - which it did not
-// when this comment last said there was no such route. The two still do not mean
-// quite the same thing and that is worth stating: this block is the newest
-// entries, all of them, whereas /labs is the entries carrying the Labs topic. So
-// the heading is a route to the labs listing and the rows beneath it are the
-// recent writing, which will overlap without being the same set.
+// This block is now the only place a project appears on the front of the site. The
+// ledger beside it is articles only, so the two lists are disjoint rather than
+// overlapping, and the rail has stopped being a second copy of the top of the page.
 //
-// Kept that way on purpose. Filtering these three to the Labs topic would leave
-// the rail's only "what is new" block showing nothing at all until enough entries
-// carry the tag, and what a reader wants from a rail is the newest work.
-const recent = posts.slice(0, SITE.sidebarRecentCount);
+// That is a reversal. This was the newest entries regardless of tag, on the
+// argument that a rail should show what is new and filtering it would leave the
+// block empty until enough entries carried the tag. The emptiness argument still
+// holds and is handled the plain way instead: with no projects published the block
+// does not render at all, which is better than a heading over three entries that
+// are not what it says they are.
+const recent = postsInProjects(posts).slice(0, SITE.sidebarRecentCount);
 
 // Years that actually have entries, so a year with nothing behind it is never
 // offered.
@@ -56,21 +62,23 @@ const row =
 // including those. Topics are not here either; they are labels rather than
 // destinations, so a rail full of them would be a block of text that does nothing.
 //
-// What is left is what the header cannot carry: the newest entries, and the years.
-// Neither is a taxonomy, which is the plainest statement of the split - vocabulary
-// in the header, chronology in the rail.
+// What is left is what the header cannot carry: the newest projects, and the
+// years. Neither is a taxonomy, which is the plainest statement of the split -
+// vocabulary in the header, everything else in the rail.
 //
-// "No recent or featured entries" was the other rule, on the grounds that the
+// "No recent or featured entries" was the old rule here, on the grounds that the
 // ledger beside the rail is the recent entries and the hero above it is the
-// featured ones. Recent Labs is here anyway, and the overlap is real: on page 1
-// of the home page these three titles are the top three of the list beside them,
-// and if nothing is marked featured then selectHeroPosts falls back to the newest
-// entries and they are the hero's three as well. Taken deliberately - the block
-// earns its place on every other page the rail appears on (/page/2 and up, the
-// solution archives, the year archives), where it is the only thing pointing at
-// what is new. Excluding what is already on the page was the obvious fix and is
-// worse: on the home page it would leave entries 4 to 6 under a heading that says
-// recent.
+// featured ones. That rule is satisfied now rather than overruled: the ledger is
+// articles and this block is projects, so the rail duplicates nothing on the page
+// it sits beside. It was briefly broken - this block held the newest entries
+// whatever their tag, which on page 1 of the home page meant three titles that
+// were also the top three of the list beside them and, with nothing featured, the
+// hero's three as well.
+//
+// One page still overlaps, and it is the honest exception: on /projects this block
+// is the top of the listing beside it. Left alone deliberately, the same way the
+// old note argued - excluding what is already on the page would leave projects 4
+// to 6 under a heading that says recent.
 //
 // Still nothing else goes in here. No social or newsletter blocks. The rail is two
 // ways into the archive, not a column of widgets.
@@ -107,7 +115,7 @@ const row =
 >
 	{
 		recent.length > 0 && (
-			<nav aria-labelledby="sb-labs">
+			<nav aria-labelledby="sb-projects">
 				{/* The only heading in the rail that is a link, and it earns it: the other
 				    two name what is under them, this one also names a page. Styled as the
 				    heading first and the link second - same size, case and accent as
@@ -117,9 +125,9 @@ const row =
 
 				    The anchor is inside the h2 rather than around it, so the heading stays
 				    the labelled element and aria-labelledby keeps pointing at it. */}
-				<h2 id="sb-labs" class={heading}>
-					<a href={withBase('/labs')} class="hover:text-text transition-colors">
-						Recent Labs
+				<h2 id="sb-projects" class={heading}>
+					<a href={withBase('/projects')} class="hover:text-text transition-colors">
+						Recent Projects
 					</a>
 				</h2>
 				{/* Titles alone: no date, no thumbnail, no description, and none of the
@@ -129,9 +137,9 @@ const row =
 				    reading as one thing.
 
 				    items-start rather than items-center, and leading-snug, because a title
-				    wraps to two or three lines here where a year and a product name do
-				    not - so the text has to sit against the top of the row rather than be
-				    centred in a box its own height. */}
+				    wraps to two or three lines here where a year does not - so the text has
+				    to sit against the top of the row rather than be centred in a box its
+				    own height. */}
 				<ul class="mt-1.5">
 					{recent.map((post) => (
 						<li>

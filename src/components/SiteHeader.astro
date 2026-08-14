@@ -108,11 +108,18 @@ const solutions = solutionFacets(await getPublishedPosts());
 			{
 				/* Sized to the exact height of the two lines beside it, so its top and
 				   bottom edges land on theirs: the title's line box (text-xl, 1.25rem at
-				   a 1.4 ratio = 1.75rem) plus the tagline's mt-1 (0.25rem) plus the
-				   tagline's own line box (0.6rem inheriting the 1.5 from preflight =
-				   0.9rem). The viewBox is cropped to the mark, so this is the glyph's
-				   height rather than a padded box, and w-auto lets the 702x521 ratio set
-				   the width.
+				   leading-tight's 1.25 ratio = 1.5625rem) plus the tagline's own line box
+				   (0.6rem inheriting the 1.5 from preflight = 0.9rem). 2.46rem, rounded
+				   down from 2.4625. The viewBox is cropped to the mark, so this is the
+				   glyph's height rather than a padded box, and w-auto lets the 702x521
+				   ratio set the width.
+
+				   This was 2.9rem, against a title at the default 1.4 ratio (1.75rem) and
+				   a 0.25rem mt-1 under it. Both went to close the gap between the name and
+				   the tagline, and the mark had to come down with them or it would no
+				   longer be the height of the thing it is set against. That is the term to
+				   recompute if either line's size or leading changes again: this number is
+				   derived from the two lines, not chosen.
 
 				   aria-hidden rather than the alt="" this carried as a raster image, and
 				   the inline equivalent of it: the site name sits immediately to the right
@@ -130,25 +137,35 @@ const solutions = solutionFacets(await getPublishedPosts());
 				   that to the engine deriving a ratio from it, and an engine that does not
 				   falls back to width:auto meaning "fill the line". */
 			}
-			<Logo width={702} height={521} class="h-[2.9rem] w-auto shrink-0" aria-hidden="true" />
+			<Logo width={702} height={521} class="h-[2.46rem] w-auto shrink-0" aria-hidden="true" />
 
 			<span class="block min-w-0">
 				{
 					/* No hover colour on the brand: the wordmark should read as the site's
 				    identity, not as another accent link. Spans rather than an h1/p pair,
 				    because this sits inside the anchor now and a heading in the masthead
-				    would compete with each page's own h1. */
+				    would compete with each page's own h1.
+
+				    leading-tight rather than the 1.4 that text-xl brings with it. The name
+				    is one line, so the leading was never doing the job leading is for -
+				    all it did was hang 0.25rem of half-leading under the glyphs and push
+				    the tagline away from the name it belongs to. Tight closes that without
+				    touching the type size. */
 				}
-				<span class="font-display text-text block text-xl font-bold">
+				<span class="font-display text-text block text-xl leading-tight font-bold">
 					{SITE.name}
 				</span>
 				{
 					/* Set as authored rather than uppercased, and the 0.1em tracking went with
 				    the caps: that letterspacing exists to open up all-caps and reads as
 				    gappy in mixed case. Short enough to hold one line on a phone, so it is
-				    not hidden below sm. */
+				    not hidden below sm.
+
+				    No mt-1 any more. The two lines are one brand rather than two facts
+				    stacked, so the only space between them is the half-leading each line
+				    box carries, and a margin on top of that read as a gap. */
 				}
-				<span class="text-text-3 mt-1 block text-[0.6rem]">{SITE.tagline}</span>
+				<span class="text-text-3 block text-[0.6rem]">{SITE.tagline}</span>
 			</span>
 		</a>
 

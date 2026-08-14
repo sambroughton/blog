@@ -14,8 +14,8 @@
 // The two are no longer symmetrical, and that asymmetry is the point. Solutions
 // are navigation - the header menu, an index at /solutions and an archive per
 // product. Topics are description - tags a reader reads on a row or an entry
-// page, with no link on them and no route behind them. Labs is the single
-// exception, routed at /labs; see LABS_TOPIC below.
+// page, with no link on them and no route behind them. Projects is the single
+// exception, routed at /projects; see PROJECTS_TOPIC below.
 //
 // This vocabulary was called "Category" and is now called "Solution", reversing
 // a decision recorded here for a while: that "Category" was the plainer word to
@@ -56,13 +56,14 @@ export const SITE = {
 	heroCount: 3,
 	/**
 	 * Entries in the rail's first block, newest first - the one headed "Recent
-	 * Labs". Named for the count rather than for the heading, because these are
-	 * ordinary blog entries: there is no labs collection behind that label. See the
-	 * note in Sidebar.astro.
+	 * Projects". Named for the count rather than for the heading, because these are
+	 * ordinary blog entries carrying the Projects topic: there is no projects
+	 * collection behind that label. See the note in Sidebar.astro.
 	 *
 	 * Three, so the block reads as a glance back rather than as a second ledger
-	 * beside the first one. It does repeat the top of the list on page 1 of the
-	 * home page - a known cost, taken deliberately; see the note in Sidebar.astro.
+	 * beside the first one. It no longer repeats the top of the ledger, which it did
+	 * while this block was the newest entries whatever their tag: the ledger is
+	 * articles and this is projects, and the two lists are disjoint.
 	 *
 	 * This replaces sidebarTagCount, which capped a "Popular Tags" block that
 	 * merged both vocabularies and ranked them by volume. That block is gone, and so
@@ -157,11 +158,19 @@ export const SOLUTIONS = [
  * above and the header menu built from it - and the topics say what a given entry
  * is about once they have found it.
  *
- * The one exception is Labs, and it is an exception in the routing rather than in
- * the vocabulary: /labs lists the entries carrying it. It is a topic like any other
- * so that an entry declares itself a lab write-up the same way it declares
+ * The one exception is Projects, and it is an exception in the routing rather than
+ * in the vocabulary: /projects lists the entries carrying it. It is a topic like
+ * any other so that an entry declares itself a project the same way it declares
  * everything else, in `topics`, rather than through a second flag in frontmatter or
  * a collection of its own.
+ *
+ * It is also the one topic that is not a subject. Everything else in this list
+ * names something an entry is *about*; Projects names what an entry *is* - a piece
+ * of work built and written up, rather than a note on a product. That is a real
+ * inconsistency in the vocabulary and it is the price of not adding a third field
+ * to frontmatter for one distinction. Worth revisiting if a second value ever wants
+ * the same treatment, because two of these would make it a vocabulary rather than
+ * an exception.
  *
  * Alphabetical, because there is nothing to group them by and a reader scanning
  * for a known subject is looking one up rather than browsing a progression. These
@@ -191,8 +200,8 @@ export const TOPICS = [
 	{ label: 'Identity Protection' },
 	{ label: 'Incident Investigation' },
 	{ label: 'KQL' },
-	{ label: 'Labs' },
 	{ label: 'Privileged Access' },
+	{ label: 'Projects' },
 ] as const;
 
 export type Solution = (typeof SOLUTIONS)[number];
@@ -200,12 +209,12 @@ export type SolutionLabel = Solution['label'];
 export type TopicLabel = (typeof TOPICS)[number]['label'];
 
 /**
- * The topic /labs is built from. Here rather than inlined at the route so the
+ * The topic /projects is built from. Here rather than inlined at the route so the
  * string exists once: it has to match a TOPICS label exactly or the page silently
  * lists nothing, and `satisfies TopicLabel` is what makes a typo a build error
  * instead of an empty page.
  */
-export const LABS_TOPIC = 'Labs' satisfies TopicLabel;
+export const PROJECTS_TOPIC = 'Projects' satisfies TopicLabel;
 
 /* Removed: TopicGroup, TopicGroupIconName and TOPIC_GROUPS - the five disciplines
    (Identity, Endpoint, Cloud, Security Operations, Security Engineering) that the
@@ -235,11 +244,11 @@ export const TOPIC_LABELS = TOPICS.map((t) => t.label) as [TopicLabel, ...TopicL
 // page the reader can already reach. Home is not in here because the brand links
 // to it, and an Articles link is not either because home *is* the article feed.
 //
-// Labs is in here because nothing else names it. It is a listing of the entries
-// carrying the Labs topic - see LABS_TOPIC above - and with topics no longer
-// routed at all, this link and the rail's "Recent Labs" heading are the only two
-// ways to it. It goes first because it is a slice of the writing, which puts it
-// nearer the ledger than the two utility pages after it.
+// Projects is in here because nothing else names it. It is a listing of the
+// entries carrying the Projects topic - see PROJECTS_TOPIC above - and with topics
+// no longer routed at all, this link and the rail's "Recent Projects" heading are
+// the only two ways to it. It goes first because it is a slice of the writing,
+// which puts it nearer the ledger than the two utility pages after it.
 //
 // Search is in here because it is a way into the archive rather than a duplicate
 // of one, which makes it a peer of the Solutions menu beside it. It went here and
@@ -251,7 +260,7 @@ export const TOPIC_LABELS = TOPICS.map((t) => t.label) as [TopicLabel, ...TopicL
 // page about the blog. Both were the same file until that change, which is why
 // /about used to be labelled "Disclaimer" here.
 export const NAV = [
-	{ href: '/labs', label: 'Labs' },
+	{ href: '/projects', label: 'Projects' },
 	{ href: '/search', label: 'Search' },
 	{ href: '/about', label: 'About' },
 ] as const;

@@ -1,6 +1,6 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import {
-	LABS_TOPIC,
+	PROJECTS_TOPIC,
 	SITE,
 	SOLUTIONS,
 	TOPICS,
@@ -226,28 +226,50 @@ export function postsBySolution(posts: Post[], slug: string): Post[] {
 /**
  * Entries under one topic, newest first. Slug-keyed, as postsBySolution is.
  *
- * No route calls this any more - there are no per-topic archives - but postsInLabs
- * below is one topic filtered by label, which is the same question asked of the
- * one topic that does have a page.
+ * No route calls this any more - there are no per-topic archives - but
+ * postsInProjects below is one topic filtered by label, which is the same question
+ * asked of the one topic that does have a page.
  */
 export function postsByTopic(posts: Post[], slug: string): Post[] {
 	return posts.filter((post) => post.data.topics.some((label) => slugify(label) === slug));
 }
 
 /**
- * Entries carrying the Labs topic, newest first because `posts` already is.
+ * Entries carrying the Projects topic, newest first because `posts` already is.
  *
  * Matched on the label rather than on a slug, unlike every other filter here, and
- * that is the honest form for this one: /labs is a fixed route rather than a
- * generated one, so there is no slug it was routed by to compare against. LABS_TOPIC
- * is checked against TopicLabel in consts.ts, so the string cannot drift from the
- * catalogue without failing the build.
+ * that is the honest form for this one: /projects is a fixed route rather than a
+ * generated one, so there is no slug it was routed by to compare against.
+ * PROJECTS_TOPIC is checked against TopicLabel in consts.ts, so the string cannot
+ * drift from the catalogue without failing the build.
  *
- * May be empty, and the page has to say so rather than 404: /labs exists whether or
- * not anything carries the tag yet.
+ * May be empty, and the page has to say so rather than 404: /projects exists
+ * whether or not anything carries the tag yet.
  */
-export function postsInLabs(posts: Post[]): Post[] {
-	return posts.filter((post) => post.data.topics.includes(LABS_TOPIC));
+export function postsInProjects(posts: Post[]): Post[] {
+	return posts.filter((post) => post.data.topics.includes(PROJECTS_TOPIC));
+}
+
+/**
+ * The complement of postsInProjects: everything that is not a project.
+ *
+ * This is what the ledger is built from - the home page, its paginated
+ * continuations and the hero above them - so a project appears at /projects and in
+ * the rail's Recent Projects block, and nowhere else on the front of the site.
+ *
+ * The split is only applied to the ledger. Year archives, solution archives and
+ * search all keep the complete set, because those pages answer "everything in
+ * 2026" or "everything I have done in Sentinel", and a project is an entry like
+ * any other to those questions. Only the front page's Latest list treats the two
+ * as separate streams.
+ *
+ * Worth knowing what this costs: the ledger's article count and its page count are
+ * now derived from a subset, so publishing a project changes neither. That is the
+ * intent rather than a side effect, but it does mean SITE.pageSize is paginating
+ * something smaller than "everything published".
+ */
+export function postsExcludingProjects(posts: Post[]): Post[] {
+	return posts.filter((post) => !post.data.topics.includes(PROJECTS_TOPIC));
 }
 
 /** Years that actually have entries, newest first. */

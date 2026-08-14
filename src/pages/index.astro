@@ -2,14 +2,27 @@
 import LedgerView from '../components/LedgerView.astro';
 import { SITE } from '../consts';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getPublishedPosts, selectHeroPosts } from '../lib/collections';
+import { getPublishedPosts, postsExcludingProjects, selectHeroPosts } from '../lib/collections';
 
 // Page 1 is a static route rather than part of the paginated one, so the
 // homepage exists even when the collection is empty.
+//
+// Two lists, and the difference between them is the whole of this page's layout.
+// `articles` is the ledger and the hero: everything that is not a project. `posts`
+// is the complete set and goes to the rail, which is where the projects surface -
+// see the Recent Projects block in Sidebar.astro. Handing the rail the filtered
+// list instead would leave that block permanently empty, which is the mistake this
+// split is easiest to make.
+//
+// The hero reads from `articles` as well, so a project marked `featured` does not
+// climb back onto the front page through the carousel. Nothing is featured that
+// way today, so this is closing the door rather than fixing a bug.
 const posts = await getPublishedPosts();
-const pagePosts = posts.slice(0, SITE.pageSize);
-const lastPage = Math.max(1, Math.ceil(posts.length / SITE.pageSize));
-const heroPosts = selectHeroPosts(posts);
+const articles = postsExcludingProjects(posts);
+
+const pagePosts = articles.slice(0, SITE.pageSize);
+const lastPage = Math.max(1, Math.ceil(articles.length / SITE.pageSize));
+const heroPosts = selectHeroPosts(articles);
 ---
 
 <BaseLayout>
@@ -35,6 +48,7 @@ const heroPosts = selectHeroPosts(posts);
 				heroPosts={heroPosts}
 				currentPage={1}
 				lastPage={lastPage}
+				emptyMessage="Nothing here yet - everything published so far is a project."
 			/>
 		)
 	}
