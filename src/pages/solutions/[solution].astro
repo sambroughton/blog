@@ -34,37 +34,30 @@ const showSidebar = shouldShowSidebar(allPosts.length);
 ---
 
 {
-	/* The rail is here now, and it was deliberately absent before. Worth recording
-	   why it changed, because the old reasoning was sound when it was written.
+	/* The rail carries no product list any more, which settles an argument this
+	   comment has been having with itself for three revisions.
 
-	   It said: the rail's only facet list is the products, and this page is one
-	   product, so carrying the list here would put the current page in a list of
-	   options - a filter offering itself as an option. It went on to say the way
-	   sideways to another product is the header menu, which is on every page.
+	   The original position was that the rail's facet list is the products, and
+	   this page is one product, so carrying the list here would put the current
+	   page in a list of options - a filter offering itself as an option. Then the
+	   header menu stopped listing products, which left no route from one product
+	   archive to another, so the list came into the rail with the current one
+	   rendered as plain text with aria-current.
 
-	   That second half stopped being true. The header menu listed the products
-	   once; it has since become the five areas, so there is now no route from one
-	   product archive to another anywhere on the site - which for a page whose
-	   whole job is "here is what I have done with this product" is the one link a
-	   reader is most likely to want next.
+	   Both are moot. The header menu is the products again, so the sideways route
+	   is back on every page including this one, and the rail is down to what is new
+	   and when - neither of which repeats anything here. The rail still takes the
+	   whole collection rather than this page's slice, because the recent entries
+	   and the year archive are facts about the blog and not about this product.
 
-	   The original objection is answered rather than ignored: the rail renders the
-	   current solution as plain text with aria-current, not as a link to the page
-	   you are on. That is the same thing Pagination does with the current page and
-	   Breadcrumb does with the last crumb.
-
-	   The cost is that this route loads the whole collection again to render that
-	   list, which it had stopped doing. Same shape as /topics/<slug> and
-	   /archive/<year>, both of which take allPosts for the same reason.
-
-	   Two crumbs, not three: there is no solutions index page to name as the middle
-	   step - the rail is the list of them - and a crumb pointing at a page that does
-	   not exist is worse than a shorter trail. */
+	   Three crumbs now, not two: /solutions exists, so the middle step names a page
+	   that is really there. It was two while that index did not exist, on the rule
+	   that a crumb pointing nowhere is worse than a shorter trail. */
 }
 <BaseLayout
 	title={label}
 	description={`Entries on ${label}.`}
-	crumbs={[{ label: 'Home', href: '/' }, { label }]}
+	crumbs={[{ label: 'Home', href: '/' }, { label: 'Solutions', href: '/solutions' }, { label }]}
 >
 	{
 		/* No blurb under the heading. There is no written description of any of these
@@ -79,14 +72,13 @@ const showSidebar = shouldShowSidebar(allPosts.length);
 	<div class={showSidebar ? 'grid gap-10 md:grid-cols-[1fr_15rem]' : ''}>
 		<div class="min-w-0">
 			{
-				/* filteredBy solution: every row here shares the product in the heading
-				   above, so the eyebrow that normally leads a row would repeat it down the
-				   page and separate nothing. Those rows run title-first instead, with the
-				   area and topics beneath - which is what actually distinguishes one from
-				   the next here. */
+				/* filteredBySolution: every row here shares the product in the heading
+				   above, so a solution tag on each would repeat it down the page and
+				   separate nothing. Those rows carry their primary topic instead, which is
+				   what actually distinguishes one from the next here. See rowTag(). */
 			}
-			<EntryList posts={posts} label="Entries" filteredBy={{ kind: 'solution' }} />
+			<EntryList posts={posts} label="Entries" filteredBySolution />
 		</div>
-		{showSidebar && <Sidebar posts={allPosts} currentSolution={label} />}
+		{showSidebar && <Sidebar posts={allPosts} />}
 	</div>
 </BaseLayout>

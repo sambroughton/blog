@@ -1,12 +1,7 @@
 ---
 import EntryList from '../components/EntryList.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import {
-	getPublishedPosts,
-	solutionFacets,
-	topicFacets,
-	topicGroupFacets,
-} from '../lib/collections';
+import { getPublishedPosts, solutionFacets, topicFacets } from '../lib/collections';
 
 // Every published entry, rendered as an ordinary ledger row, then filtered in the
 // browser by hiding rows that do not match.
@@ -22,21 +17,17 @@ import {
 // the tab order as well as off the screen, for free, which a display rule would
 // not. Nothing sets `display` on .entry-row, so the user-agent rule wins.
 //
-// The three filters are the site's three taxonomy layers, widening as they go:
-// Solution, then Area, then Topic. Each option list comes from the same facet
-// helper the archives are built from, so a filter can only offer a value that has
-// entries behind it, and the option values are slugs to match the data attributes
-// rowFilterData() writes.
+// The two filters are the site's two vocabularies: Solution, then Topic. The Area
+// select between them has gone with the group layer it was built from. Each option
+// list comes from the same facet helper the listings are built from, so a filter
+// can only offer a value that has entries behind it, and the option values are
+// slugs to match the data attributes rowFilterData() writes.
 //
-// A note on the labels, since this page names all three layers at once and the
-// hierarchy is sometimes described as Solution / Topic / Tags. It is not spelled
-// that way here. "Topic" is already this site's word for the eighteen specific
-// subjects - it is the frontmatter field, the /topics index, the footer link and
-// the header menu's label - so calling them Tags on this page alone would give one
-// vocabulary two names. The broad layer above them keeps the word the site already
-// shows for it: topics/[topic].astro has printed "Area" as the eyebrow on a group
-// archive since before this page existed. So the three selects are the three
-// eyebrows the site already prints, in the order a row reads them.
+// The Topic select is now the only control on the site that acts on a topic.
+// Topics are not linked anywhere any more - see the note on TOPICS in consts.ts -
+// and that makes this page more important rather than less: it is where the
+// subject vocabulary is still usable, and the reason removing the topic archives
+// did not strand it. Worth keeping in mind if this page is ever trimmed.
 //
 // Scale: this ships every published entry's title, description and a lowercased
 // copy of both, at roughly 1.5 KB of HTML per row. Fine into the low hundreds;
@@ -46,23 +37,22 @@ import {
 const posts = await getPublishedPosts();
 
 const solutions = solutionFacets(posts);
-const areas = topicGroupFacets(posts);
 const topics = topicFacets(posts);
 
-// Shared by the three selects and their labels, so the controls cannot drift apart.
+// Shared by both selects and their labels, so the controls cannot drift apart.
 const field = 'text-text-3 block text-[0.63rem] tracking-[0.12em] uppercase';
 ---
 
 <BaseLayout
 	title="Search"
-	description="Filter the entries by Microsoft product, subject area, topic or text."
+	description="Filter the entries by Microsoft product, topic or text."
 	crumbs={[{ label: 'Home', href: '/' }, { label: 'Search' }]}
 >
 	<p class="text-blue text-[0.68rem] tracking-[0.12em] uppercase">Browse</p>
 	<h1 class="font-display text-text mt-1 text-2xl leading-tight font-bold sm:text-3xl">Search</h1>
 	<p class="text-text-2 mt-3 max-w-[52ch] text-sm leading-relaxed">
-		Filter by the product an entry is built on, the area of work it belongs to, the subject it
-		covers, or the words in its title and summary.
+		Filter by the product an entry is built on, the subject it covers, or the words in its title and
+		summary.
 	</p>
 
 	{
@@ -90,25 +80,16 @@ const field = 'text-text-3 block text-[0.63rem] tracking-[0.12em] uppercase';
 		</div>
 
 		{
-			/* Three columns from sm up, one below. The selects are equal-width rather
+			/* Two columns from sm up, one below. The selects are equal-width rather
 			   than sized to their content: the option lists are wildly different lengths
-			   and a row of three differently sized boxes reads as three unrelated
-			   controls. */
+			   and a row of differently sized boxes reads as unrelated controls. */
 		}
-		<div class="mt-4 grid gap-3 sm:grid-cols-3">
+		<div class="mt-4 grid gap-3 sm:grid-cols-2">
 			<div>
 				<label for="search-solution" class={field}>Solution</label>
 				<select id="search-solution" class="search-select mt-1.5" data-search-facet="solutions">
 					<option value="">All solutions</option>
 					{solutions.map((facet) => <option value={facet.slug}>{facet.label}</option>)}
-				</select>
-			</div>
-
-			<div>
-				<label for="search-area" class={field}>Area</label>
-				<select id="search-area" class="search-select mt-1.5" data-search-facet="areas">
-					<option value="">All areas</option>
-					{areas.map((facet) => <option value={facet.slug}>{facet.label}</option>)}
 				</select>
 			</div>
 
@@ -126,7 +107,7 @@ const field = 'text-text-3 block text-[0.63rem] tracking-[0.12em] uppercase';
 		{
 			/* is:inline so this stays in the document rather than being hoisted into the
 			   global stylesheet, which would hide the controls for everyone. Hiding the
-			   whole panel rather than leaving three inert selects on the page: the same
+			   whole panel rather than leaving two inert selects on the page: the same
 			   call SiteHeader's noscript makes about its dropdown, for the same reason -
 			   a control that does nothing is worse than no control, and showing the list
 			   itself is the honest answer. The count below is correct without scripting,

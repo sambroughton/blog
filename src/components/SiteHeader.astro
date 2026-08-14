@@ -5,38 +5,37 @@
 // https://docs.astro.build/en/guides/images/#svg-components
 import Logo from '../assets/logo.svg';
 import { NAV, SITE } from '../consts';
-import { getPublishedPosts, topicGroupFacets } from '../lib/collections';
+import { getPublishedPosts, solutionFacets } from '../lib/collections';
 import { withBase } from '../lib/paths';
 import Chevron from './Chevron.astro';
-import TopicGroupIcon from './TopicGroupIcon.astro';
 
-// One menu, on the five areas of the work.
+// One menu, on the Microsoft products the work sits in.
 //
-// It has been three things. First three rows to three taxonomy views, which asked
-// a reader to pick a classification scheme before they had seen anything
-// classified. Then the solutions - the Microsoft products - listed outright.
-// Briefly the busiest individual topics, which put the right vocabulary in the
-// header at the wrong grain: seven of eighteen subjects, re-ranked by volume on
-// every build, is a menu whose contents move and which is never the whole of
-// anything.
+// It has been four things and is now back to the second of them. First three rows
+// to three taxonomy views, which asked a reader to pick a classification scheme
+// before they had seen anything classified. Then the solutions, listed outright.
+// Briefly the busiest individual topics, which put a vocabulary in the header at
+// the wrong grain: seven of eighteen subjects, re-ranked by volume on every build,
+// is a menu whose contents move and is never the whole of anything. Then five
+// derived groups over both vocabularies - stable, and covering the archive, but a
+// third classification layer laid over two that already existed.
 //
-// Groups are the grain a top-level menu wants. Five rows, stable, each a door onto
-// a body of work rather than a single subject, and between them they cover the
-// archive - see TOPIC_GROUPS in consts.ts for how membership is derived, and note
-// that no entry is tagged with a group by hand. The individual subjects are still
-// a click away at /topics, which the last row and the label itself both reach, and
-// the rail beside each listing carries the busiest of them as tags.
+// The products are what a reader of this site actually navigates by. It is a
+// portfolio of work in named Microsoft security products, so "which console was
+// this done in" is the question the top-level menu should answer, and it is the
+// one question the entries answer outright in frontmatter rather than by
+// derivation. The subjects are still on every row and every entry page as tags -
+// they are simply not destinations any more; see the note on TOPICS in consts.ts.
 //
-// No shortlisting and no cap, unlike the topic menu this replaces: five is the
-// whole catalogue, so there is nothing to trim and nothing arbitrary about what is
-// on show. SITE.navTopicCount went with that change.
+// No shortlisting and no cap: this is the published catalogue, so there is nothing
+// to trim and nothing arbitrary about what is on show.
 //
-// It reads the collection to build the list, so only groups with something
-// published are in here: the menu can never offer an empty archive. Cloud is in
-// exactly that position today, with both of its entries still drafts, so it
-// appears in `astro dev` and not in a production build. No counts - the panel is a
-// way through, and the numbers are on the index it ends with.
-const groups = topicGroupFacets(await getPublishedPosts());
+// It reads the collection to build the list, so only products with something
+// published are in here and the menu can never offer an empty archive. Intune and
+// Defender XDR are in exactly that position today - in SOLUTIONS, not yet on any
+// entry - so neither appears. No counts: the panel is a way through, and the
+// numbers are on the index it ends with.
+const solutions = solutionFacets(await getPublishedPosts());
 ---
 
 <noscript>
@@ -52,9 +51,9 @@ const groups = topicGroupFacets(await getPublishedPosts());
 		   why the menu semantics are applied in JavaScript rather than baked into the
 		   markup: with scripting off these are ordinary links in ordinary tab order,
 		   and only the script turns them into a menu with roving focus. Nothing is
-		   stranded behind a dead control either way - and less so now than then,
-		   because the panel's own last row and the "Topics" link both reach /topics,
-		   so the complete list is two plain anchors away with no script at all.
+		   stranded behind a dead control either way - the panel's own last row and the
+		   "Solutions" link both reach /solutions, so the complete list is two plain
+		   anchors away with no script at all.
 
 		   Up here rather than beside the panel because that markup sits inside a {}
 		   expression, where the braces of a CSS rule would be read as another
@@ -164,7 +163,7 @@ const groups = topicGroupFacets(await getPublishedPosts());
 		>
 			<div class="nav-dropdown" data-dropdown>
 				{
-					/* Two controls, not one, and the split is the point: "Topics" is a
+					/* Two controls, not one, and the split is the point: "Solutions" is a
 					   destination and the caret is a disclosure, so they are a link and a
 					   button rather than one element pretending to be both.
 
@@ -182,8 +181,8 @@ const groups = topicGroupFacets(await getPublishedPosts());
 					   the label and its caret. */
 				}
 				<span class="nav-dropdown__control">
-					<a id="topics-label" href={withBase('/topics')} class="nav-link" data-dropdown-label
-						>Topics</a
+					<a id="solutions-label" href={withBase('/solutions')} class="nav-link" data-dropdown-label
+						>Solutions</a
 					>
 
 					{
@@ -204,12 +203,12 @@ const groups = topicGroupFacets(await getPublishedPosts());
 					}
 					<button
 						type="button"
-						id="topics-trigger"
+						id="solutions-trigger"
 						class="nav-dropdown__toggle"
-						aria-label="Show topics"
+						aria-label="Show solutions"
 						aria-haspopup="menu"
 						aria-expanded="false"
-						aria-controls="topics-menu"
+						aria-controls="solutions-menu"
 						data-dropdown-trigger
 					>
 						{
@@ -221,48 +220,42 @@ const groups = topicGroupFacets(await getPublishedPosts());
 				</span>
 
 				{
-					/* The five areas, then a row to the subjects inside them. This is the
+					/* Every published product, then a row to the index of them. This is the
 					   complete list rather than a shortlist, so the last row is not a way to
-					   see the rest of these - it is the way down a level, to the eighteen
-					   individual subjects on /topics.
+					   see the rest of these - it is the way to the same list with counts on
+					   it, which is the one thing the panel deliberately leaves out.
 
-					   Neither vocabulary is listed here directly any more. The topics are
-					   what the groups are built out of and are on the index below; the
-					   solutions are in the rail, as a complete run of tags, and in the search
-					   filters. Putting either in the header at full length is the browsing
-					   problem this menu exists to simplify.
+					   The topics are not here and are nowhere else in the chrome either.
+					   They are tags rather than destinations now, so there is no menu they
+					   could be the contents of; the search page's Topic filter is the only
+					   control left that acts on one.
 
 					   No role or tabindex in the markup - the script adds them. See the
 					   <noscript> at the top of this file: without it these have to stay
 					   ordinary links in ordinary tab order. */
 				}
-				<div id="topics-menu" class="nav-menu" data-dropdown-menu>
+				<div id="solutions-menu" class="nav-menu" data-dropdown-menu>
 					{
 						/* Presentational: with scripting on, the panel's accessible name comes
-						   from the "Topics" link via the aria-labelledby the script sets, so
+						   from the "Solutions" link via the aria-labelledby the script sets, so
 						   announcing this as a second label would repeat it. */
 					}
-					<p class="nav-menu__label" aria-hidden="true">Topics</p>
+					<p class="nav-menu__label" aria-hidden="true">Solutions</p>
 
 					{
-						/* The glyph is aria-hidden inside the component, so each row's
-						   accessible name stays the label alone. */
-					}
-					{
-						groups.map((group) => (
-							<a class="nav-menu__row nav-menu__row--icon" href={withBase(`/topics/${group.slug}`)}>
-								<TopicGroupIcon name={group.icon} class="h-4 w-4 shrink-0" />
-								<span>{group.label}</span>
+						solutions.map((solution) => (
+							<a class="nav-menu__row" href={withBase(`/solutions/${solution.slug}`)}>
+								{solution.label}
 							</a>
 						))
 					}
 
 					{
-						/* Ruled off above, so the five areas read as a set and this reads as the
-						   way out of it rather than as a sixth area called "All topics". No glyph
-						   on it, which is the other half of that: it is not one of them. */
+						/* Ruled off above, so the products read as a set and this reads as the
+						   way out of it rather than as a tenth product called "All solutions". */
 					}
-					<a class="nav-menu__row nav-menu__row--all" href={withBase('/topics')}>All topics</a>
+					<a class="nav-menu__row nav-menu__row--all" href={withBase('/solutions')}>All solutions</a
+					>
 				</div>
 			</div>
 
@@ -302,9 +295,9 @@ const groups = topicGroupFacets(await getPublishedPosts());
 		const items = Array.from(menu.querySelectorAll<HTMLAnchorElement>('.nav-menu__row'));
 
 		menu.setAttribute('role', 'menu');
-		// Named by the visible "Topics" link rather than by the caret that opens it:
-		// the caret's accessible name is "Show topics", and a panel announced as
-		// "Show topics menu" describes the control instead of the contents.
+		// Named by the visible "Solutions" link rather than by the caret that opens
+		// it: the caret's accessible name is "Show solutions", and a panel announced
+		// as "Show solutions menu" describes the control instead of the contents.
 		menu.setAttribute('aria-labelledby', label.id);
 		for (const item of items) {
 			item.setAttribute('role', 'menuitem');
@@ -362,7 +355,7 @@ const groups = topicGroupFacets(await getPublishedPosts());
 		//
 		// Bound to the wrapper around both controls rather than to the caret alone,
 		// so the arrows work with focus on either. A keyboard reader tabbing along
-		// the header lands on "Topics" first, and that is the point they are most
+		// the header lands on "Solutions" first, and that is the point they are most
 		// likely to try one.
 		control.addEventListener('keydown', (event) => {
 			if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;

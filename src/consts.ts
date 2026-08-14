@@ -11,6 +11,12 @@
 // blog's job is to show which Microsoft security products are being built on and
 // which XDR engineering subjects have been covered inside them.
 //
+// The two are no longer symmetrical, and that asymmetry is the point. Solutions
+// are navigation - the header menu, an index at /solutions and an archive per
+// product. Topics are description - tags a reader reads on a row or an entry
+// page, with no link on them and no route behind them. Labs is the single
+// exception, routed at /labs; see LABS_TOPIC below.
+//
 // This vocabulary was called "Category" and is now called "Solution", reversing
 // a decision recorded here for a while: that "Category" was the plainer word to
 // show a reader, and that the values being Microsoft products was a detail the
@@ -59,23 +65,13 @@ export const SITE = {
 	 * home page - a known cost, taken deliberately; see the note in Sidebar.astro.
 	 *
 	 * This replaces sidebarTagCount, which capped a "Popular Tags" block that
-	 * merged both vocabularies and ranked them by volume. That block is gone. The
-	 * rail's facet list is now the solutions, which is the one list the header menu
-	 * cannot show, and a shortlist of topics beside it duplicated what the menu
-	 * already does systematically. Nothing caps the solutions block: SOLUTIONS is
-	 * nine values, only the published ones render, so the catalogue is the ceiling.
+	 * merged both vocabularies and ranked them by volume. That block is gone, and so
+	 * is the Solutions block that briefly replaced it: the products are the header
+	 * menu now, and a rail listing them beside every page said the same thing a
+	 * second time. What is left in the rail is what the header cannot carry - what
+	 * is new, and when.
 	 */
 	sidebarRecentCount: 3,
-	/**
-	 * Taxonomy values a ledger row's meta line carries before the reading time.
-	 *
-	 * Three, which is what fits on one line beside the reading time in the copy
-	 * column at the widths that matter. The row leads with the solution above the
-	 * title, so this is the budget for the area and the topics beneath it - and a
-	 * cap is what keeps the line a caption rather than the tag cloud EntryMeta.astro
-	 * has always argued against. The full list is on the entry page.
-	 */
-	rowFacetCount: 3,
 } as const;
 
 /**
@@ -152,11 +148,25 @@ export const SOLUTIONS = [
 /**
  * Topic: the specific technical subject an entry covers. One or more per entry.
  *
- * Alphabetical, because there is nothing to group them by any more and a reader
- * scanning the index for a known subject is looking one up rather than browsing
- * a progression. These previously named a parent domain, which existed only to
- * group the topics index; domains are gone from the information architecture and
- * that field went with them.
+ * Labels only, and deliberately not destinations. Topics are tags a reader reads
+ * rather than follows: they are rendered as plain text everywhere on the site, and
+ * there is no /topics route, no topics index and no per-topic archive. That is a
+ * reversal, and the reason is that a blog this size did not have enough behind each
+ * subject to justify a page per subject plus the slug and breadcrumb machinery
+ * underneath it. The product is what a reader navigates by now - see SOLUTIONS
+ * above and the header menu built from it - and the topics say what a given entry
+ * is about once they have found it.
+ *
+ * The one exception is Labs, and it is an exception in the routing rather than in
+ * the vocabulary: /labs lists the entries carrying it. It is a topic like any other
+ * so that an entry declares itself a lab write-up the same way it declares
+ * everything else, in `topics`, rather than through a second flag in frontmatter or
+ * a collection of its own.
+ *
+ * Alphabetical, because there is nothing to group them by and a reader scanning
+ * for a known subject is looking one up rather than browsing a progression. These
+ * previously named a parent domain, which existed only to group the topics index;
+ * both are gone.
  *
  * Near-synonyms are deliberate and distinct: Detection Engineering is building a
  * detection, Detection Tuning is fixing one that fires badly; Incident
@@ -181,6 +191,7 @@ export const TOPICS = [
 	{ label: 'Identity Protection' },
 	{ label: 'Incident Investigation' },
 	{ label: 'KQL' },
+	{ label: 'Labs' },
 	{ label: 'Privileged Access' },
 ] as const;
 
@@ -188,146 +199,59 @@ export type Solution = (typeof SOLUTIONS)[number];
 export type SolutionLabel = Solution['label'];
 export type TopicLabel = (typeof TOPICS)[number]['label'];
 
-/** The five glyphs TopicGroupIcon.astro carries, one per group. */
-export type TopicGroupIconName = 'person' | 'computer' | 'cloud' | 'shield' | 'build';
-
 /**
- * A discipline: the broad area of security work an entry belongs to, rather than
- * the product it uses or the subject it covers.
- *
- * The five doors the header menu opens onto. This is a layer *over* the two
- * vocabularies rather than a third one beside them, which is the whole design:
- * nothing in frontmatter names a group, so no entry has to be re-tagged and no
- * entry can be filed into the wrong one by hand. Membership is derived - an entry
- * is in a group if it carries any of that group's topics or any of its
- * solutions - so the filing follows from the tags an author was already writing.
- *
- * That derivation is also why a group can be defined against whichever vocabulary
- * actually describes it. Identity and Endpoint are natural topic sets; Cloud has
- * no topics at all and is entirely the two cloud products, because the subject
- * vocabulary has never needed a word for "this is about the cloud estate" when the
- * solution already said so.
+ * The topic /labs is built from. Here rather than inlined at the route so the
+ * string exists once: it has to match a TOPICS label exactly or the page silently
+ * lists nothing, and `satisfies TopicLabel` is what makes a typo a build error
+ * instead of an empty page.
  */
-export interface TopicGroup {
-	label: string;
-	icon: TopicGroupIconName;
-	/** Topics that put an entry in this group. May be empty. */
-	topics: readonly TopicLabel[];
-	/** Solutions that put an entry in this group. May be empty. */
-	solutions: readonly SolutionLabel[];
-}
+export const LABS_TOPIC = 'Labs' satisfies TopicLabel;
 
-/**
- * Ordered as the reader meets the estate rather than by volume: the two things
- * being defended (identities, then devices), the place they live (the cloud
- * estate), then the two disciplines applied across all of it - running the
- * detections, and building them.
- *
- * Groups with nothing published are dropped at render time rather than removed
- * from this list, so one can be written towards before it appears anywhere. Cloud
- * is in exactly that state today: both of its entries are drafts.
- *
- * An entry belongs to as many of these as its tags reach, and most reach two or
- * three. That is correct rather than sloppy - a KQL hunt across sign-in logs is
- * genuinely identity work, security operations and security engineering at once -
- * and it is why these are doors into the archive and not a place to look up how
- * many entries "really" belong to a discipline. The counts on /topics are per
- * subject, which is the number that means something.
- *
- * Every published entry must land in at least one group, or it becomes reachable
- * only through its own tags. Nothing enforces that: it holds for the current
- * catalogue because every topic below is claimed by exactly one group, so check it
- * again if a topic is ever added to TOPICS without being added here.
- */
-export const TOPIC_GROUPS: readonly TopicGroup[] = [
-	{
-		label: 'Identity',
-		icon: 'person',
-		topics: [
-			'Authentication',
-			'Conditional Access',
-			'External Access',
-			'Guest Accounts',
-			'Identity Investigation',
-			'Identity Protection',
-			'Privileged Access',
-		],
-		solutions: ['Microsoft Entra ID', 'Microsoft Defender for Identity'],
-	},
-	{
-		// Intune is here as well as Defender for Endpoint: managing a device and
-		// defending it are the same estate, and an entry about compliance policy or
-		// app protection is endpoint work whichever console it was done in. Changes
-		// nothing today - no entry carries Intune yet - so this is the group the
-		// first one will land in rather than a claim about the current catalogue.
-		label: 'Endpoint',
-		icon: 'computer',
-		topics: [
-			'Attack Surface Reduction',
-			'Device Investigation',
-			'Device Onboarding',
-			'Endpoint Hardening',
-		],
-		solutions: ['Microsoft Defender for Endpoint', 'Microsoft Intune'],
-	},
-	{
-		// No topics, and not an omission - see the note on TopicGroup above.
-		label: 'Cloud',
-		icon: 'cloud',
-		topics: [],
-		solutions: ['Microsoft Defender for Cloud', 'Microsoft Defender for Cloud Apps'],
-	},
-	{
-		// Sentinel is the SIEM the operations work happens in, so the product carries
-		// the group as well as the topics do. Defender for Office 365 is deliberately
-		// not listed: its entries reach this group through Incident Investigation and
-		// Detection Tuning, and claiming the whole product for operations would file
-		// mail-flow configuration work as an analyst's.
-		//
-		// Microsoft Defender XDR is not listed either, and for a bigger reason: the
-		// unified portal spans every group below and above this one, so claiming it
-		// for any single group would misfile, and listing it in all four would let one
-		// tag drag an entry into the whole menu. Its entries reach the right groups
-		// through their topics, which is what the derivation is for.
-		label: 'Security Operations',
-		icon: 'shield',
-		topics: ['Advanced Hunting', 'Detection Tuning', 'Incident Investigation'],
-		solutions: ['Microsoft Sentinel'],
-	},
-	{
-		// Topics only. Building a detection is a discipline rather than a product -
-		// it happens in Sentinel and in Defender alike - so a solution here would
-		// pull in every entry about the tool instead of the ones about the building.
-		label: 'Security Engineering',
-		icon: 'build',
-		topics: ['Analytics Rules', 'Data Collection', 'Detection Engineering', 'KQL'],
-		solutions: [],
-	},
-];
+/* Removed: TopicGroup, TopicGroupIconName and TOPIC_GROUPS - the five disciplines
+   (Identity, Endpoint, Cloud, Security Operations, Security Engineering) that the
+   header menu opened onto, derived from each entry's topics and solutions rather
+   than declared in frontmatter.
+
+   Worth saying why, because the derivation was the good part and is what would be
+   worth rebuilding: nothing had to be tagged with a group by hand, so no entry
+   could be filed into the wrong one. What did not hold up was the layer itself.
+   Three vocabularies on one row - area, product, subject - is more classification
+   than a blog of this size has entries, and the group archives lived at
+   /topics/<slug> alongside the per-topic ones, which is where the slug collision
+   guard and the two-shaped breadcrumb came from. Both are gone with them.
+
+   The header menu is the solutions now. That is one list, it is the vocabulary a
+   reader actually navigates by, and it needs no derivation because an entry names
+   its products outright. */
 
 // z.enum() needs a non-empty tuple, hence the assertions.
 export const SOLUTION_LABELS = SOLUTIONS.map((s) => s.label) as [SolutionLabel, ...SolutionLabel[]];
 export const TOPIC_LABELS = TOPICS.map((t) => t.label) as [TopicLabel, ...TopicLabel[]];
 
-// Plain header links, rendered after the Topics menu.
+// Plain header links, rendered after the Solutions menu.
 //
-// Two entries, and the header is still meant to stay this short. The rule it was
+// Three entries, and the header is still meant to stay this short. The rule it was
 // written to enforce holds unchanged: nothing in here may be a second name for a
 // page the reader can already reach. Home is not in here because the brand links
 // to it, and an Articles link is not either because home *is* the article feed.
 //
+// Labs is in here because nothing else names it. It is a listing of the entries
+// carrying the Labs topic - see LABS_TOPIC above - and with topics no longer
+// routed at all, this link and the rail's "Recent Labs" heading are the only two
+// ways to it. It goes first because it is a slice of the writing, which puts it
+// nearer the ledger than the two utility pages after it.
+//
 // Search is in here because it is a way into the archive rather than a duplicate
-// of one, which makes it a peer of the Topics menu beside it - the site's only
-// other discovery control - rather than another name for the ledger. It went here
-// and not into the footer for the plain reason that a search page nobody can find
-// is not a search page. Solutions are deliberately NOT in the header: they live in
-// the rail and in the search filters, where the list can be complete.
+// of one, which makes it a peer of the Solutions menu beside it. It went here and
+// not into the footer for the plain reason that a search page nobody can find is
+// not a search page.
 //
 // The disclaimer is not in here. It is a legal page rather than a destination, so
 // it sits in the footer beside the rest of the small print, and /about is a short
 // page about the blog. Both were the same file until that change, which is why
 // /about used to be labelled "Disclaimer" here.
 export const NAV = [
+	{ href: '/labs', label: 'Labs' },
 	{ href: '/search', label: 'Search' },
 	{ href: '/about', label: 'About' },
 ] as const;

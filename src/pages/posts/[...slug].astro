@@ -5,13 +5,7 @@ import { render } from 'astro:content';
 import EntryEyebrow from '../../components/EntryEyebrow.astro';
 import EntryMeta from '../../components/EntryMeta.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import {
-	areasFor,
-	formatDate,
-	getPublishedPosts,
-	isoDate,
-	primarySolution,
-} from '../../lib/collections';
+import { formatDate, getPublishedPosts, isoDate, primarySolution } from '../../lib/collections';
 import { withBase } from '../../lib/paths';
 import { readingTimeMinutes } from '../../lib/readingTime';
 import { slugify } from '../../lib/slug';
@@ -34,13 +28,6 @@ export const getStaticPaths = (async () => {
 const { post, newer, older } = Astro.props;
 const { Content } = await render(post);
 const minutes = readingTimeMinutes(post.body);
-
-// Both secondary vocabularies in full, coarsest first: every area this entry
-// lands in, then every topic it carries. Uncapped, unlike a ledger row, which is
-// the same row/entry-page split this page has always made - a row is a glance and
-// this is the page a reader chose. areasFor() can return an empty list, so this is
-// topics alone for an entry whose subjects no group claims.
-const facets = [...areasFor(post), ...post.data.topics];
 ---
 
 <BaseLayout
@@ -121,23 +108,23 @@ const facets = [...areasFor(post), ...post.data.topics];
 				</div>
 
 				{
-					/* The subject taxonomy in full, linked - which is what separates this
-				    page from a ledger row, where the same line is capped at three values
-				    and unlinked. A reader who has opened the entry is the one who might
-				    follow a specific subject sideways.
+					/* Every topic this entry carries, uncapped - which is what separates this
+				    page from a ledger row, where one tag stands for the lot. A reader who
+				    has opened the entry is the one who wants to know what is in it.
 
-				    This was a <dl> of two rows, "Categories" and "Topics", each a label
-				    against a run of bordered tags. It went for a plain reason: with the
-				    product promoted to the eyebrow there is only one vocabulary left down
-				    here, so a description list had one name to describe, and the same
-				    middot line the ledger rows use says it in one line instead of three.
-				    The hierarchy now reads top to bottom - product, then subject - which is
-				    the same order a row reads and the same order the search filters read.
+				    Unlinked, as they are everywhere now. That is the loss this change
+				    takes: the line used to be the way to follow a subject sideways, and
+				    there is no longer anywhere for it to go. It stays as a tag run rather
+				    than becoming prose because the labels are still worth scanning, and
+				    because it is the shape a reader has already met on the row that brought
+				    them here.
 
-				    Areas before topics, coarsest first, matching a row. */
+				    The hierarchy reads top to bottom - product in the eyebrow, subjects
+				    down here - which is the same order a row reads and the same order the
+				    search filters read. */
 				}
 				<div class="mt-4">
-					<EntryMeta facets={facets} />
+					<EntryMeta topics={post.data.topics} />
 				</div>
 			</div>
 

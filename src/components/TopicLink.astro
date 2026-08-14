@@ -1,30 +1,27 @@
 ---
 import type { TopicLabel } from '../consts';
-import { withBase } from '../lib/paths';
-import { slugify } from '../lib/slug';
 
 interface Props {
 	label: TopicLabel;
-	/** Render as a link to the topic archive. Off for previews and mockups. */
-	linked?: boolean;
+	/** Extra classes for the point of use, e.g. lifting it above a stretched link. */
 	class?: string;
 }
 
-const { label, linked = true, class: className = '' } = Astro.props;
+const { label, class: className = '' } = Astro.props;
 
-// No catalogue lookup, unlike SolutionTag: a topic carries no glyph and no
-// colour, so its label is the whole of it and the slug is derived rather than
-// stored. That difference is the point - the secondary vocabulary is plainer in
-// the data as well as on the page.
-const href = withBase(`/topics/${slugify(label)}`);
+// A topic, as a label rather than a destination.
+//
+// The name is now a small lie and is kept anyway: this is the component every
+// caller already imports, and renaming it would touch more files than the change
+// it describes. There is nothing to link to - /topics and the per-topic archives
+// are gone, and consts.ts has the reasoning - so what was an <a> behind a `linked`
+// prop is a <span> with no prop at all. A component that cannot be asked to render
+// a dead link is better than one that can.
+//
+// Restoring the link means restoring the route: put the archive back, add the href
+// here, and give this a `linked` prop again for the ledger row, where the row is
+// one stretched link and a second target inside it would be a second tab stop to
+// the same place the reader is already going.
 ---
 
-{
-	linked ? (
-		<a href={href} class={`tag-topic ${className}`}>
-			{label}
-		</a>
-	) : (
-		<span class={`tag-topic ${className}`}>{label}</span>
-	)
-}
+<span class={`tag-topic ${className}`}>{label}</span>

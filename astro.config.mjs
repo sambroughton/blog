@@ -46,10 +46,20 @@ export default defineConfig({
 	// verbatim and never resolves it against the rest of this map, so pointing at
 	// the final destination is a plain edit rather than a trick.
 	//
-	// Every entry under /posts/ is untouched by both moves, as is every
-	// /topics/<slug> - the slugs those routes are keyed by are derived from the
-	// display label by slugify(), which reproduces the hand-written ids they used
-	// before.
+	// Every entry under /posts/ is untouched by both moves.
+	//
+	// /topics is a third dead prefix and is deliberately NOT keyed here yet. The
+	// topics index, the per-topic archives and the five group archives under it have
+	// all been removed - topics are tags rather than destinations now; see the note
+	// on TOPICS in src/consts.ts - so every /topics URL 404s as of this change.
+	//
+	// Left out rather than forgotten, because the rule this map is built on is
+	// "checked against the previous build rather than reasoned about", and that check
+	// has not been done: it needs the deployed sitemap, not this repo. If those URLs
+	// were live, the honest set is /topics, /topics/<slug> for each published topic
+	// and each of the five groups, and the destination for all of them is arguable -
+	// there is no successor page, so it is either / or /search, the latter being the
+	// only place a topic is still something a reader can act on.
 	//
 	// Enumerated rather than written as the dynamic pattern
 	// '/technologies/[technology]', which the docs do allow. That form is

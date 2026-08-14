@@ -1,16 +1,8 @@
 ---
-import {
-	formatDayMonth,
-	isoDate,
-	rowFilterData,
-	rowTaxonomy,
-	type ListingFilter,
-	type Post,
-} from '../lib/collections';
+import { formatDayMonth, isoDate, rowFilterData, rowTag, type Post } from '../lib/collections';
 import { entryTint } from '../lib/entryTints';
 import { withBase } from '../lib/paths';
 import { readingTimeMinutes } from '../lib/readingTime';
-import EntryEyebrow from './EntryEyebrow.astro';
 import EntryMeta from './EntryMeta.astro';
 import EntryThumb from './EntryThumb.astro';
 
@@ -21,15 +13,14 @@ interface Props {
 	/** Shown when there is nothing to list. */
 	emptyMessage?: string;
 	/**
-	 * The taxonomy value this listing is already filtered by, so no row repeats the
-	 * page's own heading. Omitted on a mixed listing - the ledger, an archive year,
-	 * the search page - where every row leads with its own product.
+	 * True on a solution archive, where every row would otherwise repeat the h1.
+	 * Those rows show their primary topic instead. rowTag() applies it.
 	 *
-	 * This replaced a `tag: 'category' | 'topic'` prop that chose which single
-	 * vocabulary a row showed. A row now shows both, so the question changed from
-	 * "which one" to "which value is redundant here". rowTaxonomy() applies it.
+	 * A boolean rather than the `filteredBy: ListingFilter` this was, because there
+	 * is one filtered listing left: the area and topic archives that union covered
+	 * are gone.
 	 */
-	filteredBy?: ListingFilter;
+	filteredBySolution?: boolean;
 	/**
 	 * Emit filter keys as data-* on each row and mark the count for live updating.
 	 * One caller, /search, which filters these rows client-side. Off everywhere
@@ -42,7 +33,7 @@ const {
 	posts,
 	label,
 	emptyMessage = 'No entries yet.',
-	filteredBy,
+	filteredBySolution = false,
 	filterable = false,
 } = Astro.props;
 
@@ -78,7 +69,7 @@ const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles
 				    (py-5) between the rule above it and its own copy. */}
 				{posts.map((post, index) => {
 					const minutes = readingTimeMinutes(post.body);
-					const taxonomy = rowTaxonomy(post, filteredBy);
+					const tag = rowTag(post, filteredBySolution);
 					// The row is a hover reveal: a colour wash cross-fades in at 0.60
 					// under two scrims, a 1px bar rises up the left edge and the copy
 					// slides 10px right. Geometry and timing are in .entry-row in
@@ -135,23 +126,20 @@ const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles
 								<EntryThumb post={post} class="mt-3 mb-3 sm:mt-0 sm:mb-0" />
 
 								<div class="mt-1 min-w-0 sm:mt-0">
-									{/* The product, above the title, unlinked. This is the row's
-									    most prominent taxonomy label and the reason the meta line
-									    below it can stay quiet. Absent on a solution archive, where
-									    every row would repeat the h1 - see rowTaxonomy().
-
-									    mb-1 here rather than mt-1 on the heading, so the heading
-									    keeps one set of classes whether or not the eyebrow is
-									    drawn. */}
-									{taxonomy.eyebrow && (
-										<EntryEyebrow labels={[taxonomy.eyebrow]} linked={false} class="mb-1" />
-									)}
-
+									{/* No eyebrow above the title. The product was here as a caps
+									    line for a while and has gone back under the title as a tag:
+									    a row's job is to sell the title, and a product name set in
+									    caps above it took the first line and the strongest position
+									    on every row to say something most rows repeat. As a tag it
+									    is still the first thing after the copy and still the only
+									    link in the row besides the title. See EntryMeta.astro. */}
 									<h3 class="font-display text-base leading-snug font-bold">
 										{/* __link stretches this anchor over the whole row, so the row
-										    is clickable while remaining one link with the title as its
-										    accessible name. Nothing else in the row is a link now, so
-										    this is the only tab stop per row. */}
+										    is clickable with the title as its accessible name. Two tab
+										    stops per row again, not one: the solution tag below is a
+										    link to that product's archive and lifts itself above this
+										    one to stay clickable. That is the cost of the tag being a
+										    tag, and it buys the only sideways route out of a row. */}
 										<a
 											href={withBase(`/posts/${post.id}`)}
 											class="entry-row__title entry-row__link text-text no-underline"
@@ -165,7 +153,7 @@ const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles
 									</p>
 
 									<div class="mt-2.5">
-										<EntryMeta facets={taxonomy.facets} minutes={minutes} linked={false} />
+										<EntryMeta tag={tag} minutes={minutes} />
 									</div>
 								</div>
 							</div>

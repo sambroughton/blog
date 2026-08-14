@@ -1,90 +1,80 @@
 ---
-import { withBase } from '../lib/paths';
-import { slugify } from '../lib/slug';
+import type { TopicLabel } from '../consts';
+import type { RowTag } from '../lib/collections';
+import SolutionTag from './SolutionTag.astro';
+import TopicLink from './TopicLink.astro';
 
 interface Props {
 	/**
-	 * Area and topic labels, coarsest first, already capped by the caller.
-	 * rowTaxonomy() in lib/collections.ts is what builds and caps this.
+	 * The single tag a ledger row carries. rowTag() in lib/collections.ts picks
+	 * which vocabulary it comes from: the product, or the primary topic on a page
+	 * that is already one product.
+	 *
+	 * Mutually exclusive with `topics` below - a row passes this, an entry page
+	 * passes that - but not modelled as a union, because the two are read by
+	 * different callers and an optional pair keeps the call sites plain.
 	 */
-	facets: readonly string[];
+	tag?: RowTag;
 	/**
-	 * Reading time, appended after the facets. Omit where the page already states
+	 * Every topic an entry carries, for the entry page. Uncapped, unlike a row:
+	 * this is the page a reader has already chosen, so the full list belongs here
+	 * and nowhere else.
+	 */
+	topics?: readonly TopicLabel[];
+	/**
+	 * Reading time, appended after the tags. Omit where the page already states
 	 * it - an entry page carries it on the date line above this one, and printing
 	 * it twice within two lines is worse than the small asymmetry of an optional
 	 * prop.
 	 */
 	minutes?: number;
-	/**
-	 * Link each value to its /topics archive. Off on a ledger row, where the row is
-	 * one stretched link. On an entry page it is on: a reader who has opened the
-	 * entry is the one who might follow a subject sideways.
-	 */
-	linked?: boolean;
 }
 
-const { facets, minutes, linked = true } = Astro.props;
+const { tag, topics, minutes } = Astro.props;
 
-// The line under a title: the subject area, the topics, then the reading time.
+// The line under a title: one tag, or an entry's full topic list, then the
+// reading time.
 //
-// This used to be one bordered tag and the reading time, and the comment here
-// argued hard against ever showing more - an entry carries two or three topics,
-// so a row would end up with four tags under a two-line headline and the list
-// would read as a tag cloud with titles in it. That objection is answered rather
-// than overruled, in two ways. These are no longer tags: one colour, one size, no
-// borders, middot-separated, on one line, which is a caption and not a row of
-// controls. And the count is capped - SITE.rowFacetCount - so the line cannot grow
-// into the cloud that was being guarded against. The full list is still on the
-// entry page, which is where it always belonged.
+// Back to one tag per row after a spell showing three unlinked values on a middot
+// line - the subject area, then the topics. That line went with the area layer it
+// was built for: with groups removed it was topics alone, and three plain-text
+// tags under a two-line headline is the tag cloud the original note here argued
+// against, with the added problem that none of them went anywhere.
 //
-// It is also the shape HeroCarousel's featured card already uses for the same job:
-// date · reading time · product, middots, one colour, no boxes.
+// The two tags keep their own weights, as they do on the entry page: an outlined
+// solution, a quieter topic. Only the solution is a link. Topics are labels a
+// reader reads rather than follows - see the note on TOPICS in consts.ts - so
+// TopicLink renders them as spans and there is no `linked` prop to get wrong here.
 //
-// Both vocabularies resolve to /topics/<slug>. Areas and topics genuinely share
-// that segment - topics/[topic].astro serves both from one route - and
-// assertNoTopicSlugCollisions() is what guarantees the slug is unambiguous, so one
-// derivation covers both and this needs no union to tell them apart. `string`
-// rather than a label type for the same reason: the two vocabularies meet here,
-// and Facet<Label = string> sets the precedent for widening where a caller only
-// needs the shape. Every value handed in is a real catalogue label.
-//
-// Nothing here is z-lifted above the row's stretched link, unlike the tag this
-// replaced. With linked={false} on a row there is nothing to lift: the whole line
-// is part of the row's click target, which is what you want.
+// The solution tag lifts itself above the row's stretched link in EntryList, or it
+// would stop being clickable. Topics need no lift: they are not targets, so
+// letting the row's own link sit over them is correct.
 ---
 
-{
-	/* Separators are drawn before each item rather than after it, so the line can
-	   end on any of them: facets may be empty (an entry whose subjects no group
-	   claims, on a page that also drops its topics) and minutes may be absent. A
-	   trailing middot with nothing after it is the bug that shape avoids.
-
-	   Decorative, hence aria-hidden: they divide facts that are already separate
-	   elements, and read aloud they are noise between them. */
-}
 <div class="text-text-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[0.72rem]">
 	{
-		facets.map((facet, index) => (
-			<Fragment>
-				{index > 0 && <span aria-hidden="true">·</span>}
-				{linked ? (
-					<a
-						href={withBase(`/topics/${slugify(facet)}`)}
-						class="hover:text-text no-underline transition-colors"
-					>
-						{facet}
-					</a>
-				) : (
-					<span>{facet}</span>
-				)}
-			</Fragment>
-		))
+		tag?.kind === 'solution' && (
+			<SolutionTag label={tag.label} class="entry-row__tag relative z-[2]" />
+		)
 	}
 
+	{tag?.kind === 'topic' && <TopicLink label={tag.label} class="entry-row__tag" />}
+
+	{topics?.map((label) => <TopicLink label={label} />)}
+
+	{
+		/* Decorative separator, hence aria-hidden: it divides two facts that are
+	    already separate elements, and read aloud it is noise between them.
+
+	    Drawn only when something precedes it, so the line can end on the tags: an
+	    entry page passes no `minutes`, and a caller could pass neither a tag nor a
+	    topic list. A leading or trailing middot with nothing on one side of it is
+	    the bug this shape avoids. */
+	}
 	{
 		minutes !== undefined && (
 			<Fragment>
-				{facets.length > 0 && <span aria-hidden="true">·</span>}
+				{(tag || topics?.length) && <span aria-hidden="true">·</span>}
 				<span>{minutes} min read</span>
 			</Fragment>
 		)

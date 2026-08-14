@@ -120,9 +120,9 @@ h4 {
    the menu needs JavaScript, so the header carries a <noscript> fallback that
    drops the caret and leaves the panel inline as a plain list of links.
 
-   Two controls sit side by side here: an ordinary .nav-link to /topics, and the
-   caret that opens the panel. The panel is a shortlist of the busiest topics, so
-   the label has somewhere of its own to go and the caret is not the only way in.
+   Two controls sit side by side here: an ordinary .nav-link to /solutions, and
+   the caret that opens the panel. The panel is the published products, so the
+   label has somewhere of its own to go and the caret is not the only way in.
 
    Colours in this block are literal rather than @theme tokens: the panel is
    specified as its own small palette, a touch deeper and cooler than
@@ -211,22 +211,22 @@ h4 {
 	top: calc(100% + 1.25rem + 10px);
 	right: 0;
 	z-index: 30;
-	/* The glyph and the gap between it and its label, as variables because two rules
-	   below need to agree on them: the icon rows space themselves by the gap, and
-	   the "All topics" row indents itself past both so its text starts on the same
-	   line as the labels rather than under the glyphs. 1rem matches the h-4 w-4 the
-	   header passes to <TopicGroupIcon>. */
-	--nav-menu-glyph: 1rem;
-	--nav-menu-gap: 0.6rem;
-	/* Sized to hold the longest row on one line, which is now the glyph, the gap and
-	   "Security Engineering": that lands around 206px against the 204px this was
-	   while the rows were text alone, so the box had to grow rather than start
-	   wrapping the widest of the five labels. 224px leaves the longest of them a
-	   little over 20px of slack. The row's line-height is set for two lines anyway,
-	   so the failure mode if a longer group is ever added is a taller row, not a
-	   broken one. max-height is omitted because the list is the five groups and the
-	   row to the index - a fixed height, not one that grows with the writing. */
-	width: 224px;
+	/* Sized for full product names, which is what the rows are again: the longest,
+	   "Microsoft Defender for Cloud Apps", runs about 232px at 14px, so 268px holds
+	   it on one line with the 18px padding either side. That is a good deal wider
+	   than the 224px this was while the rows were five short group labels with a
+	   glyph in front of each.
+
+	   The glyph and gap variables went with those icons. Nothing in the panel draws
+	   one now - the products carried a Material glyph and a product tint once, and
+	   both were removed as shapes that identified nothing; see the note on SOLUTIONS
+	   in consts.ts - so .nav-menu__row--all no longer has anything to indent past.
+
+	   The row's line-height is set for two lines, so the failure mode if a longer
+	   product name is ever added is a taller row rather than a broken one.
+	   max-height is omitted because the list is the published products and the row
+	   to the index: it grows one row at a time, and SOLUTIONS is the ceiling. */
+	width: 268px;
 	padding: 6px 0;
 	background: #0b101b;
 	border: 1px solid #1b2740;
@@ -268,19 +268,17 @@ h4 {
 /* Padding rather than margin, so the whole width of the panel is the hit area
    and not just the label. */
 .nav-menu__row {
-	/* block, because the base row is a single run of text - the one row that is,
-	   "All topics". The five group rows carry a glyph and take the flex modifier
-	   below. This was flex for every row once before, when the menu listed products
-	   and each had an icon; it went to block when those came out, and is staying
-	   block now that only some rows have one. */
+	/* block: every row is a single run of text again. It was flex while the rows
+	   carried glyphs - first product icons, later the five group icons - and both
+	   sets have been removed, so there is nothing left to lay out beside a label. */
 	display: block;
 	padding: 9px 18px;
 	font-size: 14px;
-	/* Tighter than the 1.5 preflight leaves. Topic labels hold one line at this
-	   width, so this is now insurance rather than the everyday case - it was set
-	   for the two-line product rows, where at the default the workload name
-	   drifted away from the "Microsoft Defender for" above it and the pair stopped
-	   reading as one label. Kept for whichever long subject wraps first. */
+	/* Tighter than the 1.5 preflight leaves, and load-bearing again now the rows are
+	   product names: at the default a wrapped workload name drifts away from the
+	   "Microsoft Defender for" above it and the pair stops reading as one label. The
+	   panel is wide enough to hold the longest on one line, so this is what catches
+	   whichever product name is added that is longer still. */
 	line-height: 1.35;
 	color: #c3d0e6;
 	transition:
@@ -294,35 +292,22 @@ h4 {
 	color: #ffffff;
 }
 
-/* A group row: the glyph, then the label, centred against each other.
+/* The way to the index, /solutions. Ruled off and set a step quieter than the
+   products above it, so it reads as the end of the set rather than as one more
+   product - it is the only thing in the panel that is not one.
 
-   The glyph takes currentColor from the row, so it brightens on hover with the
-   text on one clock rather than needing a rule of its own - and it dims with the
-   row's own colour the rest of the time, which is what keeps five icons from
-   reading as five bullets. */
-.nav-menu__row--icon {
-	display: flex;
-	align-items: center;
-	gap: var(--nav-menu-gap);
-}
+   No left indent any more. It had one to clear the glyphs on the rows above, so
+   its text started on the same line as their labels rather than under their icons;
+   with the glyphs gone that indent would be the ragged left edge it existed to
+   prevent. The rule and the colour are what draw the distinction now.
 
-/* The way down a level, to /topics. Ruled off and set a step quieter than the five
-   areas above it, so it reads as the end of the set rather than as a sixth one -
-   this row is the only thing in the panel that is not an area, and the only one
-   with no glyph.
-
-   Indented past where a glyph would be, so its text starts on the same line as the
-   labels above rather than under their icons. A ragged left edge in a 224px panel
-   reads as a mistake rather than as a distinction; the rule is what draws that.
-
-   Margin above the rule and padding below, rather than a border on the last group
-   row: the rule belongs to this row, and hanging it off the one above would move
-   with the list if a group were ever added or dropped - which happens on its own,
-   since a group with nothing published is not rendered. */
+   Margin above the rule and padding below, rather than a border on the last
+   product row: the rule belongs to this row, and hanging it off the one above
+   would move with the list as products are published, since a product with nothing
+   behind it is not rendered. */
 .nav-menu__row--all {
 	margin-top: 6px;
 	padding-top: 12px;
-	padding-left: calc(18px + var(--nav-menu-glyph) + var(--nav-menu-gap));
 	border-top: 1px solid #1b2740;
 	color: #8fa3c2;
 }
@@ -391,8 +376,8 @@ h4 {
 	   the box would reach 16px past the glyph, further than the 0.5rem gap between
 	   this wrapped nav row and its neighbours, and start swallowing taps meant for
 	   the brand above or the panel below. 36px clears WCAG 2.2 2.5.8, which asks
-	   24x24, and the caret is the second way in anyway - "Topics" beside it is a
-	   full-size text link to the same subjects at /topics.
+	   24x24, and the caret is the second way in anyway - "Solutions" beside it is a
+	   full-size text link to the same list at /solutions.
 	   https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html */
 	.nav-dropdown__toggle {
 		padding: 0.75rem;
@@ -472,19 +457,24 @@ h4 {
    these carry product and subject names that are read as words, and "MICROSOFT
    DEFENDER FOR OFFICE 365" at 0.12em is a banner rather than a tag.
 
-   Read that last paragraph as scoped to this shape rather than to the vocabulary,
-   because a row now does set a product in caps at 0.12em - as an eyebrow above the
-   title, no border, nothing else on the line. The objection above is about a
+   Read that last paragraph as scoped to this shape rather than to the vocabulary.
+   An entry page still sets its products in caps at 0.12em as an eyebrow above the
+   title - no border, nothing else on the line - and the objection above is about a
    bordered box among other bordered boxes, where caps make one of a row of peers
-   shout; it does not reach a line that has no peers on it. See EntryEyebrow.astro.
+   shout. It does not reach a line that has no peers on it. See EntryEyebrow.astro.
 
-   Where each is used, since that has narrowed: .tag-solution is the rail's
-   Solutions block and nothing else. .tag-topic currently has no caller - the entry
-   page listed topics as a run of these until its taxonomy became one middot line
-   under the title, and the rail's merged tag block went at the same time. Both
-   classes are kept whole rather than trimmed to what is live: they are a matched
-   pair, and half a pair is harder to bring back than none of it. The .entry-row
-   rules further down that brighten either tag are inert for the same reason. */
+   Where each is used, since both are live again and the note here said neither
+   quite was: .tag-solution is the tag under a ledger row's title, and .tag-topic is
+   the tag a row on a solution archive carries instead plus the full run of them on
+   an entry page. The rail uses neither - it has no tag block any more.
+
+   Only .tag-solution is ever an anchor. Topics are labels rather than destinations
+   now, so TopicLink renders a <span> unconditionally and the a.tag-topic rules
+   below are the inert half of the pair. Kept whole rather than trimmed to what is
+   live: the two are a matched set, and half a pair is harder to bring back than
+   none of it. The .entry-row rules further down brighten both, which is correct -
+   a topic tag inside a hovered row should light with the row whether or not it is
+   a link. */
 .tag-solution {
 	display: inline-flex;
 	align-items: center;
@@ -807,13 +797,14 @@ a.tag-topic:focus-visible {
 	transition: color 260ms;
 }
 
-/* The tags carry their own 200ms hover in the tags block above. This restated the
-   timing at the row's 260ms so that pointing anywhere on the row brightened the
-   tag on the same clock as the title, rather than the two arriving a beat apart.
+/* The tags carry their own 200ms hover in the tags block above. This restates the
+   timing at the row's 260ms so that pointing anywhere on the row brightens the tag
+   on the same clock as the title, rather than the two arriving a beat apart.
 
-   No caller now: a row's taxonomy is unlinked text and does not brighten at all.
-   Kept beside the two .tag-* rules it exists to re-time, so if either comes back
-   into a row this comes back with it. */
+   Live again on both vocabularies: EntryList puts this on whichever tag a row
+   carries - the solution under the title, or the primary topic on a solution
+   archive. It was inert for one revision, while a row's taxonomy was unlinked
+   middot text that did not brighten at all. */
 .entry-row__tag {
 	transition:
 		border-color 260ms,

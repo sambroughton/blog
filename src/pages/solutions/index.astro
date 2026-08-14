@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublishedPosts, solutionFacets } from '../../lib/collections';
+import { withBase } from '../../lib/paths';
+
+// An index of the Microsoft products worked in so far.
+//
+// It exists for two reasons, and the second is the load-bearing one. It is the
+// counts: the header menu is a way through and deliberately carries no numbers, so
+// this is where "how much is behind each of these" gets answered. And it is a
+// destination for the header's "Solutions" label, which is a link beside a caret
+// rather than a control pretending to be both - that pattern needs somewhere for
+// the word itself to go, and a menu whose only route in is a 12px caret is worse
+// for touch and for keyboard alike.
+//
+// There has never been an index of products before; the note on the old /topics
+// index said as much and pointed at the rail's Solutions block as the nearest
+// thing. That block is gone and this is its replacement, in the one place a
+// complete list is worth a whole page rather than a column beside every page.
+//
+// Flat and in catalogue order, not by volume: SOLUTIONS is ordered as the estate
+// reads - the platform trio, then the Defender family in scope order - and sorting
+// this by article count would let the busiest product read as the most important
+// one. solutionFacets() is what preserves that order, and it drops products with
+// nothing published, so no row here can lead to a page that does not exist.
+const posts = await getPublishedPosts();
+const solutions = solutionFacets(posts);
+---
+
+<BaseLayout
+	title="Solutions"
+	description="The Microsoft security products these entries are built on."
+	crumbs={[{ label: 'Home', href: '/' }, { label: 'Solutions' }]}
+>
+	<p class="text-blue text-[0.68rem] tracking-[0.12em] uppercase">Browse</p>
+	<h1 class="font-display text-text mt-1 text-2xl leading-tight font-bold sm:text-3xl">
+		Solutions
+	</h1>
+	<p class="text-text-2 mt-3 max-w-[52ch] text-sm leading-relaxed">
+		The Microsoft security products the work sits in. An entry usually names more than one, so it
+		turns up under each of them.
+	</p>
+
+	{
+		solutions.length === 0 ? (
+			<p class="text-text-2 mt-10 text-sm">No entries yet, so there is nothing to browse.</p>
+		) : (
+			/* Two columns from sm up rather than the three the topics index used. The
+			   labels are full product names - "Microsoft Defender for Cloud Apps" - so a
+			   third column would wrap most of them, where eighteen short subject names
+			   flowed into three cleanly. The count sits hard right of each row, which is
+			   what keeps a column of ragged-length labels reading as a list. */
+			<ul class="border-rule mt-8 grid border-t sm:grid-cols-2 sm:gap-x-10">
+				{solutions.map((solution) => (
+					<li class="border-rule border-b">
+						<a
+							href={withBase(`/solutions/${solution.slug}`)}
+							class="text-text-2 hover:text-text flex items-baseline justify-between gap-3 py-2 text-sm transition-colors"
+						>
+							<span>{solution.label}</span>
+							<span class="text-blue shrink-0 text-[0.72rem] tabular-nums">{solution.count}</span>
+						</a>
+					</li>
+				))}
+			</ul>
+		)
+	}
+</BaseLayout>
