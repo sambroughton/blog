@@ -2,19 +2,26 @@
 import type { GetStaticPaths } from 'astro';
 import { Image } from 'astro:assets';
 import { render } from 'astro:content';
+import Breadcrumb from '../../components/Breadcrumb.astro';
 import EntryEyebrow from '../../components/EntryEyebrow.astro';
-import EntryMeta from '../../components/EntryMeta.astro';
+import TopicLink from '../../components/TopicLink.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { formatDate, getPublishedPosts, isoDate, primarySolution } from '../../lib/collections';
 import { withBase } from '../../lib/paths';
 import { readingTimeMinutes } from '../../lib/readingTime';
 import { slugify } from '../../lib/slug';
+import { buildToc } from '../../lib/toc';
 
 export const getStaticPaths = (async () => {
 	const posts = await getPublishedPosts();
 
 	// Neighbours come from the same sorted list the ledger uses, so "previous"
 	// means previous chronologically, not previous alphabetically.
+	//
+	// Built from the complete set rather than from the articles-only list the
+	// ledger paginates, so an entry's neighbours are the entries either side of it
+	// in time whether or not any of the three is a project. A reader who has opened
+	// one is reading, not browsing a filtered stream.
 	return posts.map((post, index) => ({
 		params: { slug: post.id },
 		props: {
@@ -26,8 +33,45 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 const { post, newer, older } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 const minutes = readingTimeMinutes(post.body);
+
+// The contents list, built from the ids Astro already put on the headings rather
+// than from anything parsed here. Empty for a short entry with no sections, which
+// is why each rail block below is rendered conditionally rather than assumed.
+const toc = buildToc(headings);
+
+// The rail has something in it if either block does. Checked once here because the
+// <aside> and the grid column it sits in both depend on it: an empty aside would
+// still take its 16rem track and leave the article in a narrower column for no
+// reason.
+const hasRail = toc.length > 0 || post.data.topics.length > 0;
+
+// The trail is rendered inside the article column rather than passed to
+// BaseLayout, which is where every other page puts it. It has to move with the
+// copy: focus mode centres the column, and a breadcrumb left behind at the far
+// left of a 64rem main would be the one thing on the page still laid out the old
+// way.
+//
+// The primary solution, not /posts: /posts is a route prefix with no index behind
+// it, and a crumb that leads nowhere is worse than no crumb. An entry can name
+// several solutions, so this trail picks the first - the one the entry is about -
+// rather than offering a fork. Every published entry's solutions have a page,
+// since those pages are generated from the solutions published entries actually
+// use.
+//
+// This does mean the product is named twice above the fold, once here and once in
+// the eyebrow below. That is the pattern a solution archive already uses, where
+// the value is in the crumb and in the h1 - and the breadcrumb is documented as
+// the quietest thing on the page, ranked below the metadata line, so the two are
+// not competing for the same job. The crumb navigates up; the eyebrow states what
+// the entry is about.
+const crumbs = [
+	{ label: 'Home', href: '/' },
+	{ label: 'Solutions', href: '/solutions' },
+	{ label: primarySolution(post), href: `/solutions/${slugify(primarySolution(post))}` },
+	{ label: post.data.title },
+];
 ---
 
 <BaseLayout
@@ -35,155 +79,304 @@ const minutes = readingTimeMinutes(post.body);
 	description={post.data.description}
 	ogType="article"
 	publishedTime={post.data.pubDate}
-	narrow
-	crumbs={[
-		{ label: 'Home', href: '/' },
-		/* The primary solution, not /posts: /posts is a route prefix with no index
-		   behind it, and a crumb that leads nowhere is worse than no crumb. An entry
-		   can name several solutions, so this trail picks the first - the one the
-		   entry is about - rather than offering a fork. Every published entry's
-		   solutions have a page, since those pages are generated from the solutions
-		   published entries actually use.
-
-		   This does mean the product is named twice above the fold, once here and
-		   once in the eyebrow below. That is the pattern a solution archive already
-		   uses, where the value is in the crumb and in the h1 - and the breadcrumb is
-		   documented as the quietest thing on the page, ranked below the metadata
-		   line, so the two are not competing for the same job. The crumb navigates
-		   up; the eyebrow states what the entry is about. */
-		{
-			label: primarySolution(post),
-			href: `/solutions/${slugify(primarySolution(post))}`,
-		},
-		{ label: post.data.title },
-	]}
 >
-	<article class="mx-auto max-w-2xl">
-		<header>
-			{
-				/* The products this entry is built on, above everything else on the page.
-				   Linked here, unlike on a ledger row: a row is one stretched link and a
-				   second target inside it would be a second tab stop, whereas a reader who
-				   has opened the entry is exactly the one who might follow the product
-				   sideways to the rest of the work in it. */
-			}
-			<EntryEyebrow labels={post.data.solutions} />
+	{
+		/* Read before paint, so a reader who has turned focus mode on does not watch
+		   the rail render and then vanish on every entry they open. is:inline keeps
+		   this in the document as a blocking script rather than being bundled and
+		   deferred, which is the whole point - a module script runs after layout, and
+		   that flash is exactly what it would cause.
 
-			{
-				/* The series, demoted from the accent to text-3. It used to be the only
-				   caps line here and so it took the accent; the solution now sits above it
-				   holding that slot, and two blue caps lines stacked would read as one
-				   two-line label rather than as two different facts. Same size and
-				   tracking, so it still reads as the same tier - just quieter, which is
-				   also the right order of weight: three entries share a series, every entry
-				   names a product. */
+		   The flag goes on <html> rather than on the wrapper below, so it can be set
+		   before the wrapper has been parsed and there is no element to wait for.
+		   Nothing else on the site reads it: every rule keyed to it is scoped to
+		   .entry-layout, which exists on this route alone.
+
+		   try/catch because localStorage throws rather than returning null when
+		   storage is blocked - Safari in private mode, or a browser refusing site
+		   data. Swallowing it means focus mode is simply not restored, which is the
+		   correct degradation for a display preference. */
+	}
+	<script is:inline>
+		try {
+			if (localStorage.getItem('sb-focus-mode') === '1') {
+				document.documentElement.dataset.focus = '';
 			}
-			{
-				post.data.series && (
-					<p class="text-text-3 mt-1 text-[0.68rem] tracking-[0.12em] uppercase">
-						{post.data.series}
+		} catch {
+			/* storage unavailable; focus mode is not restored */
+		}
+	</script>
+
+	<div class="entry-layout" data-rail={hasRail ? '' : undefined}>
+		<div class="entry-layout__main min-w-0">
+			<Breadcrumb crumbs={crumbs} />
+
+			<article>
+				<header>
+					{
+						/* The eyebrow and the focus toggle share a line, the label against the
+						   left edge and the control against the right. They are unrelated and
+						   are on one row for a plain reason: the toggle belongs at the top of
+						   the column it resizes, and every other slot up there is spoken for by
+						   the title block.
+
+						   items-start rather than items-center, because the eyebrow wraps to two
+						   lines on a narrow column while the button never does, and centring
+						   would float the button against the middle of a two-line label. */
+					}
+					<div class="flex items-start justify-between gap-4">
+						{
+							/* The products this entry is built on, above everything else on the
+							   page. Linked here, unlike on a ledger row: a row is one stretched
+							   link and a second target inside it would be a second tab stop,
+							   whereas a reader who has opened the entry is exactly the one who
+							   might follow the product sideways to the rest of the work in it. */
+						}
+						<EntryEyebrow labels={post.data.solutions} class="min-w-0" />
+
+						{
+							/* aria-pressed rather than aria-expanded: this is a toggle button
+							   whose label does not change, which is what pressed states are for.
+							   Expanded would be wrong - nothing is disclosed, a column is removed.
+
+							   Hidden below the breakpoint where the rail appears, since there is
+							   nothing to hide below it and the article is already the full width
+							   of the page. That is also why this is not in the site header: it is
+							   a property of this layout rather than of the site.
+							   https://www.w3.org/WAI/ARIA/apg/patterns/button/ */
+						}
+						<button type="button" class="focus-toggle" aria-pressed="false" data-focus-toggle>
+							{
+								/* Corner brackets, the usual mark for "fit to frame". Decorative -
+								   the button's own text says what it does. */
+							}
+							<svg
+								viewBox="0 0 16 16"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								class="h-3.5 w-3.5 shrink-0"
+								aria-hidden="true"
+							>
+								<path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4"></path>
+							</svg>
+							<span>Focus mode</span>
+						</button>
+					</div>
+
+					{
+						/* The series, demoted from the accent to text-3. It used to be the only
+						   caps line here and so it took the accent; the solution now sits above
+						   it holding that slot, and two blue caps lines stacked would read as one
+						   two-line label rather than as two different facts. Same size and
+						   tracking, so it still reads as the same tier - just quieter, which is
+						   also the right order of weight: three entries share a series, every
+						   entry names a product. */
+					}
+					{
+						post.data.series && (
+							<p class="text-text-3 mt-1 text-[0.68rem] tracking-[0.12em] uppercase">
+								{post.data.series}
+							</p>
+						)
+					}
+
+					<h1 class="font-display text-text mt-4 text-3xl leading-tight font-bold sm:text-4xl">
+						{post.data.title}
+					</h1>
+
+					<p class="text-text-2 mt-4 max-w-[52ch] text-[1.05rem] leading-relaxed">
+						{post.data.description}
 					</p>
-				)
-			}
 
-			<h1 class="font-display text-text mt-4 text-3xl leading-tight font-bold sm:text-4xl">
-				{post.data.title}
-			</h1>
-
-			<p class="text-text-2 mt-4 max-w-[52ch] text-[1.05rem] leading-relaxed">
-				{post.data.description}
-			</p>
-
-			<div class="border-rule mt-5 border-b pb-5">
-				{
-					/* Date and reading time only on this line. The product is not repeated
-				    here: it is the eyebrow above the title, which is where this page now
-				    leads with it. */
-				}
-				<div class="text-text-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.72rem]">
-					<time datetime={isoDate(post.data.pubDate)}>
-						{formatDate(post.data.pubDate)}
-					</time>
-					<span>{minutes} min read</span>
-				</div>
-
-				{
-					/* Every topic this entry carries, uncapped - which is what separates this
-				    page from a ledger row, where one tag stands for the lot. A reader who
-				    has opened the entry is the one who wants to know what is in it.
-
-				    Unlinked, as they are everywhere now. That is the loss this change
-				    takes: the line used to be the way to follow a subject sideways, and
-				    there is no longer anywhere for it to go. It stays as a tag run rather
-				    than becoming prose because the labels are still worth scanning, and
-				    because it is the shape a reader has already met on the row that brought
-				    them here.
-
-				    The hierarchy reads top to bottom - product in the eyebrow, subjects
-				    down here - which is the same order a row reads and the same order the
-				    search filters read. */
-				}
-				<div class="mt-4">
-					<EntryMeta topics={post.data.topics} />
-				</div>
-			</div>
-
-			{
-				post.data.updatedDate && (
-					<p class="text-text-3 mt-3 text-[0.72rem]">
-						Updated{' '}
-						<time datetime={isoDate(post.data.updatedDate)}>
-							{formatDate(post.data.updatedDate)}
+					{
+						/* Date and reading time, and nothing else. The product is the eyebrow
+						   above the title and the topics are in the rail, which is what leaves
+						   this line as the two facts about the reading rather than about the
+						   filing. It carried the full topic list until the rail existed to take
+						   it. */
+					}
+					<div
+						class="border-rule text-text-3 mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-b pb-5 text-[0.72rem]"
+					>
+						<time datetime={isoDate(post.data.pubDate)}>
+							{formatDate(post.data.pubDate)}
 						</time>
-					</p>
-				)
-			}
+						<span>{minutes} min read</span>
+					</div>
 
-			{
-				post.data.cover && (
-					<Image
-						src={post.data.cover}
-						alt={post.data.coverAlt ?? ''}
-						widths={[640, 1024]}
-						sizes="(min-width: 768px) 42rem, 100vw"
-						class="border-rule mt-6 w-full border"
-						loading="eager"
-					/>
-				)
-			}
-		</header>
+					{
+						post.data.updatedDate && (
+							<p class="text-text-3 mt-3 text-[0.72rem]">
+								Updated{' '}
+								<time datetime={isoDate(post.data.updatedDate)}>
+									{formatDate(post.data.updatedDate)}
+								</time>
+							</p>
+						)
+					}
 
-		<div class="prose-body mt-8">
-			<Content />
+					{
+						post.data.cover && (
+							<Image
+								src={post.data.cover}
+								alt={post.data.coverAlt ?? ''}
+								widths={[640, 1024]}
+								sizes="(min-width: 768px) 42rem, 100vw"
+								class="border-rule mt-6 w-full border"
+								loading="eager"
+							/>
+						)
+					}
+				</header>
+
+				<div class="prose-body mt-8">
+					<Content />
+				</div>
+
+				<nav
+					aria-label="Nearby entries"
+					class="border-rule mt-14 grid gap-4 border-t pt-6 sm:grid-cols-2"
+				>
+					{
+						older ? (
+							<a href={withBase(`/posts/${older.id}`)} class="group">
+								<span class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Older</span>
+								<span class="font-display text-text-2 group-hover:text-blue mt-1 block text-base font-bold transition-colors">
+									{older.data.title}
+								</span>
+							</a>
+						) : (
+							<span />
+						)
+					}
+
+					{
+						newer && (
+							<a href={withBase(`/posts/${newer.id}`)} class="group sm:text-right">
+								<span class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Newer</span>
+								<span class="font-display text-text-2 group-hover:text-blue mt-1 block text-base font-bold transition-colors">
+									{newer.data.title}
+								</span>
+							</a>
+						)
+					}
+				</nav>
+			</article>
 		</div>
 
-		<nav
-			aria-label="Nearby entries"
-			class="border-rule mt-14 grid gap-4 border-t pt-6 sm:grid-cols-2"
-		>
-			{
-				older ? (
-					<a href={withBase(`/posts/${older.id}`)} class="group">
-						<span class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Older</span>
-						<span class="font-display text-text-2 group-hover:text-blue mt-1 block text-base font-bold transition-colors">
-							{older.data.title}
-						</span>
-					</a>
-				) : (
-					<span />
-				)
-			}
+		{
+			/* The rail. Two blocks, both about this entry rather than about the site,
+			   which is what separates it from the ledger's Sidebar: that one is a way
+			   out to other entries, this one is a way around the one you are in.
 
-			{
-				newer && (
-					<a href={withBase(`/posts/${newer.id}`)} class="group sm:text-right">
-						<span class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Newer</span>
-						<span class="font-display text-text-2 group-hover:text-blue mt-1 block text-base font-bold transition-colors">
-							{newer.data.title}
-						</span>
-					</a>
-				)
-			}
-		</nav>
-	</article>
+			   Ordered contents first, tags second - the list you use while reading over
+			   the labels you read once. Rendered after the article in the source, so a
+			   reader on a phone or with the rail collapsed reaches the entry before its
+			   metadata, and the grid puts it back on the right at the breakpoint. */
+		}
+		{
+			hasRail && (
+				<aside class="entry-rail" aria-label="About this entry">
+					{toc.length > 0 && (
+						<nav aria-labelledby="entry-toc">
+							<h2 id="entry-toc" class="entry-rail__heading">
+								Table of contents
+							</h2>
+							{/* An ordered list because the sections are in document order and the
+							    numbers are the reader's place in the article, not decoration. The
+							    counters are drawn by CSS rather than by list-style, so a wrapped
+							    row hangs its text off the number instead of under it. */}
+							<ol class="entry-toc mt-2.5">
+								{toc.map((section) => (
+									<li>
+										<a href={`#${section.slug}`}>{section.text}</a>
+										{section.children.length > 0 && (
+											<ul class="entry-toc__sub">
+												{section.children.map((child) => (
+													<li>
+														<a href={`#${child.slug}`}>{child.text}</a>
+													</li>
+												))}
+											</ul>
+										)}
+									</li>
+								))}
+							</ol>
+						</nav>
+					)}
+
+					{post.data.topics.length > 0 && (
+						<div class={toc.length > 0 ? 'mt-8' : undefined}>
+							<h2 class="entry-rail__heading">Tags</h2>
+							{/* Every topic this entry carries, uncapped - which is what separates
+							    this page from a ledger row, where one tag stands for the lot.
+
+							    Unlinked, as topics are everywhere now. That is the loss this
+							    change takes: this used to be the way to follow a subject sideways
+							    and there is no longer anywhere for it to go. It stays a tag run
+							    rather than becoming prose because the labels are still worth
+							    scanning, and because it is the shape a reader has already met on
+							    the row that brought them here. */}
+							<ul class="mt-2.5 flex flex-wrap gap-1.5">
+								{post.data.topics.map((topic) => (
+									<li class="flex max-w-full">
+										<TopicLink label={topic} />
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
+				</aside>
+			)
+		}
+	</div>
 </BaseLayout>
+
+<script>
+	// Focus mode: one attribute on <html>, set here and restored by the inline
+	// script above. Everything visual is in global.css keyed off :root[data-focus].
+	//
+	// The button is found rather than assumed, because an entry with no headings and
+	// no topics renders no rail - the toggle is still drawn there, and toggling it
+	// is harmless, so there is no case to guard beyond the element existing.
+	const toggle = document.querySelector<HTMLButtonElement>('[data-focus-toggle]');
+
+	if (toggle) {
+		const KEY = 'sb-focus-mode';
+
+		// Read from the DOM rather than from storage, so the button's initial state
+		// agrees with what the inline script actually did. If storage threw up there,
+		// the attribute is absent and this reports off, which is what the reader sees.
+		const sync = () => {
+			toggle.setAttribute(
+				'aria-pressed',
+				String(document.documentElement.hasAttribute('data-focus')),
+			);
+		};
+
+		sync();
+
+		toggle.addEventListener('click', () => {
+			const root = document.documentElement;
+			const on = !root.hasAttribute('data-focus');
+
+			if (on) root.setAttribute('data-focus', '');
+			else root.removeAttribute('data-focus');
+
+			sync();
+
+			// Persisted so the mode survives following a link to the next entry, which
+			// is the point of it being a mode rather than a per-page control. Failure
+			// is ignored for the same reason the inline script swallows it: the toggle
+			// still works for this page, it just will not be remembered.
+			try {
+				localStorage.setItem(KEY, on ? '1' : '0');
+			} catch {
+				/* storage unavailable; the toggle still works for this page */
+			}
+		});
+	}
+</script>

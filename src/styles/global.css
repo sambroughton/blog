@@ -1254,3 +1254,201 @@ a.tag-topic:focus-visible {
 	margin-top: 1.5em;
 	margin-bottom: 1.5em;
 }
+
+/* Entry layout ---------------------------------------------------------------
+   The article and a rail about it: contents, then tags. Used on /posts/<slug>
+   and nowhere else.
+
+   Two things it is deliberately not. It is not the ledger's Sidebar - that rail
+   is a way out to other entries and this one is a way around the entry you are
+   in, which is why they share no markup. And the article column is not centred:
+   it starts at the left edge of <main> and the rail takes the space on the
+   right, because focus mode is the state that centres it. A column that was
+   already centred would have nothing to do when the rail went away, and the
+   toggle would read as a control that removes something rather than one that
+   changes the shape of the page.
+
+   Single column until the rail has somewhere to go. 64rem is the outer max-w-5xl
+   on <main>, so below roughly that width there is no room for a 16rem track
+   beside a readable measure, and the rail stacks under the article instead - in
+   source order, which puts the contents list after the thing it indexes. That is
+   the right way round on a phone: a contents list above the article is a wall of
+   links between the reader and the first paragraph. */
+.entry-layout {
+	display: grid;
+	gap: 2.5rem;
+}
+
+/* 1024px rather than the 64rem the container is capped at, so the two columns
+   appear a little before <main> stops growing. Below this the rail is a block
+   under the article and needs none of the rules in here. */
+@media (min-width: 1024px) {
+	/* Only when there is a rail to make room for. An entry with no headings and no
+	   topics renders no <aside>, and without this the empty second track would
+	   still narrow the article by 18.5rem for nothing. */
+	.entry-layout[data-rail] {
+		grid-template-columns: minmax(0, 1fr) 16rem;
+	}
+
+	.entry-rail {
+		/* Sticky for the reason the contents list exists: it is used while reading,
+		   so it has to still be there once you have scrolled past where it started.
+		   self-start is what leaves it travel to stick through - a grid item
+		   stretches to its row by default, so without this the box is already as
+		   tall as the article and has nowhere to move. Same pattern as Sidebar. */
+		position: sticky;
+		top: 2.5rem;
+		align-self: start;
+		max-height: calc(100vh - 5rem);
+		overflow-y: auto;
+		overscroll-behavior: contain;
+
+		/* The rule belongs to the rail rather than to the article column: it is the
+		   thing that leaves, so it takes its own edge with it in focus mode. */
+		border-left: 1px solid var(--color-rule);
+		padding-left: 1.5rem;
+	}
+}
+
+/* Focus mode. The flag is on <html> so the inline script in the entry page can
+   set it before this element has been parsed - see the note there. Every rule is
+   scoped to a class that exists on entry pages alone, so the attribute is inert
+   everywhere else and nothing has to clear it on navigation. */
+:root[data-focus] .entry-rail {
+	display: none;
+}
+
+:root[data-focus] .entry-layout[data-rail] {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+/* The centring, and the only place the article is centred. 44rem is a shade wider
+   than the 42rem this page used when it was max-w-2xl throughout: with the rail
+   gone there is no second column to balance against, so the measure can take the
+   width the type wants rather than the width that was left over. */
+:root[data-focus] .entry-layout__main {
+	margin-inline: auto;
+	max-width: 44rem;
+}
+
+/* The toggle. Sized and coloured as the quietest control on the page - it sits
+   level with the eyebrow and must not outweigh the h1 under it. */
+.focus-toggle {
+	display: none;
+	align-items: center;
+	gap: 0.45rem;
+	flex-shrink: 0;
+	padding: 0.4rem 0.7rem;
+	border: 1px solid var(--color-rule);
+	border-radius: 3px;
+	background: none;
+	color: var(--color-text-3);
+	font-family: var(--font-mono);
+	font-size: 0.7rem;
+	line-height: 1.2;
+	cursor: pointer;
+	transition:
+		border-color 200ms ease,
+		color 200ms ease;
+}
+
+/* Only where it does something. Below the two-column breakpoint there is no rail
+   to hide and the article is already the full width of the page, so the control
+   would toggle a state with no visible effect. */
+@media (min-width: 1024px) {
+	.focus-toggle {
+		display: inline-flex;
+	}
+}
+
+.focus-toggle:hover,
+.focus-toggle:focus-visible {
+	border-color: var(--color-rule-bright);
+	color: var(--color-text);
+}
+
+/* Pressed reads as on: the accent on the border and the label, which is the same
+   "this is active" treatment the current page gets in Pagination. aria-pressed is
+   the state rather than a class, so the styling cannot disagree with what a
+   screen reader is told. */
+.focus-toggle[aria-pressed='true'] {
+	border-color: rgb(76 141 255 / 0.5);
+	color: var(--color-blue);
+}
+
+.entry-rail__heading {
+	font-size: 0.63rem;
+	font-weight: 400;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--color-text-3);
+}
+
+/* Counters rather than list-style, so a wrapped row hangs off its number instead
+   of running back under it. The marker is absolutely positioned in the padding,
+   which is what makes the text block a single left edge down the list. */
+.entry-toc {
+	list-style: none;
+	counter-reset: toc;
+}
+
+.entry-toc > li {
+	counter-increment: toc;
+	position: relative;
+	padding-left: 1.35rem;
+}
+
+.entry-toc > li + li {
+	margin-top: 0.5rem;
+}
+
+.entry-toc > li::before {
+	content: counter(toc) '.';
+	position: absolute;
+	left: 0;
+	top: 0;
+	color: var(--color-text-3);
+	font-size: 0.8rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.entry-toc a {
+	display: block;
+	color: var(--color-text-2);
+	font-size: 0.8rem;
+	line-height: 1.4;
+	text-decoration: none;
+	transition: color 200ms ease;
+}
+
+.entry-toc a:hover,
+.entry-toc a:focus-visible {
+	color: var(--color-text);
+}
+
+/* Subsections. No counter and a hanging dash instead, so the two levels are told
+   apart by shape rather than by a second numbering scheme the reader has to
+   parse - "3.2" in a 16rem rail reads as a version number. */
+.entry-toc__sub {
+	list-style: none;
+	margin-top: 0.4rem;
+	padding-left: 0.75rem;
+}
+
+.entry-toc__sub > li + li {
+	margin-top: 0.35rem;
+}
+
+.entry-toc__sub a {
+	font-size: 0.75rem;
+	color: var(--color-text-3);
+}
+
+/* Anchored headings land under the top of the viewport rather than hard against
+   it, so the heading a contents link jumps to is not touching the edge. Applied
+   to the headings themselves because the page has no sticky header to clear -
+   this is breathing room, not an offset for something covering them. */
+.prose-body h2,
+.prose-body h3 {
+	scroll-margin-top: 2rem;
+}
