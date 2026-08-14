@@ -1,0 +1,75 @@
+---
+import type { SolutionLabel } from '../consts';
+import { withBase } from '../lib/paths';
+import { slugify } from '../lib/slug';
+
+interface Props {
+	/** Solutions to name, in frontmatter order. A row passes one, an entry page all. */
+	labels: readonly SolutionLabel[];
+	/**
+	 * Link each label to its solution archive. Off on a ledger row, where the row
+	 * is one stretched link and a second target inside it would be a second tab
+	 * stop for the same destination the reader is already on.
+	 */
+	linked?: boolean;
+	/** Extra classes for the point of use, e.g. the caller's vertical rhythm. */
+	class?: string;
+}
+
+const { labels, linked = true, class: className = '' } = Astro.props;
+
+// The product an entry is built on, as the first line of a row or an entry page.
+//
+// This is the site's existing eyebrow, not a new element: 0.68rem, 0.12em, caps,
+// in the accent. The same treatment as "Latest" above a list, "Featured" on the
+// hero card, "Area" and "Topic" above an archive heading, and a series name. The
+// prominence comes from sitting above the title and from the case, not from a
+// size or a box - which is what keeps the strongest signal on the page also the
+// most restrained thing on it. Nothing new in the stylesheet, and no badge to
+// grow: this deliberately is not a product logo, a pill or a coloured chip.
+//
+// It does contradict a note on .tag-solution in global.css, which says product
+// names are read as words and that caps at 0.12em make "MICROSOFT DEFENDER FOR
+// OFFICE 365" a banner rather than a tag. That objection is about a bordered box
+// sharing a line with other boxes, where caps make one of a row of peers shout.
+// Here there are no peers on the line and no border, so "banner" is not the
+// failure mode available - the failure mode is a wrapped second line, which is
+// what happens to the longest label in the narrow band between md and about
+// 900px. Accepted, with leading-[1.35] to make the wrap read: the same call
+// .nav-menu__row makes for the same reason, where a longer label costs a taller
+// row rather than a broken one.
+//
+// Contrast: --color-blue on --color-bg is 6.19:1, against the 4.88:1 that
+// --color-text-3 holds on the same ground. So this line is brighter than the
+// floor the entry row's hover budget is set by, and adding it does not move that
+// budget. See the note above .entry-row in global.css.
+//
+// Middots between multiple labels rather than a comma: an entry page can name two
+// or three products and the separator has to read at 0.12em tracking, where a
+// comma nearly disappears. aria-hidden because it separates two elements that are
+// already separate, and read aloud it is noise.
+---
+
+<p class={`text-blue text-[0.68rem] leading-[1.35] tracking-[0.12em] uppercase ${className}`}>
+	{
+		labels.map((label, index) => (
+			<Fragment>
+				{index > 0 && (
+					<span class="text-text-3" aria-hidden="true">
+						{' · '}
+					</span>
+				)}
+				{linked ? (
+					<a
+						href={withBase(`/solutions/${slugify(label)}`)}
+						class="hover:text-blue-bright no-underline transition-colors"
+					>
+						{label}
+					</a>
+				) : (
+					label
+				)}
+			</Fragment>
+		))
+	}
+</p>

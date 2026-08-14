@@ -1,7 +1,7 @@
 // Breadcrumb trail types.
 //
 // Trails are passed in by each page rather than derived from Astro.url, because
-// the readable label for a segment is never in the path: /categories/microsoft-entra-id
+// the readable label for a segment is never in the path: /solutions/microsoft-entra-id
 // has to become "Microsoft Entra ID", and a post's slug carries no title at all.
 // Deriving them would mean reversing slugify(), which is lossy, or a second lookup
 // table that could drift from consts.ts.

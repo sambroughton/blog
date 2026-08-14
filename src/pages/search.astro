@@ -1,0 +1,218 @@
+---
+import EntryList from '../components/EntryList.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import {
+	getPublishedPosts,
+	solutionFacets,
+	topicFacets,
+	topicGroupFacets,
+} from '../lib/collections';
+
+// Every published entry, rendered as an ordinary ledger row, then filtered in the
+// browser by hiding rows that do not match.
+//
+// The alternative was a JSON index and rows built in JavaScript, and this is
+// better for one reason that outweighs the rest: there is exactly one piece of row
+// markup on this site and it stays in EntryList.astro. A client-side renderer would
+// be a second copy of it, free to drift, and it would put the entire listing behind
+// scripting. Here the page is a complete, crawlable, readable archive before any
+// script runs, and the script only ever sets the `hidden` attribute.
+//
+// `hidden` rather than a class: it takes a row out of the accessibility tree and
+// the tab order as well as off the screen, for free, which a display rule would
+// not. Nothing sets `display` on .entry-row, so the user-agent rule wins.
+//
+// The three filters are the site's three taxonomy layers, widening as they go:
+// Solution, then Area, then Topic. Each option list comes from the same facet
+// helper the archives are built from, so a filter can only offer a value that has
+// entries behind it, and the option values are slugs to match the data attributes
+// rowFilterData() writes.
+//
+// A note on the labels, since this page names all three layers at once and the
+// hierarchy is sometimes described as Solution / Topic / Tags. It is not spelled
+// that way here. "Topic" is already this site's word for the eighteen specific
+// subjects - it is the frontmatter field, the /topics index, the footer link and
+// the header menu's label - so calling them Tags on this page alone would give one
+// vocabulary two names. The broad layer above them keeps the word the site already
+// shows for it: topics/[topic].astro has printed "Area" as the eyebrow on a group
+// archive since before this page existed. So the three selects are the three
+// eyebrows the site already prints, in the order a row reads them.
+//
+// Scale: this ships every published entry's title, description and a lowercased
+// copy of both, at roughly 1.5 KB of HTML per row. Fine into the low hundreds;
+// worth revisiting past about 150 entries, where the first thing to change is the
+// row payload - drop data-text and build the haystack in the script at init -
+// rather than the approach.
+const posts = await getPublishedPosts();
+
+const solutions = solutionFacets(posts);
+const areas = topicGroupFacets(posts);
+const topics = topicFacets(posts);
+
+// Shared by the three selects and their labels, so the controls cannot drift apart.
+const field = 'text-text-3 block text-[0.63rem] tracking-[0.12em] uppercase';
+---
+
+<BaseLayout
+	title="Search"
+	description="Filter the entries by Microsoft product, subject area, topic or text."
+	crumbs={[{ label: 'Home', href: '/' }, { label: 'Search' }]}
+>
+	<p class="text-blue text-[0.68rem] tracking-[0.12em] uppercase">Browse</p>
+	<h1 class="font-display text-text mt-1 text-2xl leading-tight font-bold sm:text-3xl">Search</h1>
+	<p class="text-text-2 mt-3 max-w-[52ch] text-sm leading-relaxed">
+		Filter by the product an entry is built on, the area of work it belongs to, the subject it
+		covers, or the words in its title and summary.
+	</p>
+
+	{
+		/* role="search" and not a <form>. There is nothing to submit to on a static
+		   site, so a form would promise a round trip the page cannot make and would
+		   put a surprise on the Enter key. The landmark is what a screen reader
+		   actually wants here, and role gives it without the element. */
+	}
+	<div
+		role="search"
+		aria-label="Filter entries"
+		class="search-filters border-rule mt-8 border-t pt-6"
+		data-search
+	>
+		<div>
+			<label for="search-q" class={field}>Search articles</label>
+			<input
+				type="search"
+				id="search-q"
+				class="search-input mt-1.5"
+				placeholder="Title or summary…"
+				autocomplete="off"
+				data-search-text
+			/>
+		</div>
+
+		{
+			/* Three columns from sm up, one below. The selects are equal-width rather
+			   than sized to their content: the option lists are wildly different lengths
+			   and a row of three differently sized boxes reads as three unrelated
+			   controls. */
+		}
+		<div class="mt-4 grid gap-3 sm:grid-cols-3">
+			<div>
+				<label for="search-solution" class={field}>Solution</label>
+				<select id="search-solution" class="search-select mt-1.5" data-search-facet="solutions">
+					<option value="">All solutions</option>
+					{solutions.map((facet) => <option value={facet.slug}>{facet.label}</option>)}
+				</select>
+			</div>
+
+			<div>
+				<label for="search-area" class={field}>Area</label>
+				<select id="search-area" class="search-select mt-1.5" data-search-facet="areas">
+					<option value="">All areas</option>
+					{areas.map((facet) => <option value={facet.slug}>{facet.label}</option>)}
+				</select>
+			</div>
+
+			<div>
+				<label for="search-topic" class={field}>Topic</label>
+				<select id="search-topic" class="search-select mt-1.5" data-search-facet="topics">
+					<option value="">All topics</option>
+					{topics.map((facet) => <option value={facet.slug}>{facet.label}</option>)}
+				</select>
+			</div>
+		</div>
+	</div>
+
+	<noscript>
+		{
+			/* is:inline so this stays in the document rather than being hoisted into the
+			   global stylesheet, which would hide the controls for everyone. Hiding the
+			   whole panel rather than leaving three inert selects on the page: the same
+			   call SiteHeader's noscript makes about its dropdown, for the same reason -
+			   a control that does nothing is worse than no control, and showing the list
+			   itself is the honest answer. The count below is correct without scripting,
+			   since it is the real total. */
+		}
+		<style is:inline>
+			.search-filters {
+				display: none;
+			}
+		</style>
+		<p class="text-text-2 border-rule mt-8 border-t pt-6 text-sm">
+			Filtering needs JavaScript. Every entry is listed below, newest first.
+		</p>
+	</noscript>
+
+	<div class="mt-10">
+		<EntryList posts={posts} label="Results" filterable />
+
+		{
+			/* Not a live region. The count above is the announcement - it is marked
+			   aria-live by the script - and two regions firing on one keystroke would
+			   say the same thing twice. EntryList's own empty branch cannot fire here,
+			   since the collection is never empty on this page; these are its exact
+			   classes so the two states are indistinguishable. */
+		}
+		<p hidden class="text-text-2 py-10 text-sm" data-search-empty>
+			No entries match these filters.
+		</p>
+	</div>
+</BaseLayout>
+
+<script>
+	// Filtering is attribute matching, nothing more. Each row carries its taxonomy
+	// as space-separated slugs and its searchable text pre-lowercased, written by
+	// rowFilterData() at build time - see lib/collections.ts for why the slugs are
+	// space-separated rather than concatenated.
+	const root = document.querySelector<HTMLElement>('[data-search]');
+	const count = document.querySelector<HTMLElement>('[data-entry-count]');
+	// The list section is found through the count rather than by a selector of its
+	// own, so the two can never end up pointing at different listings.
+	const list = count?.closest('section') ?? null;
+	const empty = document.querySelector<HTMLElement>('[data-search-empty]');
+
+	if (root && count && list) {
+		const text = root.querySelector<HTMLInputElement>('[data-search-text]');
+		const selects = [...root.querySelectorAll<HTMLSelectElement>('[data-search-facet]')];
+		const rows = [...list.querySelectorAll<HTMLElement>('li.entry-row')];
+
+		// Applied here rather than in the markup, so with scripting off nothing
+		// promises updates it cannot deliver. Same approach SiteHeader takes with the
+		// dropdown's menu semantics.
+		count.setAttribute('aria-live', 'polite');
+		count.setAttribute('aria-atomic', 'true');
+
+		/** Exact whole-value match against one of a row's space-separated slug lists. */
+		const has = (row: HTMLElement, key: string, value: string) =>
+			!value || (row.dataset[key] ?? '').split(' ').includes(value);
+
+		// Arrow consts rather than function declarations, and not a style preference:
+		// a declaration is hoisted, so the compiler cannot prove it only runs after the
+		// null guard above and drops the narrowing on `count` inside it. A const is
+		// created after the guard, so the narrowing survives without an assertion.
+		const apply = () => {
+			const query = (text?.value ?? '').trim().toLowerCase();
+			let shown = 0;
+
+			for (const row of rows) {
+				const matches =
+					(!query || (row.dataset.text ?? '').includes(query)) &&
+					selects.every((select) => has(row, select.dataset.searchFacet ?? '', select.value));
+
+				row.hidden = !matches;
+				if (matches) shown++;
+			}
+
+			// Rebuilds the string EntryList renders, with the same pluralisation, so the
+			// filtered count and the build-time one cannot read differently.
+			count.textContent = `${shown} ${shown === 1 ? 'article' : 'articles'}`;
+			if (empty) empty.hidden = shown > 0;
+		};
+
+		// No debounce. This is a substring test over a few dozen rows, so it is
+		// sub-millisecond, and `polite` is what makes per-keystroke announcements
+		// tolerable - assistive tech coalesces polite updates and settles once typing
+		// pauses, which a debounce would only delay.
+		text?.addEventListener('input', apply);
+		for (const select of selects) select.addEventListener('change', apply);
+	}
+</script>

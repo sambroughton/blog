@@ -1,0 +1,39 @@
+---
+import type { SolutionLabel } from '../consts';
+import { withBase } from '../lib/paths';
+import { slugify } from '../lib/slug';
+
+interface Props {
+	label: SolutionLabel;
+	/** Render as a link to the solution archive. Off for previews and mockups. */
+	linked?: boolean;
+	/** Extra classes for the point of use, e.g. lifting it above a stretched link. */
+	class?: string;
+}
+
+const { label, linked = true, class: className = '' } = Astro.props;
+
+// No catalogue lookup any more, and none needed: the tag carried a glyph and a
+// product colour that had to be read off the SOLUTIONS entry, and with both
+// gone the label is the whole tag. `label` is typed as SolutionLabel and the
+// href is derived from it by the same slugify() the archive routes are built
+// from, so there is nothing left here the catalogue could answer.
+//
+// One caller since the ledger rows stopped using it: the rail's Solutions block.
+// A row now leads with its product as a caps eyebrow above the title rather than
+// as a tag under it, which is a bigger weight difference than any border can
+// carry - but the rail wants a wrapped run of pills, because that is the shape
+// that lets a 15rem column hold "Microsoft Defender for Cloud Apps" without
+// holding every other label to its width.
+const href = withBase(`/solutions/${slugify(label)}`);
+---
+
+{
+	linked ? (
+		<a href={href} class={`tag-solution ${className}`}>
+			{label}
+		</a>
+	) : (
+		<span class={`tag-solution ${className}`}>{label}</span>
+	)
+}

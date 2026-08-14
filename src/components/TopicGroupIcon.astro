@@ -1,0 +1,72 @@
+---
+import type { TopicGroupIconName } from '../consts';
+
+// Material Symbols Outlined `person` / `computer` / `cloud` / `shield` / `build`,
+// in the default variant: FILL 0, wght 400, GRAD 0, opsz 24. Same source, same
+// treatment and same reasoning as Chevron.astro - read that file first, this one
+// only differs in which glyphs it carries.
+//
+// Path data copied verbatim from Google's own repository rather than redrawn, so
+// these are the outlines the font ships:
+// https://github.com/google/material-design-icons/tree/master/symbols/web
+// Licensed Apache-2.0: https://github.com/google/material-design-icons/blob/master/LICENSE
+//
+// Inlined rather than pulled from fonts.googleapis.com as an icon font, for the
+// reason Chevron gives: no page on this site makes a third-party request, and five
+// glyphs are not worth reintroducing one on all of them.
+//
+// This is the second time glyphs have been beside labels in the header menu, and
+// the first time is worth knowing about. The menu used to carry one per Microsoft
+// product, and SOLUTIONS documents why they came out: they were generic shapes
+// standing in for vendor marks that cannot be shipped, so a cloud outline next to
+// "Microsoft Defender for Cloud Apps" identified nothing the label had not already
+// said, and three of the seven were tinted the same slate.
+//
+// These are not that. A group is a discipline rather than a product, so there is no
+// mark being stood in for and the shape is doing the work itself: a person for
+// identities, a display for devices, a cloud for the cloud estate, a shield for
+// running the defence and a wrench for building it. Five shapes a reader can tell
+// apart at 16px, which is the test the product glyphs failed.
+//
+// Deliberately five distinct silhouettes rather than the two near-identical shields
+// the mockup pairs Security Operations and Security Engineering with. At this size
+// two shields differing only by an inner glyph are one shape with noise in it,
+// which is the same failure the product icons had. Swap `build` for another shield
+// here if the pairing matters more than the distinction.
+//
+// aria-hidden throughout: every caller sets these beside the label they illustrate,
+// so an accessible name would be a second announcement of the same word.
+
+interface Props {
+	name: TopicGroupIconName;
+	/** Overrides the default box. Tailwind sizing wins over the attributes below. */
+	class?: string;
+}
+
+const { name, class: className = 'h-4 w-4' } = Astro.props;
+
+// The -960 960 viewBox is the Material Symbols coordinate system, not a mistake.
+const PATHS: Record<TopicGroupIconName, string> = {
+	person:
+		'M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T560-640q0-33-23.5-56.5T480-720q-33 0-56.5 23.5T400-640q0 33 23.5 56.5T480-560Zm0-80Zm0 400Z',
+	computer:
+		'M40-120v-80h880v80H40Zm120-120q-33 0-56.5-23.5T80-320v-440q0-33 23.5-56.5T160-840h640q33 0 56.5 23.5T880-760v440q0 33-23.5 56.5T800-240H160Zm0-80h640v-440H160v440Zm0 0v-440 440Z',
+	cloud:
+		'M260-160q-91 0-155.5-63T40-377q0-78 47-139t123-78q25-92 100-149t170-57q117 0 198.5 81.5T760-520q69 8 114.5 59.5T920-340q0 75-52.5 127.5T740-160H260Zm0-80h480q42 0 71-29t29-71q0-42-29-71t-71-29h-60v-80q0-83-58.5-141.5T480-720q-83 0-141.5 58.5T280-520h-20q-58 0-99 41t-41 99q0 58 41 99t99 41Zm220-240Z',
+	shield:
+		'M480-80q-139-35-229.5-159.5T160-516v-244l320-120 320 120v244q0 152-90.5 276.5T480-80Zm0-84q104-33 172-132t68-220v-189l-240-90-240 90v189q0 121 68 220t172 132Zm0-316Z',
+	build:
+		'M686-132 444-376q-20 8-40.5 12t-43.5 4q-100 0-170-70t-70-170q0-36 10-68.5t28-61.5l146 146 72-72-146-146q29-18 61.5-28t68.5-10q100 0 170 70t70 170q0 23-4 43.5T584-516l244 242q12 12 12 29t-12 29l-84 84q-12 12-29 12t-29-12Zm29-85 27-27-256-256q18-20 26-46.5t8-53.5q0-60-38.5-104.5T386-758l74 74q12 12 12 28t-12 28L332-500q-12 12-28 12t-28-12l-74-74q9 57 53.5 95.5T360-440q26 0 52-8t47-25l256 256ZM472-488Z',
+};
+---
+
+<svg
+	width="24"
+	height="24"
+	viewBox="0 -960 960 960"
+	fill="currentColor"
+	class={className}
+	aria-hidden="true"
+>
+	<path d={PATHS[name]}></path>
+</svg>

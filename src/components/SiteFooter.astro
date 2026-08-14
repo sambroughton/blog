@@ -2,14 +2,23 @@
 import { SITE } from '../consts';
 import { withBase } from '../lib/paths';
 
-// Topics but not Categories, which is not an omission: categories have no index
-// page - the header menu lists all of them on every page, so a page repeating
-// that list was a second copy of it - while topics have one and nothing else
-// links to it. The rail carries no vocabulary at all now, so this is the only
-// route to the topics index outside the tags on an entry.
+// The disclaimer is the reason this nav exists.
+//
+// It was in the header, labelled as such, on the /about route. It is a legal page
+// rather than a destination - read once, if at all - so it belongs down here with
+// the rest of the small print, and the header is the shorter for it: Topics,
+// Search and About, and nothing else. The path is /disclaimer now; /about is the
+// page about the blog.
+//
+// Topics stays as the plain-text route to the index, for a reader who has come to
+// the bottom of a page rather than up to the header menu. Solutions are still not
+// in here: they have no index page to link to, and the rail carries the complete
+// list of them beside every listing. Search is not in here either - it is a way
+// into the archive rather than small print, so it sits in the header beside the
+// Topics menu, which is its only peer.
 const links = [
 	{ href: '/topics', label: 'Topics' },
-	{ href: '/about', label: 'Disclaimer' },
+	{ href: '/disclaimer', label: 'Disclaimer' },
 ];
 ---
 

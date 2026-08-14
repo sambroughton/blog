@@ -5,48 +5,64 @@
 // https://docs.astro.build/en/guides/images/#svg-components
 import Logo from '../assets/logo.svg';
 import { NAV, SITE } from '../consts';
-import { getPublishedPosts, categoryFacets } from '../lib/collections';
+import { getPublishedPosts, topicGroupFacets } from '../lib/collections';
 import { withBase } from '../lib/paths';
 import Chevron from './Chevron.astro';
+import TopicGroupIcon from './TopicGroupIcon.astro';
 
-// One menu, listing the categories themselves rather than the vocabularies they
-// belong to.
+// One menu, on the five areas of the work.
 //
-// This was three fixed rows to three Explore views, one per taxonomy dimension,
-// which cost a reader two clicks to reach any actual listing and asked them to
-// pick a classification scheme before they had seen anything classified.
-// Categories are now the primary vocabulary, so the header names them outright and
-// the reader arrives at a listing in one click.
+// It has been three things. First three rows to three taxonomy views, which asked
+// a reader to pick a classification scheme before they had seen anything
+// classified. Then the solutions - the Microsoft products - listed outright.
+// Briefly the busiest individual topics, which put the right vocabulary in the
+// header at the wrong grain: seven of eighteen subjects, re-ranked by volume on
+// every build, is a menu whose contents move and which is never the whole of
+// anything.
 //
-// It reads the collection again as a result: only categories with something
-// published are in here, so the menu can never offer an empty archive and it
-// grows as the writing does. No counts - the panel is a way through, and the
-// numbers are on the index it ends with.
-const categories = categoryFacets(await getPublishedPosts());
+// Groups are the grain a top-level menu wants. Five rows, stable, each a door onto
+// a body of work rather than a single subject, and between them they cover the
+// archive - see TOPIC_GROUPS in consts.ts for how membership is derived, and note
+// that no entry is tagged with a group by hand. The individual subjects are still
+// a click away at /topics, which the last row and the label itself both reach, and
+// the rail beside each listing carries the busiest of them as tags.
+//
+// No shortlisting and no cap, unlike the topic menu this replaces: five is the
+// whole catalogue, so there is nothing to trim and nothing arbitrary about what is
+// on show. SITE.navTopicCount went with that change.
+//
+// It reads the collection to build the list, so only groups with something
+// published are in here: the menu can never offer an empty archive. Cloud is in
+// exactly that position today, with both of its entries still drafts, so it
+// appears in `astro dev` and not in a production build. No counts - the panel is a
+// way through, and the numbers are on the index it ends with.
+const groups = topicGroupFacets(await getPublishedPosts());
 ---
 
 <noscript>
 	{
-		/* With scripting off, the trigger goes and the panel stays: it drops out of
-		   its floating box and sits under the header links as a plain list, which is
-		   the same treatment the narrow breakpoint already gives it.
+		/* With scripting off, the caret button goes and the panel stays: it drops out
+		   of its floating box and sits under the header links as a plain list, which is
+		   the same treatment the narrow breakpoint already gives it. The "Topics" link
+		   beside the caret is a plain anchor and needs nothing done to it.
 
-		   This used to hide both and offer a link to the categories index instead.
-		   That index has been removed - the menu lists every category, so a page
-		   repeating them was a second copy of the same list - which left the fallback
-		   link with nowhere to point. Showing the list itself is the honest answer,
-		   and it is why the menu semantics are applied in JavaScript rather than
-		   baked into the markup: with scripting off these are ordinary links in
-		   ordinary tab order, and only the script turns them into a menu with roving
-		   focus. Nothing is stranded behind a dead control either way.
+		   This once hid the panel too and offered a link to an index in its place,
+		   which stopped working when that index was removed and the fallback link had
+		   nowhere to point. Showing the list itself is the honest answer, and it is
+		   why the menu semantics are applied in JavaScript rather than baked into the
+		   markup: with scripting off these are ordinary links in ordinary tab order,
+		   and only the script turns them into a menu with roving focus. Nothing is
+		   stranded behind a dead control either way - and less so now than then,
+		   because the panel's own last row and the "Topics" link both reach /topics,
+		   so the complete list is two plain anchors away with no script at all.
 
 		   Up here rather than beside the panel because that markup sits inside a {}
 		   expression, where the braces of a CSS rule would be read as another
 		   expression. is:inline keeps the rule in the <noscript>, which is the whole
-		   point: hoisted into the stylesheet it would hide the trigger for everyone. */
+		   point: hoisted into the stylesheet it would hide the caret for everyone. */
 	}
 	<style is:inline>
-		.nav-dropdown__trigger {
+		.nav-dropdown__toggle {
 			display: none;
 		}
 
@@ -139,7 +155,7 @@ const categories = categoryFacets(await getPublishedPosts());
 
 		{
 			/* self-stretch so the dropdown can be offset from the header's bottom
-			   border rather than from the trigger's own box; wrapping so the menu can
+			   border rather than from its controls' own box; wrapping so the menu can
 			   drop onto a row of its own on a phone. */
 		}
 		<nav
@@ -147,52 +163,106 @@ const categories = categoryFacets(await getPublishedPosts());
 			class="site-nav flex flex-wrap items-center gap-x-6 gap-y-2 self-stretch text-[0.72rem]"
 		>
 			<div class="nav-dropdown" data-dropdown>
-				<button
-					type="button"
-					id="categories-trigger"
-					class="nav-link nav-dropdown__trigger"
-					aria-haspopup="menu"
-					aria-expanded="false"
-					aria-controls="categories-menu"
-					data-dropdown-trigger
-				>
-					Categories
+				{
+					/* Two controls, not one, and the split is the point: "Topics" is a
+					   destination and the caret is a disclosure, so they are a link and a
+					   button rather than one element pretending to be both.
+
+					   The alternative was a single anchor carrying aria-expanded, which is
+					   one tab stop instead of two but gives a touch reader no way to reach
+					   the panel at all - the tap navigates - and asks a keyboard user to
+					   discover an arrow key with nothing announcing it. Two adjacent
+					   controls to two different actions is not the duplicate-tab-stop
+					   problem the brand link avoids further up; that one is two routes to a
+					   single page, this is a route and a control.
+
+					   The wrapper exists so the pair stays one flex item. Below 768px the
+					   dropdown is display:contents so the panel can claim a row of its own,
+					   and without this the nav's 1.5rem column gap would open up between
+					   the label and its caret. */
+				}
+				<span class="nav-dropdown__control">
+					<a id="topics-label" href={withBase('/topics')} class="nav-link" data-dropdown-label
+						>Topics</a
+					>
+
 					{
-						/* Rotated to point back at the trigger while the panel is open, by the
-					    rule in global.css. */
+						/* aria-label rather than visible text, which is the opposite of the
+						   call made on the brand link above and for the opposite reason: there
+						   is no wording here for a reader to see, so there is none to drop.
+						   "Show" rather than "Toggle" because aria-expanded is what states
+						   which way it goes.
+
+						   aria-haspopup="menu" because the script gives the panel role="menu",
+						   and the menu button pattern asks for the two to agree: a button
+						   controlling a menu declares it. Kept in the markup rather than set
+						   alongside the role in the script, since it is true of the control
+						   whether or not the panel has been upgraded yet - with scripting off
+						   the caret is hidden entirely, so there is no state where this is
+						   announcing a menu that cannot open.
+						   https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/ */
 					}
-					<Chevron direction="down" class="h-3 w-3 shrink-0" />
-				</button>
+					<button
+						type="button"
+						id="topics-trigger"
+						class="nav-dropdown__toggle"
+						aria-label="Show topics"
+						aria-haspopup="menu"
+						aria-expanded="false"
+						aria-controls="topics-menu"
+						data-dropdown-trigger
+					>
+						{
+							/* Rotated to point back at the trigger while the panel is open, by the
+						    rule in global.css. */
+						}
+						<Chevron direction="down" class="h-3 w-3 shrink-0" />
+					</button>
+				</span>
 
 				{
-					/* Every published category, in catalogue order, and nothing after them.
-					   There is no "view all" row because there is nothing further to see:
-					   this list is the complete one, so a link to an index repeating it was
-					   sending the reader to a second copy of what they were already reading.
+					/* The five areas, then a row to the subjects inside them. This is the
+					   complete list rather than a shortlist, so the last row is not a way to
+					   see the rest of these - it is the way down a level, to the eighteen
+					   individual subjects on /topics.
 
-					   Topics are deliberately not in here: they are the secondary
-					   vocabulary, there are far more of them, and putting both in the header
-					   would restate the browsing problem this menu exists to simplify.
+					   Neither vocabulary is listed here directly any more. The topics are
+					   what the groups are built out of and are on the index below; the
+					   solutions are in the rail, as a complete run of tags, and in the search
+					   filters. Putting either in the header at full length is the browsing
+					   problem this menu exists to simplify.
 
 					   No role or tabindex in the markup - the script adds them. See the
 					   <noscript> at the top of this file: without it these have to stay
 					   ordinary links in ordinary tab order. */
 				}
-				<div id="categories-menu" class="nav-menu" data-dropdown-menu>
+				<div id="topics-menu" class="nav-menu" data-dropdown-menu>
 					{
 						/* Presentational: with scripting on, the panel's accessible name comes
-						   from the trigger via the aria-labelledby the script sets, so
+						   from the "Topics" link via the aria-labelledby the script sets, so
 						   announcing this as a second label would repeat it. */
 					}
-					<p class="nav-menu__label" aria-hidden="true">Categories</p>
+					<p class="nav-menu__label" aria-hidden="true">Topics</p>
 
 					{
-						categories.map((category) => (
-							<a class="nav-menu__row" href={withBase(`/categories/${category.slug}`)}>
-								{category.label}
+						/* The glyph is aria-hidden inside the component, so each row's
+						   accessible name stays the label alone. */
+					}
+					{
+						groups.map((group) => (
+							<a class="nav-menu__row nav-menu__row--icon" href={withBase(`/topics/${group.slug}`)}>
+								<TopicGroupIcon name={group.icon} class="h-4 w-4 shrink-0" />
+								<span>{group.label}</span>
 							</a>
 						))
 					}
+
+					{
+						/* Ruled off above, so the five areas read as a set and this reads as the
+						   way out of it rather than as a sixth area called "All topics". No glyph
+						   on it, which is the other half of that: it is not one of them. */
+					}
+					<a class="nav-menu__row nav-menu__row--all" href={withBase('/topics')}>All topics</a>
 				</div>
 			</div>
 
@@ -209,14 +279,18 @@ const categories = categoryFacets(await getPublishedPosts());
 
 <script>
 	// Open state lives as one attribute on the wrapper, so every rule in the
-	// stylesheet only ever has to look at [data-open]. The trigger and the panel
-	// are both inside it, which also makes them a single hover region.
+	// stylesheet only ever has to look at [data-open]. Both controls and the panel
+	// are inside it, which also makes them a single hover region.
 	const wrapper = document.querySelector('[data-dropdown]');
+	const control = wrapper?.querySelector('.nav-dropdown__control');
+	const label = wrapper?.querySelector('[data-dropdown-label]');
 	const trigger = wrapper?.querySelector('[data-dropdown-trigger]');
 	const menu = wrapper?.querySelector('[data-dropdown-menu]');
 
 	if (
 		wrapper instanceof HTMLElement &&
+		control instanceof HTMLElement &&
+		label instanceof HTMLAnchorElement &&
 		trigger instanceof HTMLButtonElement &&
 		menu instanceof HTMLElement
 	) {
@@ -228,7 +302,10 @@ const categories = categoryFacets(await getPublishedPosts());
 		const items = Array.from(menu.querySelectorAll<HTMLAnchorElement>('.nav-menu__row'));
 
 		menu.setAttribute('role', 'menu');
-		menu.setAttribute('aria-labelledby', trigger.id);
+		// Named by the visible "Topics" link rather than by the caret that opens it:
+		// the caret's accessible name is "Show topics", and a panel announced as
+		// "Show topics menu" describes the control instead of the contents.
+		menu.setAttribute('aria-labelledby', label.id);
 		for (const item of items) {
 			item.setAttribute('role', 'menuitem');
 			item.tabIndex = -1;
@@ -279,10 +356,15 @@ const categories = categoryFacets(await getPublishedPosts());
 			closeTimer = window.setTimeout(close, GRACE_MS);
 		});
 
-		// Enter and Space are the button's own doing. Arrows open the menu and land
-		// on an end of it, and are swallowed so the page does not scroll out from
-		// under what just opened.
-		trigger.addEventListener('keydown', (event) => {
+		// Enter and Space are the button's own doing, and Enter on the link is the
+		// browser's. Arrows open the menu and land on an end of it, and are swallowed
+		// so the page does not scroll out from under what just opened.
+		//
+		// Bound to the wrapper around both controls rather than to the caret alone,
+		// so the arrows work with focus on either. A keyboard reader tabbing along
+		// the header lands on "Topics" first, and that is the point they are most
+		// likely to try one.
+		control.addEventListener('keydown', (event) => {
 			if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
 			event.preventDefault();
 			open();

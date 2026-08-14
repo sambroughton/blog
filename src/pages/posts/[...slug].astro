@@ -2,10 +2,16 @@
 import type { GetStaticPaths } from 'astro';
 import { Image } from 'astro:assets';
 import { render } from 'astro:content';
-import CategoryTag from '../../components/CategoryTag.astro';
-import TopicLink from '../../components/TopicLink.astro';
+import EntryEyebrow from '../../components/EntryEyebrow.astro';
+import EntryMeta from '../../components/EntryMeta.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { formatDate, getPublishedPosts, isoDate, primaryCategory } from '../../lib/collections';
+import {
+	areasFor,
+	formatDate,
+	getPublishedPosts,
+	isoDate,
+	primarySolution,
+} from '../../lib/collections';
 import { withBase } from '../../lib/paths';
 import { readingTimeMinutes } from '../../lib/readingTime';
 import { slugify } from '../../lib/slug';
@@ -28,6 +34,13 @@ export const getStaticPaths = (async () => {
 const { post, newer, older } = Astro.props;
 const { Content } = await render(post);
 const minutes = readingTimeMinutes(post.body);
+
+// Both secondary vocabularies in full, coarsest first: every area this entry
+// lands in, then every topic it carries. Uncapped, unlike a ledger row, which is
+// the same row/entry-page split this page has always made - a row is a glance and
+// this is the page a reader chose. areasFor() can return an empty list, so this is
+// topics alone for an entry whose subjects no group claims.
+const facets = [...areasFor(post), ...post.data.topics];
 ---
 
 <BaseLayout
@@ -38,15 +51,22 @@ const minutes = readingTimeMinutes(post.body);
 	narrow
 	crumbs={[
 		{ label: 'Home', href: '/' },
-		/* The primary category, not /posts: /posts is a route prefix with no index
+		/* The primary solution, not /posts: /posts is a route prefix with no index
 		   behind it, and a crumb that leads nowhere is worse than no crumb. An entry
-		   can name several categories, so this trail picks the first - the one the
+		   can name several solutions, so this trail picks the first - the one the
 		   entry is about - rather than offering a fork. Every published entry's
-		   categories have a page, since those pages are generated from the categories
-		   published entries actually use. */
+		   solutions have a page, since those pages are generated from the solutions
+		   published entries actually use.
+
+		   This does mean the product is named twice above the fold, once here and
+		   once in the eyebrow below. That is the pattern a solution archive already
+		   uses, where the value is in the crumb and in the h1 - and the breadcrumb is
+		   documented as the quietest thing on the page, ranked below the metadata
+		   line, so the two are not competing for the same job. The crumb navigates
+		   up; the eyebrow states what the entry is about. */
 		{
-			label: primaryCategory(post),
-			href: `/categories/${slugify(primaryCategory(post))}`,
+			label: primarySolution(post),
+			href: `/solutions/${slugify(primarySolution(post))}`,
 		},
 		{ label: post.data.title },
 	]}
@@ -54,8 +74,28 @@ const minutes = readingTimeMinutes(post.body);
 	<article class="mx-auto max-w-2xl">
 		<header>
 			{
+				/* The products this entry is built on, above everything else on the page.
+				   Linked here, unlike on a ledger row: a row is one stretched link and a
+				   second target inside it would be a second tab stop, whereas a reader who
+				   has opened the entry is exactly the one who might follow the product
+				   sideways to the rest of the work in it. */
+			}
+			<EntryEyebrow labels={post.data.solutions} />
+
+			{
+				/* The series, demoted from the accent to text-3. It used to be the only
+				   caps line here and so it took the accent; the solution now sits above it
+				   holding that slot, and two blue caps lines stacked would read as one
+				   two-line label rather than as two different facts. Same size and
+				   tracking, so it still reads as the same tier - just quieter, which is
+				   also the right order of weight: three entries share a series, every entry
+				   names a product. */
+			}
+			{
 				post.data.series && (
-					<p class="text-blue text-[0.68rem] tracking-[0.12em] uppercase">{post.data.series}</p>
+					<p class="text-text-3 mt-1 text-[0.68rem] tracking-[0.12em] uppercase">
+						{post.data.series}
+					</p>
 				)
 			}
 
@@ -69,9 +109,9 @@ const minutes = readingTimeMinutes(post.body);
 
 			<div class="border-rule mt-5 border-b pb-5">
 				{
-					/* Date and reading time only on this line. The category is not repeated
-				    here the way it is on a ledger row: it sits in the list below with the
-				    topics, where the two vocabularies can be read against each other. */
+					/* Date and reading time only on this line. The product is not repeated
+				    here: it is the eyebrow above the title, which is where this page now
+				    leads with it. */
 				}
 				<div class="text-text-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.72rem]">
 					<time datetime={isoDate(post.data.pubDate)}>
@@ -81,34 +121,24 @@ const minutes = readingTimeMinutes(post.body);
 				</div>
 
 				{
-					/* Both vocabularies in full, which is what separates this page from a
-				    ledger row: a row shows the primary category alone, but a reader who
-				    has opened the entry is the one who might follow a specific subject or
-				    product sideways. A description list, since each row is a name and its
-				    values.
+					/* The subject taxonomy in full, linked - which is what separates this
+				    page from a ledger row, where the same line is capped at three values
+				    and unlinked. A reader who has opened the entry is the one who might
+				    follow a specific subject sideways.
 
-				    Categories first and tagged, topics second and plainer, which is the
-				    same order of weight the rest of the site gives them. */
+				    This was a <dl> of two rows, "Categories" and "Topics", each a label
+				    against a run of bordered tags. It went for a plain reason: with the
+				    product promoted to the eyebrow there is only one vocabulary left down
+				    here, so a description list had one name to describe, and the same
+				    middot line the ledger rows use says it in one line instead of three.
+				    The hierarchy now reads top to bottom - product, then subject - which is
+				    the same order a row reads and the same order the search filters read.
+
+				    Areas before topics, coarsest first, matching a row. */
 				}
-				<dl class="mt-4 grid gap-y-2 text-[0.72rem]">
-					<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
-						<dt class="text-text-3 w-24 shrink-0 text-[0.63rem] tracking-[0.12em] uppercase">
-							Categories
-						</dt>
-						<dd class="flex flex-wrap gap-1.5">
-							{post.data.categories.map((category) => <CategoryTag label={category} />)}
-						</dd>
-					</div>
-
-					<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
-						<dt class="text-text-3 w-24 shrink-0 text-[0.63rem] tracking-[0.12em] uppercase">
-							Topics
-						</dt>
-						<dd class="flex flex-wrap gap-1.5">
-							{post.data.topics.map((topic) => <TopicLink label={topic} />)}
-						</dd>
-					</div>
-				</dl>
+				<div class="mt-4">
+					<EntryMeta facets={facets} />
+				</div>
 			</div>
 
 			{

@@ -1,0 +1,92 @@
+---
+import type { GetStaticPaths } from 'astro';
+import EntryList from '../../components/EntryList.astro';
+import Sidebar from '../../components/Sidebar.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+	getPublishedPosts,
+	postsBySolution,
+	shouldShowSidebar,
+	solutionFacets,
+} from '../../lib/collections';
+
+// Only solutions with at least one published entry get a page, so neither the
+// rail, the search filter nor a row's eyebrow can link to an empty listing. An
+// entry names several solutions, so it can appear under more than one of these.
+//
+// Filtered listings are not paginated: revisit if any single solution outgrows a
+// comfortable page.
+export const getStaticPaths = (async () => {
+	const posts = await getPublishedPosts();
+
+	return solutionFacets(posts).map((facet) => ({
+		params: { solution: facet.slug },
+		props: {
+			label: facet.label,
+			posts: postsBySolution(posts, facet.slug),
+			allPosts: posts,
+		},
+	}));
+}) satisfies GetStaticPaths;
+
+const { label, posts, allPosts } = Astro.props;
+const showSidebar = shouldShowSidebar(allPosts.length);
+---
+
+{
+	/* The rail is here now, and it was deliberately absent before. Worth recording
+	   why it changed, because the old reasoning was sound when it was written.
+
+	   It said: the rail's only facet list is the products, and this page is one
+	   product, so carrying the list here would put the current page in a list of
+	   options - a filter offering itself as an option. It went on to say the way
+	   sideways to another product is the header menu, which is on every page.
+
+	   That second half stopped being true. The header menu listed the products
+	   once; it has since become the five areas, so there is now no route from one
+	   product archive to another anywhere on the site - which for a page whose
+	   whole job is "here is what I have done with this product" is the one link a
+	   reader is most likely to want next.
+
+	   The original objection is answered rather than ignored: the rail renders the
+	   current solution as plain text with aria-current, not as a link to the page
+	   you are on. That is the same thing Pagination does with the current page and
+	   Breadcrumb does with the last crumb.
+
+	   The cost is that this route loads the whole collection again to render that
+	   list, which it had stopped doing. Same shape as /topics/<slug> and
+	   /archive/<year>, both of which take allPosts for the same reason.
+
+	   Two crumbs, not three: there is no solutions index page to name as the middle
+	   step - the rail is the list of them - and a crumb pointing at a page that does
+	   not exist is worse than a shorter trail. */
+}
+<BaseLayout
+	title={label}
+	description={`Entries on ${label}.`}
+	crumbs={[{ label: 'Home', href: '/' }, { label }]}
+>
+	{
+		/* No blurb under the heading. There is no written description of any of these
+		   products anywhere in the repo, and inventing one here would be marketing
+		   copy about Microsoft's product rather than anything about the work - which
+		   the entries below already speak for. The count in the list header is the
+		   one fact about the product this page can honestly add. */
+	}
+	<p class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Solution</p>
+	<h1 class="font-display text-text mt-1 mb-6 text-2xl font-bold">{label}</h1>
+
+	<div class={showSidebar ? 'grid gap-10 md:grid-cols-[1fr_15rem]' : ''}>
+		<div class="min-w-0">
+			{
+				/* filteredBy solution: every row here shares the product in the heading
+				   above, so the eyebrow that normally leads a row would repeat it down the
+				   page and separate nothing. Those rows run title-first instead, with the
+				   area and topics beneath - which is what actually distinguishes one from
+				   the next here. */
+			}
+			<EntryList posts={posts} label="Entries" filteredBy={{ kind: 'solution' }} />
+		</div>
+		{showSidebar && <Sidebar posts={allPosts} currentSolution={label} />}
+	</div>
+</BaseLayout>

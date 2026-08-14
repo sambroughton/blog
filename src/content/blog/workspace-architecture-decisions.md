@@ -4,7 +4,7 @@
 title: Workspace architecture decisions you cannot easily reverse
 description: Regions, tenancy boundaries and retention are settled early and inherited forever, so they deserve the reasoning written down.
 pubDate: 2025-11-19
-categories:
+solutions:
   - Microsoft Sentinel
 topics:
   - Data Collection

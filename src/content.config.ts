@@ -1,7 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
-import { CATEGORY_LABELS, TOPIC_LABELS } from './consts';
+import { SOLUTION_LABELS, TOPIC_LABELS } from './consts';
 
 const blog = defineCollection({
 	loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/blog' }),
@@ -13,13 +13,17 @@ const blog = defineCollection({
 			updatedDate: z.coerce.date().optional(),
 
 			/**
-			 * Microsoft security categories involved. At least one, from CATEGORIES in
+			 * Microsoft security products involved. At least one, from SOLUTIONS in
 			 * consts.ts, written as the display label rather than a slug.
 			 *
-			 * Order matters: the first is the primary category and the only one a
-			 * ledger row shows, so lead with the one the entry is actually about.
+			 * Order matters: the first is the primary solution and the one a ledger row
+			 * leads with, so lead with the one the entry is actually about.
+			 *
+			 * First in the schema because it is the primary vocabulary, which is also
+			 * the order the reader meets the two on a row: the solution above the title,
+			 * the topics beneath it.
 			 */
-			categories: z.array(z.enum(CATEGORY_LABELS)).nonempty(),
+			solutions: z.array(z.enum(SOLUTION_LABELS)).nonempty(),
 
 			/** Specific subjects covered. At least one, from TOPICS in consts.ts. */
 			topics: z.array(z.enum(TOPIC_LABELS)).nonempty(),

@@ -112,13 +112,17 @@ h4 {
 	transform: scaleX(1);
 }
 
-/* Categories menu -----------------------------------------------------------
-   A button plus a floating panel rather than a native <details>: the design
-   calls for opening on hover, an enter and exit transition, and pointer-events
-   off while closed, none of which <details> can give, since it hides its own
-   content outright rather than styling it away. The trade is that the menu now
-   needs JavaScript, so the header carries a <noscript> fallback that swaps the
-   trigger for a plain link to the categories index.
+/* Topics menu ---------------------------------------------------------------
+   A caret button plus a floating panel rather than a native <details>: the
+   design calls for opening on hover, an enter and exit transition, and
+   pointer-events off while closed, none of which <details> can give, since it
+   hides its own content outright rather than styling it away. The trade is that
+   the menu needs JavaScript, so the header carries a <noscript> fallback that
+   drops the caret and leaves the panel inline as a plain list of links.
+
+   Two controls sit side by side here: an ordinary .nav-link to /topics, and the
+   caret that opens the panel. The panel is a shortlist of the busiest topics, so
+   the label has somewhere of its own to go and the caret is not the only way in.
 
    Colours in this block are literal rather than @theme tokens: the panel is
    specified as its own small palette, a touch deeper and cooler than
@@ -128,36 +132,78 @@ h4 {
 	display: flex;
 	align-items: center;
 	/* Stretched to the full height of the header row, so the panel can be offset
-	   from the header's bottom border rather than from the trigger's own box.
+	   from the header's bottom border rather than from the controls' own box.
 	   The 1.25rem in the panel's `top` below is that row's py-5 bottom padding,
 	   which is all that sits between this box and the border. */
 	align-self: stretch;
 }
 
-.nav-dropdown__trigger {
-	padding: 0;
-	border: 0;
-	background: none;
-	font: inherit;
+/* Holds the label and its caret together as one item. The gap matches the 0.3rem
+   .nav-link uses internally, so the pair sits exactly as it did while the caret
+   was inside the trigger - and below 768px, where .nav-dropdown becomes
+   display:contents, this is what stops the nav's own 1.5rem column gap from
+   opening up between a label and its caret. */
+.nav-dropdown__control {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	align-self: stretch;
 }
 
-/* The caret only. Scoped to the direct child so the glyphs inside the panel's
-   rows, which are also svg, are not caught by it and do not rotate with it. */
-.nav-dropdown__trigger > svg {
+.nav-dropdown__toggle {
+	display: inline-flex;
+	align-items: center;
+	/* The glyph is 0.75rem square, which is nowhere near a pointer target on its
+	   own. Padding grows the hit area and the matching negative margin takes the
+	   growth back out of the layout, so the caret still sits 0.3rem from the label
+	   and the header row keeps its height. */
+	padding: 0.5rem;
+	margin: -0.5rem;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+/* Its own ring, offset outwards rather than inwards: the button is transparent
+   and the same size as the glyph in it, so an inset outline would land on top of
+   the caret. */
+.nav-dropdown__toggle:focus-visible {
+	outline: 2px solid #4d7cfe;
+	outline-offset: 0;
+	border-radius: 3px;
+}
+
+/* Scoped to the direct child so the glyphs inside the panel's rows, which are
+   also svg, are not caught by it and do not rotate with it. */
+.nav-dropdown__toggle > svg {
 	transition: transform 160ms ease;
 }
 
-/* Open state: the underline the trigger already wipes in on hover, held on, and
-   the caret flipped to point back at the trigger. The label itself deliberately
-   holds its colour - the underline and the caret are the two signals, and a
-   third one tinting the text would make the trigger the loudest thing in the
-   header while the panel is up. */
-.nav-dropdown[data-open] .nav-dropdown__trigger::after {
+/* Open state: the underline the label already wipes in on hover, held on, and
+   the caret flipped to point back at it. The label itself deliberately holds its
+   colour - the underline and the caret are the two signals, and a third one
+   tinting the text would make it the loudest thing in the header while the panel
+   is up.
+
+   On the label rather than on the caret that was clicked, because the underline
+   belongs to the word: the pair reads as one item, and lighting the rule under
+   an empty 0.75rem button would underline nothing. */
+.nav-dropdown[data-open] .nav-link::after {
 	transform: scaleX(1);
 }
 
-.nav-dropdown[data-open] .nav-dropdown__trigger > svg {
+.nav-dropdown[data-open] .nav-dropdown__toggle > svg {
 	transform: rotate(180deg);
+}
+
+/* Pointing at the caret lights the label's underline too, so the two read as one
+   control under the pointer. Mouse hover opens the panel and [data-open] above
+   would cover it; this is for the keyboard-and-touch path, where the panel can be
+   open or shut independently of where the pointer is. */
+.nav-dropdown__control:hover .nav-link::after {
+	transform: scaleX(1);
 }
 
 .nav-menu {
@@ -165,12 +211,22 @@ h4 {
 	top: calc(100% + 1.25rem + 10px);
 	right: 0;
 	z-index: 30;
-	/* Sized to hold the longest label on one line. That is "Defender for Office
-	   365" since the "Microsoft " prefix came off the catalogue - with it the
-	   labels had to wrap onto two lines and this was 232px. The list is built from
-	   published categories, so it can grow at build time; max-height is omitted
-	   because the catalogue is eight entries. */
-	width: 204px;
+	/* The glyph and the gap between it and its label, as variables because two rules
+	   below need to agree on them: the icon rows space themselves by the gap, and
+	   the "All topics" row indents itself past both so its text starts on the same
+	   line as the labels rather than under the glyphs. 1rem matches the h-4 w-4 the
+	   header passes to <TopicGroupIcon>. */
+	--nav-menu-glyph: 1rem;
+	--nav-menu-gap: 0.6rem;
+	/* Sized to hold the longest row on one line, which is now the glyph, the gap and
+	   "Security Engineering": that lands around 206px against the 204px this was
+	   while the rows were text alone, so the box had to grow rather than start
+	   wrapping the widest of the five labels. 224px leaves the longest of them a
+	   little over 20px of slack. The row's line-height is set for two lines anyway,
+	   so the failure mode if a longer group is ever added is a taller row, not a
+	   broken one. max-height is omitted because the list is the five groups and the
+	   row to the index - a fixed height, not one that grows with the writing. */
+	width: 224px;
 	padding: 6px 0;
 	background: #0b101b;
 	border: 1px solid #1b2740;
@@ -212,15 +268,19 @@ h4 {
 /* Padding rather than margin, so the whole width of the panel is the hit area
    and not just the label. */
 .nav-menu__row {
-	/* Was a flex row with a 0.6rem gap, which existed to seat a glyph beside the
-	   label and centre the two against each other. The glyph is gone and the row
-	   is a single run of text, so block is what it actually is. */
+	/* block, because the base row is a single run of text - the one row that is,
+	   "All topics". The five group rows carry a glyph and take the flex modifier
+	   below. This was flex for every row once before, when the menu listed products
+	   and each had an icon; it went to block when those came out, and is staying
+	   block now that only some rows have one. */
 	display: block;
 	padding: 9px 18px;
 	font-size: 14px;
-	/* Tighter than the 1.5 preflight leaves, because most of these rows are two
-	   lines: at the default the workload name drifts away from the "Microsoft
-	   Defender for" above it and the pair stops reading as one label. */
+	/* Tighter than the 1.5 preflight leaves. Topic labels hold one line at this
+	   width, so this is now insurance rather than the everyday case - it was set
+	   for the two-line product rows, where at the default the workload name
+	   drifted away from the "Microsoft Defender for" above it and the pair stopped
+	   reading as one label. Kept for whichever long subject wraps first. */
 	line-height: 1.35;
 	color: #c3d0e6;
 	transition:
@@ -232,6 +292,39 @@ h4 {
 .nav-menu__row:focus-visible {
 	background: rgba(77, 124, 254, 0.1);
 	color: #ffffff;
+}
+
+/* A group row: the glyph, then the label, centred against each other.
+
+   The glyph takes currentColor from the row, so it brightens on hover with the
+   text on one clock rather than needing a rule of its own - and it dims with the
+   row's own colour the rest of the time, which is what keeps five icons from
+   reading as five bullets. */
+.nav-menu__row--icon {
+	display: flex;
+	align-items: center;
+	gap: var(--nav-menu-gap);
+}
+
+/* The way down a level, to /topics. Ruled off and set a step quieter than the five
+   areas above it, so it reads as the end of the set rather than as a sixth one -
+   this row is the only thing in the panel that is not an area, and the only one
+   with no glyph.
+
+   Indented past where a glyph would be, so its text starts on the same line as the
+   labels above rather than under their icons. A ragged left edge in a 224px panel
+   reads as a mistake rather than as a distinction; the rule is what draws that.
+
+   Margin above the rule and padding below, rather than a border on the last group
+   row: the rule belongs to this row, and hanging it off the one above would move
+   with the list if a group were ever added or dropped - which happens on its own,
+   since a group with nothing published is not rendered. */
+.nav-menu__row--all {
+	margin-top: 6px;
+	padding-top: 12px;
+	padding-left: calc(18px + var(--nav-menu-glyph) + var(--nav-menu-gap));
+	border-top: 1px solid #1b2740;
+	color: #8fa3c2;
 }
 
 /* The section heading above the rows. The panel lists one vocabulary now rather
@@ -252,11 +345,13 @@ h4 {
 	outline-offset: -2px;
 }
 
-/* Below the panel's own width there is nowhere for it to float, so Explore
+/* Below the panel's own width there is nowhere for it to float, so Topics
    expands inline instead: the nav takes a full-width row of its own and the
    panel opens beneath the links as the same rows. display:contents lifts the
-   trigger and the panel into the nav's flex flow, which is what lets the panel
-   claim a row rather than being trapped in a content-width wrapper. */
+   controls and the panel into the nav's flex flow, which is what lets the panel
+   claim a row rather than being trapped in a content-width wrapper - and is why
+   the label and its caret need the .nav-dropdown__control wrapper to stay
+   together as one item. */
 @media (max-width: 767.98px) {
 	.site-nav {
 		width: 100%;
@@ -287,6 +382,23 @@ h4 {
 		display: block;
 	}
 
+	/* 36px square for the caret, up from the 28px a pointer gets: grown by padding
+	   and taken back out by the matching negative margin, exactly as the base rule
+	   does, so the header row keeps its height and the caret keeps its 0.3rem from
+	   the label.
+
+	   Short of the 44px floor .nav-menu__row takes below, and deliberately: at 44px
+	   the box would reach 16px past the glyph, further than the 0.5rem gap between
+	   this wrapped nav row and its neighbours, and start swallowing taps meant for
+	   the brand above or the panel below. 36px clears WCAG 2.2 2.5.8, which asks
+	   24x24, and the caret is the second way in anyway - "Topics" beside it is a
+	   full-size text link to the same subjects at /topics.
+	   https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html */
+	.nav-dropdown__toggle {
+		padding: 0.75rem;
+		margin: -0.75rem;
+	}
+
 	/* 44px, the usual floor for a touch target. */
 	.nav-menu__row {
 		min-height: 44px;
@@ -297,7 +409,12 @@ h4 {
    The trail is the quietest thing on the page. On an entry it sits directly
    above an h1 that repeats the title, so anything louder competes with the
    heading it is meant to orient you towards. Intended order of weight:
-   h1, then the summary, then the category/date/reading time, then this.
+   h1, then the summary, then the solution/date/reading time, then this.
+
+   On an entry the trail also names the primary solution, which the eyebrow under
+   it names again. That is this element being the quiet one rather than a
+   duplication worth removing: the crumb navigates up, the eyebrow states. See the
+   note in pages/posts/[...slug].astro.
 
    Three values a step below --color-text-3 (#6b7fa0), deliberately literal
    rather than @theme tokens: they exist only to sit under that token for this
@@ -341,20 +458,34 @@ h4 {
 }
 
 /* Taxonomy tags ------------------------------------------------------------
-   Two weights for the two vocabularies, because they are not peers: a category
+   Two weights for the two vocabularies, because they are not peers: a solution
    is the primary classification and a topic qualifies it. Making both look like
    the same control would throw that away, and making either look like a button
    would put a call to action under every headline on the site.
 
    Both read as metadata: small, square-ish, no fill, no shadow, no glow. Hover
    brightens the border and the text and does nothing else. Same 3px/8px box on
-   both so a category and a topic sitting on one line share a baseline and an
+   both so a solution and a topic sitting on one line share a baseline and an
    optical height, and only their colour and border separate them.
 
    Deliberately not letter-spaced uppercase like the section labels elsewhere:
    these carry product and subject names that are read as words, and "MICROSOFT
-   DEFENDER FOR OFFICE 365" at 0.12em is a banner rather than a tag. */
-.tag-category {
+   DEFENDER FOR OFFICE 365" at 0.12em is a banner rather than a tag.
+
+   Read that last paragraph as scoped to this shape rather than to the vocabulary,
+   because a row now does set a product in caps at 0.12em - as an eyebrow above the
+   title, no border, nothing else on the line. The objection above is about a
+   bordered box among other bordered boxes, where caps make one of a row of peers
+   shout; it does not reach a line that has no peers on it. See EntryEyebrow.astro.
+
+   Where each is used, since that has narrowed: .tag-solution is the rail's
+   Solutions block and nothing else. .tag-topic currently has no caller - the entry
+   page listed topics as a run of these until its taxonomy became one middot line
+   under the title, and the rail's merged tag block went at the same time. Both
+   classes are kept whole rather than trimmed to what is live: they are a matched
+   pair, and half a pair is harder to bring back than none of it. The .entry-row
+   rules further down that brighten either tag are inert for the same reason. */
+.tag-solution {
 	display: inline-flex;
 	align-items: center;
 	/* No gap, unlike the 0.32rem this held while the tag carried a glyph: the box
@@ -378,17 +509,17 @@ h4 {
 /* Scoped to the anchor: both tags render as a plain <span> where nothing is
    being linked to - an unlinked tag that lights up under the pointer is telling
    the reader it is clickable when it is not. */
-a.tag-category:hover,
-a.tag-category:focus-visible {
+a.tag-solution:hover,
+a.tag-solution:focus-visible {
 	border-color: rgb(107 161 255 / 0.62);
 	color: var(--color-blue-bright);
 }
 
 /* The quieter half of the pair. Transparent ground and a border at the rule
-   colour, which is the faintest edge the palette has, against the category's
+   colour, which is the faintest edge the palette has, against the solution's
    tinted ground and accent border. Text at --color-text-2 rather than the accent
    so a row of topics does not read as a row of links competing with the one
-   category beside them. */
+   solution beside them. */
 .tag-topic {
 	display: inline-flex;
 	align-items: center;
@@ -405,10 +536,69 @@ a.tag-category:focus-visible {
 
 /* Brightens rather than tints, the same rule the breadcrumb, the sidebar and the
    header nav follow: the thing under the pointer lights up, it does not change
-   hue. Colour is reserved for the category tag, which is the point of the pair. */
+   hue. Colour is reserved for the solution tag, which is the point of the pair. */
 a.tag-topic:hover,
 a.tag-topic:focus-visible {
 	border-color: var(--color-rule-bright);
+	color: var(--color-text);
+}
+
+/* Search filters -----------------------------------------------------------
+   The only form controls on the site, so this is the whole of its input styling
+   rather than one component's share of it.
+
+   Most of the work is already done by `color-scheme: dark` at the top of this
+   file: that is what draws a native control and, more importantly, the select's
+   own dropdown list dark instead of white. The list is drawn by the browser and
+   cannot be styled from here at all, so that declaration is not a nicety - it is
+   the only thing standing between this page and a white popup on a dark page.
+
+   `appearance` is deliberately not reset. The native caret is correct under
+   color-scheme and removing it would mean drawing and positioning a replacement,
+   which is a background-image and a padding calculation to maintain in exchange
+   for nothing a reader can see.
+
+   Square, bordered, --color-text-2 hovering to a brighter border: the same box the
+   pagination cells and the carousel buttons already use, so these read as controls
+   from this site rather than from the browser. 0.72rem is an existing size on the
+   page, not a new one. */
+.search-input,
+.search-select {
+	width: 100%;
+	padding: 0.4rem 0.6rem;
+	background: var(--color-surface);
+	border: 1px solid var(--color-rule);
+	color: var(--color-text);
+	/* font: inherit first, so the control takes Inter rather than the UA's default
+	   form font, then the size on top of it. */
+	font: inherit;
+	font-size: 0.72rem;
+	line-height: 1.4;
+	transition: border-color 200ms ease;
+}
+
+.search-input:hover,
+.search-select:hover {
+	border-color: var(--color-rule-bright);
+}
+
+/* The same ring .nav-menu a and .nav-dropdown__toggle take. Inset, so it draws
+   inside the border rather than pushing the control's neighbours around. */
+.search-input:focus-visible,
+.search-select:focus-visible {
+	outline: 2px solid #4d7cfe;
+	outline-offset: -2px;
+	border-color: var(--color-rule-bright);
+}
+
+.search-input::placeholder {
+	color: var(--color-text-3);
+}
+
+/* Belt and braces: some Chromium builds on Windows draw option rows from the page
+   background rather than from color-scheme, which lands white text on white. */
+.search-select option {
+	background: var(--color-surface);
 	color: var(--color-text);
 }
 
@@ -432,16 +622,23 @@ a.tag-topic:focus-visible {
 
      title    #fff on hover     ~18:1
      dek      --color-text-2    ~7.1:1
-     domain   text-3 -> text-2  ~7.1:1  (brightens on hover, so measured lit)
+     eyebrow  --color-blue      ~5.8:1  (the solution, above the title)
      date     --color-text-3    ~4.6:1
-     read     --color-text-3    ~4.7:1
+     meta     --color-text-3    ~4.6:1  (area, topics, reading time)
 
-   The date and the reading time are the two things that hold --color-text-3 all
-   the way through the hover, so they set the floor. Both clear the 4.5:1 WCAG
-   1.4.3 AA asks of normal text, but only just, and only because this palette is
-   deep: the previous brighter one failed at this opacity. Treat 0.60 and the
-   oklch lightnesses in entryTints.ts as one setting - raising either means
-   rechecking both. At rest, with no wash, text-3 is 4.88:1.
+   The floor is unchanged by the row's rebuild, and got simpler. The date and the
+   meta line hold --color-text-3 all the way through the hover, so they set it.
+   Nothing in the row brightens on hover any more except the title: the tag that
+   used to go text-3 -> text-2 is gone, so there is no longer a value that has to
+   be measured lit as well as at rest. The eyebrow is the one addition and it does
+   not move the budget - --color-blue is 6.19:1 at rest against text-3's 4.88:1, so
+   the brightest new thing on the row is safer than the things already on it.
+
+   Both floor values clear the 4.5:1 WCAG 1.4.3 AA asks of normal text, but only
+   just, and only because this palette is deep: the previous brighter one failed at
+   this opacity. Treat 0.60 and the oklch lightnesses in entryTints.ts as one
+   setting - raising either means rechecking both. At rest, with no wash, text-3 is
+   4.88:1.
    https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html
 
    These are computed from the composited stack, not sampled from a browser, so
@@ -598,8 +795,11 @@ a.tag-topic:focus-visible {
 	content: '';
 	position: absolute;
 	inset: -1.25rem -1rem;
-	/* Over the copy, so the whole row is the target. The category tag lifts
-	   itself back above this - see EntryMeta.astro. */
+	/* Over the copy, so the whole row is the target - and nothing in the row lifts
+	   itself back above it any more. A tag under the title used to, so it could stay
+	   clickable inside a stretched link; the row's taxonomy is now unlinked text on
+	   both lines, which makes the whole of it part of one target and this the only
+	   tab stop in the row. */
 	z-index: 1;
 }
 
@@ -607,10 +807,13 @@ a.tag-topic:focus-visible {
 	transition: color 260ms;
 }
 
-/* The category tag carries its own 200ms hover in the tags block above. This
-   restates the timing at the row's 260ms so that pointing anywhere on the row
-   brightens the tag on the same clock as the title, rather than the two arriving
-   a beat apart. */
+/* The tags carry their own 200ms hover in the tags block above. This restated the
+   timing at the row's 260ms so that pointing anywhere on the row brightened the
+   tag on the same clock as the title, rather than the two arriving a beat apart.
+
+   No caller now: a row's taxonomy is unlinked text and does not brighten at all.
+   Kept beside the two .tag-* rules it exists to re-time, so if either comes back
+   into a row this comes back with it. */
 .entry-row__tag {
 	transition:
 		border-color 260ms,
@@ -644,12 +847,15 @@ a.tag-topic:focus-visible {
 /* The same values each tag's own hover uses, so pointing at the tag and pointing
    at the row around it land on one appearance rather than two.
 
-   Split by tag class because the row can carry either vocabulary - the category
-   on a mixed listing, the topic on a category archive where every row would
-   otherwise repeat the heading - and the two do not brighten alike. The category
-   goes to the accent; the topic lights up without changing hue, which is the
-   rule the breadcrumb, the sidebar and the header nav all follow. */
-.entry-row:focus-within .tag-category {
+   Split by tag class because a row could carry either vocabulary - the solution on
+   a mixed listing, the topic on a solution archive where every row would otherwise
+   repeat the heading - and the two do not brighten alike. The solution goes to the
+   accent; the topic lights up without changing hue, which is the rule the
+   breadcrumb, the sidebar and the header nav all follow.
+
+   Both pairs are inert as written: no row contains a .tag-* element now. Kept with
+   .entry-row__tag above, for the same reason. */
+.entry-row:focus-within .tag-solution {
 	border-color: rgb(107 161 255 / 0.62);
 	color: var(--color-blue-bright);
 }
@@ -685,7 +891,7 @@ a.tag-topic:focus-visible {
 		color: #fff;
 	}
 
-	.entry-row:hover .tag-category {
+	.entry-row:hover .tag-solution {
 		border-color: rgb(107 161 255 / 0.62);
 		color: var(--color-blue-bright);
 	}
@@ -746,8 +952,9 @@ a.tag-topic:focus-visible {
 
    No z-index, deliberately. The row's stretched link sits at z-index 1 over the
    whole body, and leaving this at auto is what keeps the tile part of that target
-   instead of a hole in it - the opposite of the category tag, which lifts itself
-   to z-[2] precisely so it can be clicked separately.
+   instead of a hole in it. The solution tag used to be the opposite case, lifting
+   itself to z-[2] precisely so it could be clicked separately; nothing in a row
+   does that now.
 
    aspect-ratio rather than a height: the ratio holds while the width changes
    across the breakpoint, so a cover crops identically at both sizes, and the row

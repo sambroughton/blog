@@ -4,7 +4,7 @@
 title: Hunting lateral movement across identity and endpoint telemetry
 description: Correlating authentication patterns with process and network activity, and the joins that make a two-source hunt tractable.
 pubDate: 2026-04-29
-categories:
+solutions:
   - Microsoft Sentinel
 topics:
   - Advanced Hunting

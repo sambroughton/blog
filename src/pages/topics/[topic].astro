@@ -4,43 +4,103 @@ import EntryList from '../../components/EntryList.astro';
 import Sidebar from '../../components/Sidebar.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import {
+	assertNoTopicSlugCollisions,
 	getPublishedPosts,
 	postsByTopic,
+	postsByTopicGroup,
 	shouldShowSidebar,
 	topicFacets,
+	topicGroupFacets,
 } from '../../lib/collections';
 
-// Only topics with at least one published entry get a page, so the topics index
-// can never link to an empty listing. An entry carries several topics, so it can
-// appear under more than one of these.
+// Two kinds of page from one route: the five groups and the individual topics.
+//
+// They share a segment because a group is a way into the subject vocabulary rather
+// than a separate thing beside it - /topics/identity and /topics/kql are both
+// "entries about this" at different grain - and Astro allows one dynamic route per
+// segment, so serving both means emitting both here. The alternative was a second
+// segment (/disciplines/identity, say), which would have named the layer in every
+// URL for no gain to a reader who never sees the distinction.
+//
+// The two differ only in the eyebrow above the heading and the width of the net
+// they cast, which is why this is one template rather than two. `kind` carries
+// which one is being rendered.
+//
+// Only values with at least one published entry get a page, in both lists, so
+// nothing that links here can reach an empty listing. An entry carries several
+// topics and usually lands in more than one group, so it appears under several of
+// these.
 export const getStaticPaths = (async () => {
+	// Before anything is emitted: the two lists are independent, and a label added
+	// to either could collide with the other. See the function for what breaks.
+	assertNoTopicSlugCollisions();
+
 	const posts = await getPublishedPosts();
 
-	return topicFacets(posts).map((facet) => ({
+	const groups = topicGroupFacets(posts).map((facet) => ({
 		params: { topic: facet.slug },
 		props: {
+			kind: 'group' as const,
+			label: facet.label,
+			posts: postsByTopicGroup(posts, facet.slug),
+			allPosts: posts,
+		},
+	}));
+
+	const topics = topicFacets(posts).map((facet) => ({
+		params: { topic: facet.slug },
+		props: {
+			kind: 'topic' as const,
 			label: facet.label,
 			posts: postsByTopic(posts, facet.slug),
 			allPosts: posts,
 		},
 	}));
+
+	return [...groups, ...topics];
 }) satisfies GetStaticPaths;
 
-const { label, posts, allPosts } = Astro.props;
+const { kind, label, posts, allPosts } = Astro.props;
 const showSidebar = shouldShowSidebar(allPosts.length);
+
+// Named for what the reader is looking at rather than for the vocabulary it came
+// out of. "Area" rather than "Group" or "Discipline": the word appears once, above
+// a heading that already says which one, and the reader does not need the site's
+// internal name for the layer.
+const eyebrow = kind === 'group' ? 'Area' : 'Topic';
+
+// Three crumbs for a topic and two for a group, which looks inconsistent and is
+// not: the middle crumb names the page the current one sits inside, and /topics is
+// that page for a subject but not for an area. It lists the eighteen subjects, so
+// a trail reading Home > Topics > Identity would send a reader "up" to a page with
+// no Identity on it.
+//
+// Same call, for the same reason, as the two-crumb trail on a solution archive -
+// see the note in solutions/[solution].astro. The way sideways to another area is
+// the header menu, which is on every page.
+const crumbs =
+	kind === 'group'
+		? [{ label: 'Home', href: '/' }, { label }]
+		: [{ label: 'Home', href: '/' }, { label: 'Topics', href: '/topics' }, { label }];
 ---
 
-<BaseLayout
-	title={label}
-	description={`Entries on ${label}.`}
-	crumbs={[{ label: 'Home', href: '/' }, { label: 'Topics', href: '/topics' }, { label }]}
->
-	<p class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Topic</p>
+<BaseLayout title={label} description={`Entries on ${label}.`} crumbs={crumbs}>
+	<p class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">{eyebrow}</p>
 	<h1 class="font-display text-text mt-1 mb-6 text-2xl font-bold">{label}</h1>
 
 	<div class={showSidebar ? 'grid gap-10 md:grid-cols-[1fr_15rem]' : ''}>
 		<div class="min-w-0">
-			<EntryList posts={posts} label="Entries" />
+			{
+				/* Every row here already shares the heading's value, so it is filtered out
+				   of the row's meta line - the page's own area or topic repeated down the
+				   page separates nothing. The product eyebrow stays, because that is what
+				   differs between rows on a subject listing. */
+			}
+			<EntryList
+				posts={posts}
+				label="Entries"
+				filteredBy={kind === 'group' ? { kind: 'area', label } : { kind: 'topic', label }}
+			/>
 		</div>
 		{showSidebar && <Sidebar posts={allPosts} />}
 	</div>

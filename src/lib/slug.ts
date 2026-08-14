@@ -3,7 +3,7 @@
  *
  * Entries carry display labels ("Microsoft Entra ID", "KQL") and every archive
  * route is keyed by the slug of one, so this function is what decides whether
- * /categories/microsoft-entra-id resolves. Both sides of every comparison go
+ * /solutions/microsoft-entra-id resolves. Both sides of every comparison go
  * through it - the getStaticPaths param and the link that points at it - so a
  * change here moves both together and cannot leave a link pointing at a route
  * that no longer generates.
@@ -23,6 +23,10 @@
  *   'Conditional Access'       -> 'conditional-access'
  *   'Microsoft Defender XDR'   -> 'microsoft-defender-xdr'
  *   'Microsoft Defender for Office 365' -> 'microsoft-defender-for-office-365'
+ *
+ * The Defender XDR line was a hypothetical when it was written and is now a live
+ * value - it went back into SOLUTIONS when that vocabulary stopped being called
+ * Category. The slug it produces is unchanged, which is the point of listing it.
  */
 export function slugify(value: string): string {
 	return value

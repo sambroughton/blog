@@ -4,7 +4,7 @@
 title: Signals worth watching for stolen session tokens
 description: Why a successful sign-in is the wrong place to look, and which properties actually separate a replayed session from a real one.
 pubDate: 2026-04-02
-categories:
+solutions:
   - Microsoft Entra ID
   - Microsoft Sentinel
 topics:

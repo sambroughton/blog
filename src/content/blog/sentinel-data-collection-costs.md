@@ -2,7 +2,7 @@
 title: 'Microsoft Sentinel data collection rules: what actually costs you money'
 description: Where ingestion spend concentrates, and how transformations and table plans change the bill without losing the detections you rely on.
 pubDate: 2026-06-12
-categories:
+solutions:
   - Microsoft Sentinel
 topics:
   - Data Collection

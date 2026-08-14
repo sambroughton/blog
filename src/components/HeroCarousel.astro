@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import { formatDate, isoDate, primaryCategory, type Post } from '../lib/collections';
+import { formatDate, isoDate, primarySolution, type Post } from '../lib/collections';
 import { withBase } from '../lib/paths';
 import { readingTimeMinutes } from '../lib/readingTime';
 import Chevron from './Chevron.astro';
@@ -102,7 +102,7 @@ const multiple = posts.length > 1;
 										{' · '}
 										{minutes} min read
 										{' · '}
-										{primaryCategory(post)}
+										{primarySolution(post)}
 									</p>
 								</div>
 							</article>

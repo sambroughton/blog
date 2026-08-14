@@ -4,7 +4,7 @@
 title: Triaging secure score recommendations without chasing the number
 description: Why the score is a symptom rather than a target, which recommendations are worth the change window, and what to do with the ones nobody will ever action.
 pubDate: 2026-03-25
-categories:
+solutions:
   - Microsoft Defender for Cloud
 topics:
   - Detection Engineering

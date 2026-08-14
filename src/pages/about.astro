@@ -1,147 +1,83 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../consts';
+import { withBase } from '../lib/paths';
 
-// The route stays /about so existing links keep resolving; the page itself is
-// the site disclaimer, and the nav and footer label it as such.
+// What the blog is, and who writes it.
+//
+// This route was the disclaimer until the header nav was cut back to Topics and
+// About. The legal text moved to /disclaimer, which the footer links, and the
+// route kept its path so nothing that pointed here 404s - it just arrives at an
+// introduction now rather than at the small print, with a link on to it.
+//
+// Deliberately short. It is the one page on the site that is not an entry or a
+// listing, and the writing is what the reader came for; a long biography here
+// would be the only place on the blog talking about itself at length.
+//
+// Facts rather than positioning: the name, what gets written about, how it is
+// filed, and where the terms are. Anything about an employer, a job title or a
+// certification is left out on purpose - it dates, and none of it is what makes
+// an entry here worth reading.
 ---
 
 <BaseLayout
-	title="Disclaimer"
-	description="Educational use, professional advice, third-party trademarks, liability and intellectual property terms for this blog."
+	title="About"
+	description={`About ${SITE.name} and the Microsoft security engineering work published here.`}
 	narrow
-	crumbs={[{ label: 'Home', href: '/' }, { label: 'Disclaimer' }]}
+	crumbs={[{ label: 'Home', href: '/' }, { label: 'About' }]}
 >
 	{
-		/* Centred to match the article pages. sb-blog left-aligns its reading columns,
-	    but it fills the right-hand space with a sticky table of contents; with
-	    nothing there, left-aligning would leave half the page empty. */
+		/* Centred in the reading column, as the disclaimer and the entries are. `narrow`
+	    on the layout is what lines the breadcrumb above it up with this copy rather
+	    than with the far left of the 5xl main. */
 	}
 	<div class="mx-auto max-w-2xl">
-		<h1 class="font-display text-text text-3xl font-bold">Disclaimer</h1>
+		<p class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">About</p>
+		<h1 class="font-display text-text mt-1 text-3xl font-bold">{SITE.name}</h1>
 
 		<div class="prose-body mt-6">
-			<h2>Information and Educational Use</h2>
-
 			<p>
-				The content on this blog is published for educational and informational purposes. It
-				documents my ongoing learning, research, lab work, certification studies, technical
-				experiments and observations relating to Microsoft security technologies, XDR, identity,
-				detection engineering and associated security topics.
+				This is a personal blog by {SITE.author} on Microsoft security engineering. It collects field
+				reports, detection queries, deployment notes and the reasoning behind them - the working notes
+				of building and running Microsoft security tooling rather than an overview of what the products
+				do.
 			</p>
 
 			<p>
-				Although I aim to keep the material accurate and current, technologies, product features,
-				interfaces, documentation and recommended practices can change. I therefore cannot guarantee
-				that every article, configuration, query, diagram or example will remain complete, accurate
-				or suitable for every environment.
+				Entries tend to start from something that did not behave as documented, or a decision that
+				had more than one defensible answer. Where a query, policy or configuration is included, it
+				is one that was actually run, with the caveats it turned out to need.
+			</p>
+
+			<h2>How it is filed</h2>
+
+			<p>
+				Every entry is filed two ways. Its <strong>solutions</strong> name the Microsoft products involved
+				- Entra ID, Sentinel, Intune, the Defender workloads - and its <strong>topics</strong> name the
+				subjects it covers, such as Conditional Access, detection engineering or KQL. An entry usually
+				carries several of each, so the same piece turns up under more than one heading.
 			</p>
 
 			<p>
-				Any use of the information on this blog is at your own discretion and risk. Always validate
-				configurations and technical guidance against current vendor documentation and within an
-				appropriate test environment before applying them to production systems.
-			</p>
-
-			<h2>Professional Advice</h2>
-
-			<p>
-				The views and material published here reflect my own learning, research and experience at
-				the time of writing.
+				The product is the label an entry leads with, above its title, because it is the thing most
+				worth knowing before you decide to read: it says which console the work was actually done
+				in.
 			</p>
 
 			<p>
-				Nothing on this blog should be considered professional, legal, financial, compliance or
-				security advice, nor does the content create a professional or advisory relationship.
+				Topics are in the header menu, with the full list at <a href={withBase('/topics')}>Topics</a
+				>. Solutions sit in the rail beside each listing, above the year-by-year archive. <a
+					href={withBase('/search')}>Search</a
+				> filters by any of the three at once.
 			</p>
 
-			<p>
-				Examples, architectures, security configurations, KQL queries, detection logic and lab
-				exercises are provided to demonstrate concepts and may require modification before they are
-				suitable for a particular organisation or environment.
-			</p>
+			<h2>Terms</h2>
 
 			<p>
-				For decisions affecting production systems, organisational security or regulatory
-				obligations, appropriate qualified professionals and current official documentation should
-				be consulted.
-			</p>
-
-			<h2>Microsoft and Other Third Parties</h2>
-
-			<p>
-				This is an independent personal blog and is not affiliated with, sponsored by or endorsed by
-				Microsoft or any other vendor mentioned on the site.
-			</p>
-
-			<p>
-				Microsoft, Microsoft Defender, Microsoft Sentinel, Microsoft Entra and other product names,
-				trademarks and logos remain the property of their respective owners.
-			</p>
-
-			<p>
-				References to third-party products or services are made for educational and informational
-				purposes.
-			</p>
-
-			<h2>Third-Party Links</h2>
-
-			<p>
-				Articles may contain links to Microsoft documentation, technical resources, GitHub
-				repositories or other third-party websites.
-			</p>
-
-			<p>
-				These external resources are maintained independently, and I have no control over their
-				content, availability, security or subsequent changes. A link should not be interpreted as
-				an endorsement of the website, organisation or all material published there.
-			</p>
-
-			<h2>Limitation of Liability</h2>
-
-			<p>
-				To the fullest extent permitted by applicable law, I accept no responsibility for loss,
-				damage, disruption, data loss, security incidents or other consequences arising from the use
-				or misuse of information, code, configurations, queries or techniques published on this
-				blog.
-			</p>
-
-			<p>
-				Readers are responsible for assessing whether material is appropriate for their own systems
-				and circumstances.
-			</p>
-
-			<h2>Changes to This Disclaimer</h2>
-
-			<p>
-				This disclaimer may be updated periodically to reflect changes to the blog, its content or
-				the technologies covered.
-			</p>
-
-			<p>The version published on this page applies to the current use of the site.</p>
-
-			<h2>Intellectual Property</h2>
-
-			<p>
-				Unless otherwise stated, the original written content, lab documentation, diagrams, graphics
-				and other materials created specifically for this blog are my own work and are protected by
-				applicable intellectual property law.
-			</p>
-
-			<p>
-				They may not be reproduced, republished, distributed or materially adapted for another
-				website, publication, training resource or commercial purpose without my prior written
-				permission.
-			</p>
-
-			<p>
-				Third-party trademarks, documentation, screenshots, code, quotations and other referenced
-				materials remain the property of their respective owners and are subject to their own
-				licences and terms.
-			</p>
-
-			<p>
-				Where external material has been used or referenced, I aim to provide appropriate
-				attribution.
+				The content here is published for educational purposes, is not professional advice, and is
+				not affiliated with or endorsed by Microsoft. The full terms - accuracy, liability,
+				trademarks and intellectual property - are on the
+				<a href={withBase('/disclaimer')}>disclaimer</a>.
 			</p>
 		</div>
 	</div>

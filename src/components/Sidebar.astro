@@ -1,35 +1,91 @@
 ---
-import { archiveYears, type Post } from '../lib/collections';
+import { SITE, type SolutionLabel } from '../consts';
+import { archiveYears, solutionFacets, type Post } from '../lib/collections';
 import { withBase } from '../lib/paths';
 import Chevron from './Chevron.astro';
+import SolutionTag from './SolutionTag.astro';
 
 interface Props {
 	posts: Post[];
+	/**
+	 * The solution the page beside this rail is already filtered to, rendered as
+	 * plain text rather than as a link to the page you are on. Only the solution
+	 * archive passes it.
+	 */
+	currentSolution?: SolutionLabel;
 }
 
-const { posts } = Astro.props;
+const { posts, currentSolution } = Astro.props;
+
+// The newest few entries. `posts` is already newest-first out of
+// getPublishedPosts(), so this is a slice and not a sort.
+//
+// Headed "Recent Labs" rather than "Recent Entries", which is a naming choice
+// worth stating because the two do not obviously match: there is no labs
+// collection and no /labs route, so this is the blog collection and nothing else.
+// The heading treats every entry as a lab write-up, which is what they are - the
+// site describes itself as field reports and deployment notes from work that was
+// actually run. If a genuinely separate labs collection is ever added, this block
+// is where it goes and this comment is the thing to delete.
+const recent = posts.slice(0, SITE.sidebarRecentCount);
+
+// Products with something published, in catalogue order rather than by volume:
+// this is a complete list of what has been worked in, so ranking it by article
+// count would let the busiest product read as the most important one.
+const solutions = solutionFacets(posts);
 
 // Years that actually have entries, so a year with nothing behind it is never
 // offered.
 const years = archiveYears(posts);
 
-// Matches the "Latest" heading in EntryList so the rail's section title reads as
+// Matches the "Latest" heading in EntryList so the rail's section titles read as
 // the same tier of label. Kept as a const rather than inlined: it is the contract
-// with that component, and a second section here would have to share it.
+// with that component, and all three sections below share it.
 const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-blue';
 
-// The rail is the archive and nothing else now.
+// One row idiom, shared by all three blocks: a full-width anchor, the label
+// against the left edge, hover brightening to text rather than shifting hue.
+// min-h-11 is the usual 44px touch floor, dropped at md where the rail becomes a
+// pointer-driven column beside the list.
+const row =
+	'text-text-2 hover:text-text flex min-h-11 items-center justify-between gap-3 py-1.5 text-sm transition-colors md:min-h-0';
+
+// Three blocks: what is new, what it was built in, and when. Secondary discovery,
+// against the header's site-level navigation.
 //
-// It carried a facet list of the primary vocabulary for as long as that
-// vocabulary had no other way in: first domains and technologies as two lists,
-// then categories as one. The header menu now lists every published category on
-// every page, so the rail was restating it beside each listing - and doing it in
-// a 15rem column that forced the long "Microsoft Defender for ..." labels into a
-// narrower measure than the menu gives them.
+// This replaces a two-block rail - "Popular Tags" then Archive - and reverses two
+// decisions recorded here, both of which were right for what the rail was then.
 //
-// Time is the one axis the header does not carry, which is what is left here.
-// Topics were never in this rail and still are not: they have their own index at
-// /topics.
+// The tag block merged both vocabularies, ranked them by volume and took the
+// busiest eight. It has gone, not because it did not work, but because its job was
+// split between two things that do it better: the header menu browses subjects
+// systematically, and the block below lists every product completely. A shortlist
+// between those two was a third, vaguer answer, and it duplicated the menu by
+// construction - the busiest topics are in both, so a reader could see "Conditional
+// Access" twice on one page. That was noted here as an accepted cost. It no longer
+// needs accepting, because the rail no longer carries topics at all, which is also
+// the plainest way to keep the two halves of the site's navigation distinct:
+// subjects in the header, products in the rail.
+//
+// Topics stay fully reachable: the header menu opens onto the five areas, /topics
+// lists all eighteen with counts, the footer links it, and every entry page's meta
+// line links each of its own. Nothing is stranded by their leaving here.
+//
+// "No recent or featured entries" was the other rule, on the grounds that the
+// ledger beside the rail is the recent entries and the hero above it is the
+// featured ones. Recent Labs is here anyway, and the overlap is real: on page 1
+// of the home page these three titles are the top three of the list beside them,
+// and if nothing is marked featured then selectHeroPosts falls back to the newest
+// entries and they are the hero's three as well. Taken deliberately - the block
+// earns its place on every other page the rail appears on (/page/2 and up, the
+// topic archives, the solution archives, the year archives), where it is the only
+// thing pointing at what is new. Excluding what is already on the page was the
+// obvious fix and is worse: on the home page it would leave entries 4 to 6 under a
+// heading that says recent.
+//
+// Still nothing else goes in here. No counts on the products - the numbers are on
+// the listings themselves - no social or newsletter blocks. The rail is three ways
+// into the archive, not a column of widgets.
 ---
 
 {
@@ -47,14 +103,96 @@ const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-blue';
 	   same as the gap it starts with. No offset for the header, which scrolls away
 	   rather than sticking.
 
-	   No max-height or overflow guard: the rail is one heading and one row per year.
-	   That is a lower ceiling than the wrapped run of years it replaces - the list
-	   now grows down at roughly 2rem a year instead of wrapping - but it still takes
-	   a couple of decades of publishing to reach the bottom of a viewport, and a
-	   sticky box only becomes partly unreachable once it is taller than one. Worth
-	   revisiting if a second section is ever added back beside it. */
+	   The overflow guard is new, and the previous note here is why: it said there
+	   was none because both blocks had known ceilings, and to revisit if a third
+	   was ever added. A third has been. The arithmetic no longer closes as tidily -
+	   three recent entries run to about 8.5rem with two-line titles, nine products
+	   to about 20rem once the longest wrap, the years grow at roughly 2rem a decade,
+	   and 8rem of gaps sit between them - so a full catalogue reaches roughly 44rem
+	   and a sticky box taller than the viewport has a bottom that cannot be scrolled
+	   to. Today it is nearer 18rem, so this guards a future rather than a bug.
+	   max-h with overflow-y-auto is the whole fix; overscroll-contain stops a scroll
+	   inside it from chaining to the page once it bottoms out. 5rem is the top-10
+	   offset plus room for the scrollbar to not sit against the viewport edge. */
 }
-<aside class="space-y-8 md:sticky md:top-10 md:self-start" aria-label="Browse entries">
+<aside
+	class="space-y-8 md:sticky md:top-10 md:max-h-[calc(100vh-5rem)] md:self-start md:overflow-y-auto md:overscroll-contain"
+	aria-label="Browse entries"
+>
+	{
+		recent.length > 0 && (
+			<nav aria-labelledby="sb-labs">
+				<h2 id="sb-labs" class={heading}>
+					Recent Labs
+				</h2>
+				{/* Titles alone: no date, no thumbnail, no description, and none of the
+				    entry row's hover treatment. The rail is 15rem wide and a row of that
+				    kind needs the ledger's measure to work; stripped to a title it is the
+				    same shape as the two blocks below it, which is what keeps the rail
+				    reading as one thing.
+
+				    items-start rather than items-center, and leading-snug, because a title
+				    wraps to two or three lines here where a year and a product name do
+				    not - so the text has to sit against the top of the row rather than be
+				    centred in a box its own height. */}
+				<ul class="mt-1.5">
+					{recent.map((post) => (
+						<li>
+							<a
+								href={withBase(`/posts/${post.id}`)}
+								class="text-text-2 hover:text-text flex min-h-11 items-start py-1.5 text-sm leading-snug transition-colors md:min-h-0"
+							>
+								{post.data.title}
+							</a>
+						</li>
+					))}
+				</ul>
+			</nav>
+		)
+	}
+
+	{
+		solutions.length > 0 && (
+			<nav aria-labelledby="sb-solutions">
+				<h2 id="sb-solutions" class={heading}>
+					Solutions
+				</h2>
+				{/* A wrapped run of tags rather than a column of rows, which is the shape
+				    that lets a 15rem rail hold "Microsoft Defender for Cloud Apps": short
+				    labels share a line and long ones take one of their own, instead of
+				    every label being held to the width of the longest. A column of rows
+				    here would force every product into a measure narrower than the label
+				    needs and wrap most of them.
+
+				    The existing tag component rather than markup of its own, so these are
+				    the same borders, accent and 200ms hover the rest of the site uses, and
+				    a change to that styling cannot leave the rail behind. gap-1.5 on both
+				    axes because the rows wrap and need separating from each other as well
+				    as along the line.
+
+				    The current product renders unlinked, which is the answer to the
+				    objection that kept this list off a solution archive in the first place:
+				    a filter should not offer itself as an option. aria-current tells a
+				    screen reader the same thing the missing link tells a pointer. Same
+				    pattern as the current page in Pagination and the last crumb in a
+				    breadcrumb. */}
+				<ul class="mt-2.5 flex flex-wrap gap-1.5">
+					{solutions.map((solution) => (
+						<li class="flex max-w-full">
+							{solution.label === currentSolution ? (
+								<span class="tag-solution" aria-current="page">
+									{solution.label}
+								</span>
+							) : (
+								<SolutionTag label={solution.label} />
+							)}
+						</li>
+					))}
+				</ul>
+			</nav>
+		)
+	}
+
 	{
 		years.length > 0 && (
 			<nav aria-labelledby="sb-archive">
@@ -78,16 +216,11 @@ const heading = 'text-[0.68rem] uppercase tracking-[0.12em] text-blue';
 
 				    The anchor carries the padding, not the li, so the empty middle of the
 				    row is part of the target and the chevron is not a separate thing to
-				    aim at. min-h-11 is the usual 44px touch floor, the same one
-				    .nav-menu__row takes, and is dropped at md where the rail becomes a
-				    pointer-driven column beside the list. */}
+				    aim at. */}
 				<ul class="mt-1.5">
 					{years.map((entry) => (
 						<li>
-							<a
-								href={withBase(`/archive/${entry.year}`)}
-								class="text-text-2 hover:text-text flex min-h-11 items-center justify-between gap-3 py-1.5 text-sm transition-colors md:min-h-0"
-							>
+							<a href={withBase(`/archive/${entry.year}`)} class={row}>
 								{entry.year}
 								<Chevron direction="right" class="h-4 w-4 shrink-0" />
 							</a>

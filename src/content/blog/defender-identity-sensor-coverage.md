@@ -4,7 +4,7 @@
 title: 'Defender for Identity: coverage gaps you only notice during an incident'
 description: Sensor placement, unmonitored domain controllers and the quiet assumptions that make identity telemetry look complete when it is not.
 pubDate: 2026-07-07
-categories:
+solutions:
   - Microsoft Defender for Identity
 topics:
   - Identity Protection

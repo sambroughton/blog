@@ -4,7 +4,7 @@
 title: Investigating a phishing campaign that cleared your mail filters
 description: Working backwards from the one report that arrived, establishing who else received it, and deciding what is worth purging after the fact.
 pubDate: 2026-02-04
-categories:
+solutions:
   - Microsoft Defender for Office 365
 topics:
   - Incident Investigation

@@ -4,7 +4,7 @@
 title: Conditional Access for guests without blocking the collaboration you wanted
 description: Separating guest policy from employee policy, and the assumptions about home-tenant controls that do not hold.
 pubDate: 2026-03-18
-categories:
+solutions:
   - Microsoft Entra ID
 topics:
   - Conditional Access
