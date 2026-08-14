@@ -1,0 +1,355 @@
+---
+import Chevron from './Chevron.astro';
+
+// A value picker drawn by this site rather than by the browser.
+//
+// This replaces the native <select> the search filters were built from. That
+// control was styled as far as a <select> can be - the closed box already took
+// the site's square border, its ground and its hover - but the list that opens
+// out of it is drawn by the browser and cannot be reached from CSS at all. So
+// the one part of the control a reader looks at while they are actually using it
+// was the one part that looked like it came from somewhere else: rounded, system
+// font, system highlight, sitting on a page whose own dropdown two inches above
+// it is a dark panel with a 5px radius and a blue-tinted hover.
+//
+// The cost of the swap is honest and worth naming: a native select is a control
+// the platform maintains, and everything it did for free is now code here -
+// keyboard, focus, typeahead, the accessible name and the announced value. That
+// is the whole of the script at the bottom of this file, and it is why the
+// pattern below is followed to the letter rather than approximated.
+//
+// The pattern is the ARIA select-only combobox: a `combobox` element that holds
+// the current value as its own text, and a `listbox` panel of `option` rows.
+// Focus never leaves the combobox - the panel is navigated with
+// aria-activedescendant instead - which is what keeps arrowing through the list
+// from committing a value on the way past.
+// https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/combobox-select-only/
+//
+// A listbox and not the `menu` the header's Solutions panel uses, even though
+// the two are drawn from the same values. That one is a list of links, so
+// choosing a row is navigation and `menu` is the right contract. This one sets a
+// filter and holds the choice afterwards, which is what `listbox` describes and
+// `menu` has no vocabulary for - a menu item has no selected state.
+//
+// No <noscript> fallback, and that is not an omission: /search hides the entire
+// filter panel when scripting is off and says so in words above the full list of
+// entries, so there is no state where this renders as a control that cannot be
+// operated. It is the reason this could be built as a scripted widget at all.
+
+interface Props {
+	/**
+	 * Unique on the page. Every id inside is derived from it, so one prop is the
+	 * whole of the instance's namespace.
+	 */
+	id: string;
+	/**
+	 * Id of the visible label element above this control. Passed in rather than
+	 * rendered here so the label keeps the class the text input's label uses -
+	 * see the `field` const in search.astro, which exists to stop the three from
+	 * drifting apart.
+	 */
+	labelledBy: string;
+	/**
+	 * Written to `data-search-facet` on the wrapper. This is the key search.astro
+	 * matches a row's `data-*` against, and is unchanged from the <select> this
+	 * replaces: the filter script reads a facet's current value off the wrapper
+	 * now instead of off a select's `.value`, and nothing else about the contract
+	 * moved.
+	 */
+	facet: string;
+	/** The reset row, always first. Its value is the empty string - see below. */
+	allLabel: string;
+	options: { value: string; label: string }[];
+	class?: string;
+}
+
+const { id, labelledBy, facet, allLabel, options, class: className = '' } = Astro.props;
+
+const listboxId = `${id}-listbox`;
+
+// The reset is one more option rather than a special case in the markup or the
+// script, because search.astro's has() already reads an empty value as "this
+// facet is not filtering". An empty-valued row therefore falls straight out of
+// the existing contract and needs no branch anywhere.
+const rows = [{ value: '', label: allLabel }, ...options];
+---
+
+<div
+	class:list={['filter-select', className]}
+	data-filter-select
+	data-search-facet={facet}
+	data-value=""
+>
+	{
+		/* tabindex on a div rather than a <button>, which is the APG structure and
+		   not a preference. role="combobox" replaces the button role outright, so
+		   none of the button's behaviour survives to be used - but its Enter and
+		   Space handling does survive far enough to fire a click on top of the
+		   keydown this needs to handle itself, which is a race to write around for
+		   no gain. A div has nothing to suppress.
+
+		   The accessible value is this element's own text, which is why the label
+		   sits outside it and is referenced: anything inside here is read as the
+		   value. The chevron is aria-hidden by Chevron.astro for the same reason. */
+	}
+	<div
+		id={id}
+		class="filter-select__control"
+		role="combobox"
+		tabindex="0"
+		aria-controls={listboxId}
+		aria-expanded="false"
+		aria-haspopup="listbox"
+		aria-labelledby={labelledBy}
+		data-filter-control
+	>
+		<span class="filter-select__value" data-filter-value>{allLabel}</span>
+		<Chevron direction="down" class="h-3.5 w-3.5 shrink-0" />
+	</div>
+
+	{
+		/* Same panel as the header's dropdown: same ground, same border, same 5px
+		   radius, same shadow, same fade-and-rise. The rows differ in one thing
+		   only, a 2px accent bar on the selected one, because a menu has nothing to
+		   mark and a listbox does. Geometry is in .filter-select in global.css.
+
+		   tabindex="-1" per the pattern. Nothing focuses it - the combobox keeps
+		   focus throughout - but it is what lets a click inside the panel resolve
+		   against a focusable ancestor rather than dropping focus to the body. */
+	}
+	<div
+		id={listboxId}
+		class="filter-select__menu"
+		role="listbox"
+		aria-labelledby={labelledBy}
+		tabindex="-1"
+		data-filter-menu
+	>
+		{
+			rows.map((row, index) => (
+				<div
+					id={`${id}-option-${index}`}
+					class:list={['filter-select__option', index === 0 && 'filter-select__option--all']}
+					role="option"
+					aria-selected={index === 0 ? 'true' : 'false'}
+					data-value={row.value}
+				>
+					{row.label}
+				</div>
+			))
+		}
+	</div>
+</div>
+
+<script>
+	// Astro bundles a component's script once however many times the component
+	// renders, so this runs one time for a page holding two dropdowns. The loop is
+	// what makes the second one work rather than a nicety.
+	for (const root of document.querySelectorAll<HTMLElement>('[data-filter-select]')) {
+		const control = root.querySelector<HTMLElement>('[data-filter-control]');
+		const menu = root.querySelector<HTMLElement>('[data-filter-menu]');
+		const output = root.querySelector<HTMLElement>('[data-filter-value]');
+		if (!control || !menu || !output) continue;
+
+		const options = [...menu.querySelectorAll<HTMLElement>('[role="option"]')];
+		if (options.length === 0) continue;
+
+		// Where the keyboard is, which is deliberately not where the selection is.
+		// Arrowing down a listbox moves this and commits nothing; Enter is what
+		// moves the selection. That separation is the reason the pattern uses
+		// aria-activedescendant rather than moving focus, and it is what a native
+		// select does on every platform except Windows.
+		let active = 0;
+
+		const isOpen = () => root.hasAttribute('data-open');
+
+		// Scrolled by hand rather than with scrollIntoView({block:'nearest'}): that
+		// walks every scrollable ancestor, so on a panel opened near the bottom of
+		// the viewport it will scroll the page as well as the list. offsetTop is
+		// measured against the panel, which is the offsetParent by virtue of being
+		// absolutely positioned.
+		const revealActive = () => {
+			const option = options[active];
+			const top = option.offsetTop;
+			const bottom = top + option.offsetHeight;
+			if (top < menu.scrollTop) menu.scrollTop = top;
+			else if (bottom > menu.scrollTop + menu.clientHeight) {
+				menu.scrollTop = bottom - menu.clientHeight;
+			}
+		};
+
+		// Wraps at both ends, as the header menu's roving focus does. Negative
+		// indices count back from the last row.
+		const setActive = (index: number) => {
+			active = ((index % options.length) + options.length) % options.length;
+			options.forEach((option, i) => option.toggleAttribute('data-active', i === active));
+			control.setAttribute('aria-activedescendant', options[active].id);
+			revealActive();
+		};
+
+		const open = () => {
+			root.setAttribute('data-open', '');
+			control.setAttribute('aria-expanded', 'true');
+			// Opens onto the current value rather than the top of the list, so a
+			// second visit starts where the reader left off.
+			const selected = options.findIndex((o) => o.getAttribute('aria-selected') === 'true');
+			setActive(selected < 0 ? 0 : selected);
+		};
+
+		// Focus goes back to the control when the reader dismissed the panel
+		// themselves, and stays where it is when something else did - a click
+		// elsewhere on the page, or a Tab that has already moved on. Same split the
+		// header dropdown's Escape handler makes.
+		const close = (returnFocus = true) => {
+			root.removeAttribute('data-open');
+			control.setAttribute('aria-expanded', 'false');
+			control.removeAttribute('aria-activedescendant');
+			for (const option of options) option.removeAttribute('data-active');
+			if (returnFocus) control.focus();
+		};
+
+		const commit = (index: number) => {
+			options.forEach((option, i) =>
+				option.setAttribute('aria-selected', i === index ? 'true' : 'false'),
+			);
+			output.textContent = options[index].textContent?.trim() ?? '';
+			root.dataset.value = options[index].dataset.value ?? '';
+			// Bubbles, so search.astro can listen once on the panel around both
+			// dropdowns instead of binding to each. `change` and not a custom event
+			// name because that is what the <select> this replaces fired, which
+			// leaves the filter script's listener reading the same as it did.
+			root.dispatchEvent(new Event('change', { bubbles: true }));
+		};
+
+		// A native select gives prefix typeahead for free, and losing it on a list
+		// of a dozen product names that all begin "Microsoft Defender for" would be
+		// a real regression - it is the fastest way to the one row a reader wants.
+		// The buffer resets after a pause, which is what makes "de" find Defender
+		// rather than jumping to whatever starts with E on the second key.
+		const TYPEAHEAD_MS = 500;
+		let typed = '';
+		let typedAt = 0;
+
+		const typeahead = (char: string) => {
+			const now = Date.now();
+			typed = now - typedAt > TYPEAHEAD_MS ? char : typed + char;
+			typedAt = now;
+
+			// A fresh single character starts looking after the current row, so
+			// pressing the same letter repeatedly cycles through the rows that share
+			// it. A continuing buffer re-tests the current row first, so it can stay
+			// put as the prefix gets longer.
+			const from = typed.length === 1 ? active + 1 : active;
+			for (let step = 0; step < options.length; step++) {
+				const index = (from + step) % options.length;
+				if ((options[index].textContent?.trim().toLowerCase() ?? '').startsWith(typed)) {
+					setActive(index);
+					return;
+				}
+			}
+		};
+
+		control.addEventListener('click', () => {
+			if (isOpen()) return close();
+			control.focus();
+			open();
+		});
+
+		control.addEventListener('keydown', (event) => {
+			const key = event.key;
+
+			if (key === 'Escape') {
+				if (!isOpen()) return;
+				event.preventDefault();
+				close();
+				return;
+			}
+
+			// Not swallowed: Tab should leave the control, and closing behind it is
+			// the whole of this branch.
+			if (key === 'Tab') {
+				if (isOpen()) close(false);
+				return;
+			}
+
+			if (key === 'ArrowDown' || key === 'ArrowUp') {
+				// Swallowed either way, so the page does not scroll out from under a
+				// panel that has just opened.
+				event.preventDefault();
+				if (!isOpen()) open();
+				else setActive(active + (key === 'ArrowDown' ? 1 : -1));
+				return;
+			}
+
+			if (key === 'Home' || key === 'End') {
+				if (!isOpen()) return;
+				event.preventDefault();
+				setActive(key === 'Home' ? 0 : options.length - 1);
+				return;
+			}
+
+			if (key === 'Enter' || key === ' ') {
+				// Space is swallowed on both branches for the same reason as the
+				// arrows: unhandled it scrolls the page.
+				event.preventDefault();
+				if (!isOpen()) open();
+				else {
+					commit(active);
+					close();
+				}
+				return;
+			}
+
+			// Single printable characters only, so every named key and every
+			// modifier combination falls through to the browser untouched.
+			//
+			// Typing on a closed control opens it and moves the highlight rather
+			// than setting the value outright, which is where this parts company
+			// with a native select. Deliberate: this control commits on Enter and
+			// nothing else, and a keystroke that changed the filtered list without
+			// the panel ever opening would be the one exception to that.
+			if (key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+				event.preventDefault();
+				if (!isOpen()) open();
+				typeahead(key.toLowerCase());
+			}
+		});
+
+		// Holds focus on the control while a row is being clicked. Without it the
+		// mousedown moves focus off, the focusout handler below closes the panel,
+		// and the click that was going to choose a row lands on nothing.
+		menu.addEventListener('mousedown', (event) => event.preventDefault());
+
+		menu.addEventListener('click', (event) => {
+			const option =
+				event.target instanceof Element
+					? event.target.closest<HTMLElement>('[role="option"]')
+					: null;
+			if (!option) return;
+			commit(options.indexOf(option));
+			close();
+		});
+
+		// The pointer moves the highlight rather than lighting a second row of its
+		// own. This is why there is no :hover rule on .filter-select__option: with
+		// one the row under the pointer and the row under the keyboard would both
+		// be tinted the moment someone arrowed away from a resting cursor.
+		menu.addEventListener('pointerover', (event) => {
+			const option =
+				event.target instanceof Element
+					? event.target.closest<HTMLElement>('[role="option"]')
+					: null;
+			if (option) setActive(options.indexOf(option));
+		});
+
+		document.addEventListener('click', (event) => {
+			if (!isOpen()) return;
+			if (event.target instanceof Node && !root.contains(event.target)) close(false);
+		});
+
+		root.addEventListener('focusout', (event) => {
+			if (event.relatedTarget instanceof Node && root.contains(event.relatedTarget)) return;
+			close(false);
+		});
+	}
+</script>

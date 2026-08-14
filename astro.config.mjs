@@ -156,6 +156,23 @@ export default defineConfig({
 				borderRadius: '0',
 				borderColor: '#1a2740',
 				codeBackground: '#0a1220',
+				// A code block is the one scroll container on the site this stylesheet
+				// cannot reach: Expressive Code ships its own ::-webkit-scrollbar rules
+				// for `pre`, and in Chromium and Safari those beat the scrollbar-color
+				// set on :root in global.css. Left alone, the thumb is whichever grey
+				// github-dark names for scrollbarSlider.background, so a code block gets
+				// the syntax theme's scrollbar while everything beside it gets the
+				// site's - and only in those browsers, since Firefox ignores the webkit
+				// rules and inherits from :root either way.
+				//
+				// These two values close both gaps. They are --color-text-3 and
+				// --color-text-2 written out, exactly as borderColor and codeBackground
+				// above are --color-rule and --color-surface written out: this file
+				// cannot see the @theme block, so the duplication is the interface
+				// between them and all four move together or not at all.
+				// https://expressive-code.com/reference/style-overrides/
+				scrollbarThumbColor: '#6b7fa0',
+				scrollbarThumbHoverColor: '#93a4c0',
 				codeFontFamily: "'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
 				codeFontSize: '0.8rem',
 				codeLineHeight: '1.65',

@@ -64,6 +64,117 @@ h4 {
 	}
 }
 
+/* Scrollbars ---------------------------------------------------------------
+   Four scrolling regions on this site and, until now, four different-looking
+   scrollbars: the page itself, the ledger rail, the entry page's contents rail
+   and the filter dropdown all took the platform's, while code blocks took
+   Expressive Code's own - a github-dark grey that belongs to the syntax theme
+   rather than to this palette. On a dark site a default light scrollbar is the
+   brightest thing on the page, which is a lot of attention for furniture.
+
+   Two mechanisms, because there are two generations of this feature and the
+   split between them is not the usual "old browsers get less":
+
+     scrollbar-color / scrollbar-width   the standard properties. Baseline as of
+                                         December 2025, Chromium from 121.
+     ::-webkit-scrollbar-*               the older non-standard pseudo-elements,
+                                         still the only route in Safari and in
+                                         Chromium before 121.
+
+   Both are set, which is what the Chrome team's own guidance does, and the two
+   are given the same colours so it does not matter which one a browser picks.
+   https://developer.chrome.com/docs/css-ui/scrollbar-styling
+   https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-color
+
+   The @supports guard on the legacy block is out of that guidance rather than
+   strictly needed - unknown pseudo-elements are dropped anyway - but it states
+   which branch is which, which is the whole reason a reader stops here.
+
+   The one thing to know before editing: scrollbar-color inherits and
+   scrollbar-width does not. That asymmetry is doing real work below and it is
+   not obvious from the property names.
+   https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-width */
+
+/* Inherited, so this single declaration reaches every scroll container on the
+   site - including ones that do not exist yet, and including Expressive Code's
+   code blocks in Firefox, where its own webkit rules do not apply.
+   (Chromium takes those rules instead, which is why the same two colours are
+   also set on the Expressive Code theme in astro.config.mjs. The two have to be
+   changed together or the code blocks split by browser.)
+
+   --color-text-3 for the thumb, which is the site's quietest text colour and
+   already the colour of a date, an article count and the filter control's
+   caret. That is the right tier for this: furniture, legible, not competing.
+   It is also what clears the 3:1 non-text contrast floor WCAG 1.4.11 asks for,
+   which the rule colours do not - --color-rule-bright against the page ground
+   is about 1.6:1, so the obvious choice of "the same slate as every border" is
+   a scrollbar you cannot find. --color-text-3 measures about 4.7:1 there.
+
+   A transparent track rather than a colour, so one declaration is correct on
+   all four grounds the site has: the page (--color-bg), the two rails
+   (--color-bg), the dropdown panel (#0b101b) and a code block
+   (--color-surface). A track colour would be right on one of them. */
+:root {
+	scrollbar-color: var(--color-text-3) transparent;
+}
+
+/* Not inherited, so it is listed per container - and deliberately not set on
+   :root, which would thin the page scrollbar too.
+
+   The page keeps the platform's full width because it is the primary way to
+   scroll the document and the one place the touch-target concern in the
+   scrollbar-width docs actually bites. These three are panels a few hundred
+   pixels wide where a full-width platform scrollbar eats most of a row's right
+   padding, and each has an ordinary way to scroll it that is not the bar:
+   the rails are short, and the dropdown answers the arrow keys. */
+.filter-select__menu,
+.entry-rail,
+.ledger-rail {
+	scrollbar-width: thin;
+}
+
+@supports selector(::-webkit-scrollbar) {
+	.filter-select__menu::-webkit-scrollbar,
+	.entry-rail::-webkit-scrollbar,
+	.ledger-rail::-webkit-scrollbar {
+		/* Both axes, so a panel that ever scrolls sideways matches. `thin` above is
+		   whatever the platform calls thin, around 7px in Chromium; 6px is the
+		   nearest round number to it rather than a second opinion. */
+		width: 6px;
+		height: 6px;
+	}
+
+	.filter-select__menu::-webkit-scrollbar-track,
+	.entry-rail::-webkit-scrollbar-track,
+	.ledger-rail::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	/* The one rounded thing on a site that is otherwise square by rule - see the
+	   note on .entry-thumb's radius. A 6px square thumb reads as a rendering
+	   fault rather than as a control, every platform draws this one round, and
+	   Expressive Code's code-block thumbs are already rounded, so squaring these
+	   would make the site's scrollbars less consistent rather than more. */
+	.filter-select__menu::-webkit-scrollbar-thumb,
+	.entry-rail::-webkit-scrollbar-thumb,
+	.ledger-rail::-webkit-scrollbar-thumb {
+		background: var(--color-text-3);
+		border-radius: 3px;
+	}
+
+	/* Brightens on hover, which is the site's rule for anything under the
+	   pointer. There is no standard-property equivalent: scrollbar-color has no
+	   way to address the thumb on its own, and putting it behind :hover on the
+	   panel would light the bar up whenever the pointer was anywhere over the
+	   panel, which is not the same statement. So this is a Chromium and Safari
+	   nicety rather than something Firefox is missing out on. */
+	.filter-select__menu::-webkit-scrollbar-thumb:hover,
+	.entry-rail::-webkit-scrollbar-thumb:hover,
+	.ledger-rail::-webkit-scrollbar-thumb:hover {
+		background: var(--color-text-2);
+	}
+}
+
 /* Featured card ------------------------------------------------------------
    One continuous card, one border, one ground. The cover sits behind the copy
    as an absolutely positioned layer and is faded diagonally into the card's own
@@ -534,26 +645,24 @@ a.tag-topic:focus-visible {
 }
 
 /* Search filters -----------------------------------------------------------
-   The only form controls on the site, so this is the whole of its input styling
-   rather than one component's share of it.
+   The text box on /search, and now the only native form control left on the
+   site: the two <select> elements beside it have become the scripted listbox
+   below, so their share of this section has moved down with them.
 
-   Most of the work is already done by `color-scheme: dark` at the top of this
-   file: that is what draws a native control and, more importantly, the select's
-   own dropdown list dark instead of white. The list is drawn by the browser and
-   cannot be styled from here at all, so that declaration is not a nicety - it is
-   the only thing standing between this page and a white popup on a dark page.
+   `color-scheme: dark` at the top of this file still does most of the work here.
+   It is what draws the search field's own furniture - the clear button Chromium
+   and Safari put inside a type="search" input, and the caret - dark rather than
+   light. It used to be carrying a heavier load than that: it was also the only
+   thing drawing the selects' popup lists dark, since a native option list is
+   painted by the browser and cannot be reached from CSS at all. That was the
+   reason for the swap, and the note is kept because it names what the
+   declaration is for rather than what it happens to be enough for.
 
-   `appearance` is deliberately not reset. The native caret is correct under
-   color-scheme and removing it would mean drawing and positioning a replacement,
-   which is a background-image and a padding calculation to maintain in exchange
-   for nothing a reader can see.
-
-   Square, bordered, --color-text-2 hovering to a brighter border: the same box the
-   pagination cells and the carousel buttons already use, so these read as controls
-   from this site rather than from the browser. 0.72rem is an existing size on the
-   page, not a new one. */
-.search-input,
-.search-select {
+   Square, bordered, --color-rule brightening on hover: the same box the
+   pagination cells and the carousel buttons already use, so this reads as a
+   control from this site rather than from the browser. 0.72rem is an existing
+   size on the page, not a new one. */
+.search-input {
 	width: 100%;
 	padding: 0.4rem 0.6rem;
 	background: var(--color-surface);
@@ -567,15 +676,13 @@ a.tag-topic:focus-visible {
 	transition: border-color 200ms ease;
 }
 
-.search-input:hover,
-.search-select:hover {
+.search-input:hover {
 	border-color: var(--color-rule-bright);
 }
 
 /* The same ring .nav-menu a and .nav-dropdown__toggle take. Inset, so it draws
    inside the border rather than pushing the control's neighbours around. */
-.search-input:focus-visible,
-.search-select:focus-visible {
+.search-input:focus-visible {
 	outline: 2px solid #4d7cfe;
 	outline-offset: -2px;
 	border-color: var(--color-rule-bright);
@@ -585,11 +692,194 @@ a.tag-topic:focus-visible {
 	color: var(--color-text-3);
 }
 
-/* Belt and braces: some Chromium builds on Windows draw option rows from the page
-   background rather than from color-scheme, which lands white text on white. */
-.search-select option {
+/* Filter dropdown ----------------------------------------------------------
+   The search page's two value pickers. Built as a listbox in
+   FilterSelect.astro; the note at the top of that file is where the reasoning
+   for replacing the native <select> lives.
+
+   The whole point of this section is that the open panel is the header's open
+   panel: same ground, same border, same 5px radius, same shadow, same
+   fade-and-rise, same row metrics and the same blue-tinted highlight. Every
+   value below is deliberately the one .nav-menu already uses, and the two
+   should be changed together - a dropdown on this site should not depend on
+   which page it is on. The literals are repeated rather than shared through a
+   variable because that is how .nav-menu states them today; hoisting them into
+   @theme is the tidier answer whenever a third panel arrives.
+
+   Closed, the control is the .search-input box beside it to the pixel - same
+   padding, border, ground, size and hover - so the row of three reads as one set
+   of controls. */
+.filter-select {
+	position: relative;
+}
+
+.filter-select__control {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	width: 100%;
+	padding: 0.4rem 0.6rem;
 	background: var(--color-surface);
+	border: 1px solid var(--color-rule);
 	color: var(--color-text);
+	font-size: 0.72rem;
+	line-height: 1.4;
+	cursor: pointer;
+	/* A double-click on a value picker should not select its text. */
+	user-select: none;
+	transition: border-color 200ms ease;
+}
+
+.filter-select__control:hover {
+	border-color: var(--color-rule-bright);
+}
+
+.filter-select__control:focus-visible {
+	outline: 2px solid #4d7cfe;
+	outline-offset: -2px;
+	border-color: var(--color-rule-bright);
+}
+
+/* The longest product name is a good deal wider than this box at the narrow end
+   of the grid, so the value truncates rather than wrapping the control to two
+   lines or pushing the caret out of it. min-width: 0 is what lets a flex item
+   shrink below its content at all. */
+.filter-select__value {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Quieter than the value it sits beside, and it rotates to point back at the
+   control while the panel is open - the same two things the header's caret does,
+   by the same means. */
+.filter-select__control > svg {
+	color: var(--color-text-3);
+	transition:
+		transform 200ms ease,
+		color 200ms ease;
+}
+
+.filter-select__control:hover > svg {
+	color: var(--color-text-2);
+}
+
+.filter-select[data-open] .filter-select__control > svg {
+	transform: rotate(180deg);
+}
+
+.filter-select[data-open] .filter-select__control {
+	border-color: var(--color-rule-bright);
+}
+
+.filter-select__menu {
+	position: absolute;
+	/* Anchored to the control's edges rather than given a width of its own, unlike
+	   .nav-menu: that panel floats under a header link and is sized to its longest
+	   row, this one is the open state of the box directly above it and reading as
+	   any other width would break that. */
+	top: calc(100% + 6px);
+	right: 0;
+	left: 0;
+	z-index: 30;
+	/* .nav-menu deliberately has no ceiling, because its list is the published
+	   products and one row to the index. This one can be the topics, which is a
+	   vocabulary of eighteen, so it needs one: a panel taller than the viewport
+	   has a bottom that cannot be scrolled to. About nine rows.
+	   overscroll-behavior stops a scroll inside it chaining to the page once it
+	   bottoms out, as the sidebar's own guard does. */
+	max-height: 17rem;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 6px 0;
+	background: #0b101b;
+	border: 1px solid #1b2740;
+	border-radius: 5px;
+	box-shadow: 0 26px 50px -18px rgba(0, 0, 0, 0.85);
+	opacity: 0;
+	transform: translateY(-6px);
+	/* visibility keeps the closed panel out of the accessibility tree as well as
+	   off the hit test; the delay holds it visible until the fade has finished,
+	   and drops to 0s on the way in so it is there for the fade to happen to. */
+	visibility: hidden;
+	pointer-events: none;
+	transition:
+		opacity 180ms ease,
+		transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+		visibility 0s linear 220ms;
+}
+
+.filter-select[data-open] .filter-select__menu {
+	opacity: 1;
+	transform: translateY(0);
+	visibility: visible;
+	pointer-events: auto;
+	transition:
+		opacity 180ms ease,
+		transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+		visibility 0s;
+}
+
+/* Movement off, the fade left alone, as .nav-menu does. */
+@media (prefers-reduced-motion: reduce) {
+	.filter-select__menu,
+	.filter-select[data-open] .filter-select__menu {
+		transform: none;
+	}
+}
+
+/* .nav-menu__row's metrics exactly. 44px on touch for the same reason it takes
+   one there, applied at the same breakpoint, below. */
+.filter-select__option {
+	display: flex;
+	align-items: center;
+	padding: 9px 18px;
+	font-size: 14px;
+	line-height: 1.35;
+	color: #c3d0e6;
+	cursor: pointer;
+	transition:
+		background 150ms,
+		color 150ms;
+}
+
+/* There is no :hover rule here on purpose. The script moves this attribute to
+   whatever the pointer is over, so the pointer and the keyboard share one
+   highlight; a :hover alongside it would tint a second row the moment someone
+   arrowed away from a resting cursor. */
+.filter-select__option[data-active] {
+	background: rgba(77, 124, 254, 0.1);
+	color: #ffffff;
+}
+
+/* The one thing this panel has that the header's does not, because a menu item
+   has no selected state and a listbox option does. A 2px bar up the left edge
+   rather than a tick against the right: the entry rows already say "this one" to
+   a reader with a bar in exactly that position, and it costs no glyph. */
+.filter-select__option[aria-selected='true'] {
+	color: #ffffff;
+	box-shadow: inset 2px 0 0 var(--color-blue);
+}
+
+/* The reset row. Ruled off below and set a step quieter, so the values read as a
+   set and this reads as the way out of it rather than as one more value - the
+   same distinction .nav-menu__row--all draws, mirrored, since that row ends its
+   list and this one opens its own. The aria-selected rule above outranks the
+   colour here on specificity, so the reset still goes white while it is the
+   current value. */
+.filter-select__option--all {
+	margin-bottom: 6px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid #1b2740;
+	color: #8fa3c2;
+}
+
+@media (max-width: 767.98px) {
+	.filter-select__option {
+		min-height: 44px;
+	}
 }
 
 /* Entry row ----------------------------------------------------------------
@@ -959,7 +1249,8 @@ a.tag-topic:focus-visible {
 	width: 100%;
 	aspect-ratio: 16 / 10;
 	overflow: hidden;
-	/* 5px, as .nav-menu. Those are the only two panels on the site with a radius;
+	/* 5px, as .nav-menu and .filter-select__menu. Those are the only panels on the
+	   site with a radius, and the two dropdowns take it from the same place;
 	   the tags use 2px because they are text-sized rather than surfaces. */
 	border-radius: 5px;
 	border: 1px solid var(--color-rule);

@@ -1,5 +1,6 @@
 ---
 import EntryList from '../components/EntryList.astro';
+import FilterSelect from '../components/FilterSelect.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getPublishedPosts, solutionFacets, topicFacets } from '../lib/collections';
 
@@ -23,6 +24,15 @@ import { getPublishedPosts, solutionFacets, topicFacets } from '../lib/collectio
 // can only offer a value that has entries behind it, and the option values are
 // slugs to match the data attributes rowFilterData() writes.
 //
+// Neither is a <select> any more. They were, and the closed box already looked
+// right, but a native option list is painted by the browser and cannot be styled
+// at all - so the part of the control a reader is looking at while they use it was
+// the part that did not belong to this site. <FilterSelect> is that list drawn as
+// the header's dropdown panel; the reasoning and the cost of the swap are at the
+// top of that file. What did not change is the shape of the data: a facet still
+// carries its current slug on the element the script finds by data-search-facet,
+// and still fires `change` when it moves.
+//
 // The Topic select is now the only control on the site that acts on a topic.
 // Topics are not linked anywhere any more - see the note on TOPICS in consts.ts -
 // and that makes this page more important rather than less: it is where the
@@ -39,7 +49,10 @@ const posts = await getPublishedPosts();
 const solutions = solutionFacets(posts);
 const topics = topicFacets(posts);
 
-// Shared by both selects and their labels, so the controls cannot drift apart.
+// Shared by all three labels, so the controls cannot drift apart. It is why the
+// two pickers' labels stayed on this page rather than moving into FilterSelect:
+// the text input is a native <input> and will never live in that component, so
+// the only place the three can be stated once is here.
 const field = 'text-text-3 block text-[0.63rem] tracking-[0.12em] uppercase';
 ---
 
@@ -80,25 +93,40 @@ const field = 'text-text-3 block text-[0.63rem] tracking-[0.12em] uppercase';
 		</div>
 
 		{
-			/* Two columns from sm up, one below. The selects are equal-width rather
+			/* Two columns from sm up, one below. The pickers are equal-width rather
 			   than sized to their content: the option lists are wildly different lengths
-			   and a row of differently sized boxes reads as unrelated controls. */
+			   and a row of differently sized boxes reads as unrelated controls.
+
+			   The labels stay out here, sharing `field` with the input's above, which is
+			   the whole reason FilterSelect takes an id to point at rather than rendering
+			   a label of its own. A <span> and not a <label>: `for` only binds to a
+			   labelable element and the control is a div carrying role="combobox", so a
+			   <label> here would be markup that looks like it does something and does
+			   not. The binding is the aria-labelledby inside the component. */
 		}
 		<div class="mt-4 grid gap-3 sm:grid-cols-2">
 			<div>
-				<label for="search-solution" class={field}>Solution</label>
-				<select id="search-solution" class="search-select mt-1.5" data-search-facet="solutions">
-					<option value="">All solutions</option>
-					{solutions.map((facet) => <option value={facet.slug}>{facet.label}</option>)}
-				</select>
+				<span id="search-solution-label" class={field}>Solution</span>
+				<FilterSelect
+					id="search-solution"
+					labelledBy="search-solution-label"
+					facet="solutions"
+					allLabel="All solutions"
+					options={solutions.map((facet) => ({ value: facet.slug, label: facet.label }))}
+					class="mt-1.5"
+				/>
 			</div>
 
 			<div>
-				<label for="search-topic" class={field}>Topic</label>
-				<select id="search-topic" class="search-select mt-1.5" data-search-facet="topics">
-					<option value="">All topics</option>
-					{topics.map((facet) => <option value={facet.slug}>{facet.label}</option>)}
-				</select>
+				<span id="search-topic-label" class={field}>Topic</span>
+				<FilterSelect
+					id="search-topic"
+					labelledBy="search-topic-label"
+					facet="topics"
+					allLabel="All topics"
+					options={topics.map((facet) => ({ value: facet.slug, label: facet.label }))}
+					class="mt-1.5"
+				/>
 			</div>
 		</div>
 	</div>
@@ -107,11 +135,17 @@ const field = 'text-text-3 block text-[0.63rem] tracking-[0.12em] uppercase';
 		{
 			/* is:inline so this stays in the document rather than being hoisted into the
 			   global stylesheet, which would hide the controls for everyone. Hiding the
-			   whole panel rather than leaving two inert selects on the page: the same
+			   whole panel rather than leaving three inert controls on the page: the same
 			   call SiteHeader's noscript makes about its dropdown, for the same reason -
 			   a control that does nothing is worse than no control, and showing the list
 			   itself is the honest answer. The count below is correct without scripting,
-			   since it is the real total. */
+			   since it is the real total.
+
+			   This rule is now load-bearing for the two pickers rather than merely tidy.
+			   A <select> with no script behind it is inert but still legible - it opens,
+			   it shows the vocabulary. FilterSelect is a div that does nothing at all
+			   until its script runs, so hiding it is what stops it rendering as a box
+			   with a caret that never opens. Worth knowing before this rule is relaxed. */
 		}
 		<style is:inline>
 			.search-filters {
@@ -153,7 +187,11 @@ const field = 'text-text-3 block text-[0.63rem] tracking-[0.12em] uppercase';
 
 	if (root && count && list) {
 		const text = root.querySelector<HTMLInputElement>('[data-search-text]');
-		const selects = [...root.querySelectorAll<HTMLSelectElement>('[data-search-facet]')];
+		// Plain elements rather than the HTMLSelectElements these were: a facet's
+		// current slug is on its wrapper as data-value now, written by
+		// FilterSelect's script when a row is chosen. Same one-value-per-facet
+		// contract, read off an attribute instead of off `.value`.
+		const facets = [...root.querySelectorAll<HTMLElement>('[data-search-facet]')];
 		const rows = [...list.querySelectorAll<HTMLElement>('li.entry-row')];
 
 		// Applied here rather than in the markup, so with scripting off nothing
@@ -177,7 +215,9 @@ const field = 'text-text-3 block text-[0.63rem] tracking-[0.12em] uppercase';
 			for (const row of rows) {
 				const matches =
 					(!query || (row.dataset.text ?? '').includes(query)) &&
-					selects.every((select) => has(row, select.dataset.searchFacet ?? '', select.value));
+					facets.every((facet) =>
+						has(row, facet.dataset.searchFacet ?? '', facet.dataset.value ?? ''),
+					);
 
 				row.hidden = !matches;
 				if (matches) shown++;
@@ -194,6 +234,13 @@ const field = 'text-text-3 block text-[0.63rem] tracking-[0.12em] uppercase';
 		// tolerable - assistive tech coalesces polite updates and settles once typing
 		// pauses, which a debounce would only delay.
 		text?.addEventListener('input', apply);
-		for (const select of selects) select.addEventListener('change', apply);
+
+		// One listener on the panel rather than one per facet: FilterSelect fires a
+		// bubbling `change` from its wrapper, which is the event a <select> in the
+		// same position fired and is why this line reads as it did. The search input
+		// inside `root` fires `change` on blur too and lands here - a second run of a
+		// pure function over the same state, so it is left alone rather than filtered
+		// out by target.
+		root.addEventListener('change', apply);
 	}
 </script>

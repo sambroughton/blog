@@ -107,10 +107,15 @@ const row =
 	   box taller than the viewport has a bottom that cannot be scrolled to. max-h
 	   with overflow-y-auto is the whole fix; overscroll-contain stops a scroll inside
 	   it from chaining to the page once it bottoms out. 5rem is the top-10 offset
-	   plus room for the scrollbar to not sit against the viewport edge. */
+	   plus room for the scrollbar to not sit against the viewport edge.
+
+	   .ledger-rail is the hook for that scrollbar and does nothing else. It exists
+	   because scrollbar-width does not inherit, so the three narrow panels on the
+	   site have to be named one at a time - see the Scrollbars section in
+	   global.css, which is also where the other two are listed. */
 }
 <aside
-	class="space-y-8 md:sticky md:top-10 md:max-h-[calc(100vh-5rem)] md:self-start md:overflow-y-auto md:overscroll-contain"
+	class="ledger-rail space-y-8 md:sticky md:top-10 md:max-h-[calc(100vh-5rem)] md:self-start md:overflow-y-auto md:overscroll-contain"
 	aria-label="Browse entries"
 >
 	{
