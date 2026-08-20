@@ -400,7 +400,7 @@ h4 {
 .nav-menu__row:hover,
 .nav-menu__row:focus-visible {
 	background: rgba(77, 124, 254, 0.1);
-	color: #ffffff;
+	color: var(--color-text);
 }
 
 /* The way to the index, /solutions. Ruled off and set a step quieter than the
@@ -606,14 +606,16 @@ h4 {
 		border-color 200ms ease,
 		color 200ms ease;
 }
-
-/* Scoped to the anchor: both tags render as a plain <span> where nothing is
-   being linked to - an unlinked tag that lights up under the pointer is telling
-   the reader it is clickable when it is not. */
+/* The text lights to --color-text with everything else, rather than to the
+   brighter blue it used to take. The border keeps its accent brighten, because
+   that edge is what marks this as the primary vocabulary and it is the resting
+   identity of the tag rather than part of the hover language. So the tag is blue
+   at rest and lit at the pointer, which is the same behaviour as its quieter
+   twin below with a different colour to return to. */
 a.tag-solution:hover,
 a.tag-solution:focus-visible {
 	border-color: rgb(107 161 255 / 0.62);
-	color: var(--color-blue-bright);
+	color: var(--color-text);
 }
 
 /* The quieter half of the pair. Transparent ground and a border at the rule
@@ -851,7 +853,7 @@ a.tag-topic:focus-visible {
    arrowed away from a resting cursor. */
 .filter-select__option[data-active] {
 	background: rgba(77, 124, 254, 0.1);
-	color: #ffffff;
+	color: var(--color-text);
 }
 
 /* The one thing this panel has that the header's does not, because a menu item
@@ -859,7 +861,7 @@ a.tag-topic:focus-visible {
    rather than a tick against the right: the entry rows already say "this one" to
    a reader with a bar in exactly that position, and it costs no glyph. */
 .filter-select__option[aria-selected='true'] {
-	color: #ffffff;
+	color: var(--color-text);
 	box-shadow: inset 2px 0 0 var(--color-blue);
 }
 
@@ -1138,7 +1140,7 @@ a.tag-topic:focus-visible {
    .entry-row__tag above, for the same reason. */
 .entry-row:focus-within .tag-solution {
 	border-color: rgb(107 161 255 / 0.62);
-	color: var(--color-blue-bright);
+	color: var(--color-text);
 }
 
 .entry-row:focus-within .tag-topic {
@@ -1174,7 +1176,7 @@ a.tag-topic:focus-visible {
 
 	.entry-row:hover .tag-solution {
 		border-color: rgb(107 161 255 / 0.62);
-		color: var(--color-blue-bright);
+		color: var(--color-text);
 	}
 
 	.entry-row:hover .tag-topic {
@@ -1495,16 +1497,36 @@ a.tag-topic:focus-visible {
 	font-size: 1.2rem;
 }
 
+/* Set in the body colour rather than the accent, so a link inside a paragraph is
+   the same colour as the words around it and the underline is the whole of what
+   marks it. A page like /disclaimer or a long entry can carry a dozen of these,
+   and at the accent they picked themselves out of the prose one by one - which is
+   the opposite of what a reference inside a sentence should do.
+
+   Safe because the rule is permanent. WCAG 1.4.1 asks that colour not be the only
+   thing distinguishing a link, which the underline satisfies on its own; taking
+   the hue out does not weaken it.
+   https://www.w3.org/WAI/WCAG22/Understanding/use-of-color
+
+   --color-reading, not --color-text: this is the colour the surrounding paragraph
+   is set in, and matching it is the entire point. 14.8:1 on --color-bg, against
+   6.2:1 for the blue it replaces. */
 .prose-body a {
-	color: var(--color-blue);
+	color: var(--color-reading);
 	text-decoration: underline;
 	text-underline-offset: 3px;
 }
 
-/* Brightens out of the accent instead of deeper into it. The underline above is
-   permanent and is what marks the link, so the colour is free to leave the blue
-   without the element stopping reading as a link - WCAG 1.4.1 is satisfied by
-   the rule, not the hue. https://www.w3.org/WAI/WCAG22/Understanding/use-of-color
+/* --color-text, which is the site's one hover colour. Every text hover on the
+   site now lands here: the breadcrumb, the rail, the footer routes, the topic
+   and solution tags, the carousel and pagination controls, the prev/next links,
+   the 404 way back. The rule behind it is the one the tag block has always
+   stated - the thing under the pointer lights up, it does not change hue - and
+   the accent is no longer part of any hover anywhere.
+
+   The single exception is .entry-row__title, which rests at --color-text already
+   and so has nothing to brighten to but #fff. That is the ceiling, not a second
+   convention: an element cannot light up to the colour it is already set in.
    17.0:1 on --color-bg. */
 .prose-body a:hover {
 	color: var(--color-text);

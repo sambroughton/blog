@@ -32,53 +32,65 @@ import { withBase } from '../lib/paths';
 	    than with the far left of the 5xl main. */
 	}
 	<div class="mx-auto max-w-2xl">
-		<p class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">About</p>
-		<h1 class="font-display text-text mt-1 text-3xl font-bold">{SITE.name}</h1>
+		{
+			/* The heading is "About" and there is no eyebrow over it. It used to be the
+			   other way round - an "About" eyebrow above the site's name as the h1 - which
+			   put the name in the one slot on the page that should say what the page is.
+			   Every other route here titles itself: Disclaimer, Projects, Solutions. The
+			   name is in the masthead, the tab and the footer already.
+
+			   No mt-1 on it either, because the margin existed to hold it off the eyebrow.
+			   This is now the same two lines /disclaimer opens with. */
+		}
+		<h1 class="font-display text-text text-3xl font-bold">About</h1>
 
 		<div class="prose-body mt-6">
 			<p>
-				This is a personal blog by {SITE.author} on Microsoft security engineering. It collects field
-				reports, detection queries, deployment notes and the reasoning behind them - the working notes
-				of building and running Microsoft security tooling rather than an overview of what the products
-				do.
+				This is a personal blog about Microsoft security engineering, with a particular focus on
+				Microsoft XDR, identity and detection engineering.
 			</p>
 
 			<p>
-				Entries tend to start from something that did not behave as documented, or a decision that
-				had more than one defensible answer. Where a query, policy or configuration is included, it
-				is one that was actually run, with the caveats it turned out to need.
-			</p>
-
-			<h2>How it is filed</h2>
-
-			<p>
-				Every entry is filed two ways. Its <strong>solutions</strong> name the Microsoft products involved
-				- Entra ID, Sentinel, Intune, the Defender workloads - and its <strong>topics</strong> name the
-				subjects it covers, such as Conditional Access, detection engineering or KQL. An entry usually
-				carries several of each, so the same piece turns up under more than one heading.
+				It documents practical work with Microsoft Defender XDR, Microsoft Sentinel, Microsoft Entra
+				ID and related security technologies, including investigations, KQL queries, detections,
+				security configurations, lab work and projects.
 			</p>
 
 			<p>
-				The product is the label an entry leads with, because it is the thing most worth knowing
-				before you decide to read: it says which console the work was actually done in.
+				The focus is on how these technologies are implemented and used in practice, rather than
+				repeating product documentation. Articles document what I built or investigated, the
+				approach I took, the reasoning behind technical decisions, and any limitations, trade-offs
+				or unexpected behaviour encountered along the way.
+			</p>
+
+			<h2>Articles and projects</h2>
+
+			<p>
+				Articles cover individual technical subjects, investigations and implementations. They are
+				organised primarily by <a href={withBase('/solutions')}>solution</a>, making it easy to find
+				work involving a particular Microsoft security technology, with topics providing additional
+				context such as Conditional Access, KQL, detection engineering and identity security.
 			</p>
 
 			<p>
-				Solutions are in the header menu, with the full list at <a href={withBase('/solutions')}
-					>Solutions</a
-				>. Topics are tags rather than links - they say what an entry covers, and there is no page
-				per subject. <a href={withBase('/search')}>Search</a> filters by either, or by the words in a
-				title. <a href={withBase('/projects')}>Projects</a> is the entries tagged as work that was built
-				rather than written about.
+				<a href={withBase('/projects')}>Projects</a> document more substantial pieces of practical work,
+				bringing together the design, implementation and testing of a solution from the initial problem
+				through to the finished result.
 			</p>
 
-			<h2>Terms</h2>
-
+			{
+				/* {' '} and not a plain line break before the link. Astro drops the
+				   whitespace between text and an element that starts a line, so "see the"
+				   ran straight into "Disclaimer" with nothing between them. The other two
+				   links in this page keep their space by sitting on the same line as the
+				   word beside them, which works until Prettier reflows the paragraph -
+				   this is the form that does not depend on where the line happens to break.
+				   Same idiom as the empty-state copy in index.astro. */
+			}
 			<p>
-				The content here is published for educational purposes, is not professional advice, and is
-				not affiliated with or endorsed by Microsoft. The full terms - accuracy, liability,
-				trademarks and intellectual property - are on the
-				<a href={withBase('/disclaimer')}>disclaimer</a>.
+				This is an independent personal blog documenting my own work and learning. For information
+				about accuracy, liability, trademarks and use of the material, see the{' '}
+				<a href={withBase('/disclaimer')}>Disclaimer</a>.
 			</p>
 		</div>
 	</div>

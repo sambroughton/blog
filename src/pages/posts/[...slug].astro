@@ -244,7 +244,7 @@ const crumbs = [
 						older ? (
 							<a href={withBase(`/posts/${older.id}`)} class="group">
 								<span class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Older</span>
-								<span class="font-display text-text-2 group-hover:text-blue mt-1 block text-base font-bold transition-colors">
+								<span class="font-display text-text-2 group-hover:text-text mt-1 block text-base font-bold transition-colors">
 									{older.data.title}
 								</span>
 							</a>
@@ -257,7 +257,7 @@ const crumbs = [
 						newer && (
 							<a href={withBase(`/posts/${newer.id}`)} class="group sm:text-right">
 								<span class="text-text-3 text-[0.68rem] tracking-[0.12em] uppercase">Newer</span>
-								<span class="font-display text-text-2 group-hover:text-blue mt-1 block text-base font-bold transition-colors">
+								<span class="font-display text-text-2 group-hover:text-text mt-1 block text-base font-bold transition-colors">
 									{newer.data.title}
 								</span>
 							</a>

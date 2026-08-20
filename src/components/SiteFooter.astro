@@ -10,6 +10,12 @@ import { withBase } from '../lib/paths';
 // Projects, Search and About, and nothing else. The path is /disclaimer now;
 // /about is the page about the blog.
 //
+// The link and the line both stay. The link is the route to the full page; the
+// line under the brand pair is the part a reader needs without going anywhere -
+// that the site is personal, that the views are not the employer's, and that
+// nothing here is Microsoft's. That is the whole of what a disclaimer in a footer
+// is for, and it is cheap enough to say in place rather than only behind a click.
+//
 // Solutions replaces the Topics link that sat here, which is a swap rather than an
 // addition: it is the same job - a plain-text route to the index, for a reader who
 // has come to the bottom of a page rather than up to the header menu - pointed at
@@ -23,27 +29,140 @@ const links = [
 	{ href: '/solutions', label: 'Solutions' },
 	{ href: '/disclaimer', label: 'Disclaimer' },
 ];
+
+// Resolved at build rather than in the browser, so this is the year of the last
+// deploy and not the year the page is read. The site is static and a blog that
+// publishes anything at all rebuilds inside twelve months; the alternative is
+// shipping a script to correct one line of small print, which is not a trade worth
+// making. If the site ever goes a full year quiet, the stale year is the tell.
+const year = new Date().getFullYear();
 ---
 
+{
+	/* One row, three columns, no rule anywhere in it: the brand, the small print and
+	   the routes, all on the same horizontal line.
+
+	   The small print has been in two other places and both were wrong in the same
+	   way. Under the tagline it read as a third line of the masthead; on a row of its
+	   own below everything it read as a footer under the footer. It is neither - it
+	   is one of three things this strip says, so it sits beside the other two.
+
+	   justify-between spaces the three rather than a grid sizing them, because they
+	   are not columns of equal weight and should not be set as if they were. Each
+	   takes the width its text needs and the space falls between them.
+
+	   The footer echoes the header rather than restating it: same name, same tagline,
+	   at the footer's sizes. A reader arriving at the bottom of a long entry gets the
+	   site's name and what it is for without scrolling back up for it.
+
+	   max-w-5xl and px-5 match SiteHeader and <main> exactly, so all three edges land
+	   on the same line. */
+}
 <footer class="border-rule mt-20 border-t">
 	<div
-		class="mx-auto flex max-w-5xl flex-wrap items-start justify-between gap-x-6 gap-y-3 px-5 py-8"
+		class="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-x-6 gap-y-4 px-5 py-8"
 	>
-		<div>
-			<p class="font-display text-text text-base font-bold">{SITE.name}</p>
-			<p class="text-text-3 mt-1 text-[0.7rem]">
-				Personal site. Views are my own, not my employer's. Not affiliated with Microsoft.
-			</p>
-		</div>
+		{
+			/* items-baseline, not items-start. The three columns are different type sizes
+			   - a 1rem wordmark against 0.7rem small print and 0.72rem links - so aligning
+			   their boxes leaves the shorter two floating somewhere above the name's
+			   x-height. Aligning the baselines is what makes them read as one line. They
+			   end at different depths, which is fine: the only edge a reader reads across
+			   is the top one. */
+		}
+		{
+			/* leading-tight on the name and no margin on the tagline, which is the
+			   header's treatment and for the header's reason: the two lines are one
+			   brand rather than two facts stacked, so the only space between them is the
+			   half-leading each line box carries. The default 1.5 leading hangs a
+			   quarter-rem under the name's glyphs and a margin on top of that reads as a
+			   gap between two unrelated things.
 
-		<nav aria-label="Footer" class="flex gap-5 text-[0.72rem]">
+			   0.7rem rather than the header's 0.6rem. That size is set against a text-xl
+			   wordmark; this one sits under text-base, and shrinking it to match the
+			   ratio would put it below every other piece of small print on the page. */
+		}
+		<div>
+			<p class="font-display text-text text-base leading-tight font-bold">{SITE.name}</p>
+			<p class="text-text-3 text-[0.7rem]">{SITE.tagline}</p>
+		</div>
+		{
+			/* The middle column, and no width on it. At 63 characters it holds one line
+			   inside the space the other two leave, and if an edit lengthens it, flex
+			   shrinks this one first - it is the only item here with a sentence's worth of
+			   text to reflow, where the other two would break badly.
+
+			   self-start and mt-5 put it on the row's second line rather than its first,
+			   which is the whole trick here and needs saying, because the obvious version
+			   of it does not work. Adding a margin alone to a baseline-aligned item does
+			   not move that item down - baseline alignment lands every first baseline on
+			   the same line whatever the margins are, so the margin would simply make this
+			   the tallest item and push the other two down to meet it. self-start takes it
+			   out of the baseline group first; the margin then moves it on its own.
+
+			   1.25rem is the name's line box, derived and not chosen: text-base at 1rem
+			   times leading-tight's 1.25. That is the exact distance from the wordmark's
+			   baseline to the tagline's, so this line lands on the tagline's. Recompute it
+			   if the name's size or leading ever changes.
+
+			   The copyright meets it there because the right-hand column carries no gap
+			   between its two lines - see the note on that block below.
+
+			   "not my employer's" is not in this line. "Views are my own" carries the
+			   claim on its own and the clause naming an employer is on /disclaimer, under
+			   Professional Advice, one click from every page. That split is deliberate:
+			   the footer says what a reader needs in passing, the page carries the
+			   wording. */
+		}
+		<p class="text-text-3 mt-5 self-start text-[0.7rem]">
+			Personal site. Views are my own. Not affiliated with Microsoft.
+		</p>
+
+		{
+			/* The routes and the copyright as one right-hand block, ragged right from sm
+			   up, so the copyright sits under the links it belongs with rather than as an
+			   orphan on a row of its own. Left-aligned below that breakpoint, where the
+			   block has wrapped onto its own row and there is no column edge to sit
+			   against.
+
+			   No gap between the two lines, where this had 1.5. That gap was the whole of
+			   why the copyright sat lower than the tagline opposite it: the two columns'
+			   first lines are different heights, but the difference very nearly cancels
+			   against the difference in where their first baselines fall, so what was left
+			   between the second lines was the gap and almost nothing else. Removing it
+			   also makes this block the same shape as the brand block - two stacked line
+			   boxes, spaced by their own leading and nothing more. */
+		}
+		<div class="flex flex-col sm:items-end">
+			<nav aria-label="Footer" class="flex flex-wrap gap-x-5 text-[0.72rem]">
+				{
+					/* min-h-11 below md, the same 44px floor the rail's rows take and for the
+					   same reason: 0.72rem of text with no padding is a target about thirteen
+					   pixels tall, which is a thumb's problem rather than a pointer's. It goes
+					   at md, where the row collapses back to the height of its text.
+
+					   Baseline alignment survives this. The links are centred in a taller box
+					   below md, so the row grows, but the wordmark still sits on their baseline
+					   - flex aligns the baselines it is given whatever the boxes around them
+					   are doing. */
+				}
+				{
+					links.map((link) => (
+						<a
+							href={withBase(link.href)}
+							class="text-text-2 hover:text-text inline-flex min-h-11 items-center transition-colors md:min-h-0"
+						>
+							{link.label}
+						</a>
+					))
+				}
+			</nav>
+
 			{
-				links.map((link) => (
-					<a href={withBase(link.href)} class="text-text-2 hover:text-blue transition-colors">
-						{link.label}
-					</a>
-				))
+				/* tabular-nums for the same reason the solutions index uses it - a year is
+				   data, and lining figures are what data is set in. */
 			}
-		</nav>
+			<p class="text-text-3 text-[0.7rem] tabular-nums">&copy; {year} {SITE.author}</p>
+		</div>
 	</div>
 </footer>

@@ -144,13 +144,21 @@ const row =
 				    items-start rather than items-center, and leading-snug, because a title
 				    wraps to two or three lines here where a year does not - so the text has
 				    to sit against the top of the row rather than be centred in a box its
-				    own height. */}
+				    own height.
+
+				    A hairline between rows, and none under the last one: the block ends on
+				    space rather than on a rule that would read as the top edge of the Archive
+				    heading below it. Titles here wrap to two and three lines, so two adjacent
+				    entries run together as one paragraph without something to say where one
+				    stops - that is what the rule is doing, and py-1.5 goes to py-2 to give it
+				    room to sit in. Same --color-rule the ledger rows and the solutions index
+				    draw with, so the rail matches the pages it points at. */}
 				<ul class="mt-1.5">
 					{recent.map((post) => (
-						<li>
+						<li class="border-rule border-b last:border-b-0">
 							<a
 								href={withBase(`/posts/${post.id}`)}
-								class="text-text-2 hover:text-text flex min-h-11 items-start py-1.5 text-sm leading-snug transition-colors md:min-h-0"
+								class="text-text-2 hover:text-text flex min-h-11 items-start py-2 text-sm leading-snug transition-colors md:min-h-0"
 							>
 								{post.data.title}
 							</a>
