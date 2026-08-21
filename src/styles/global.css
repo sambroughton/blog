@@ -1166,8 +1166,16 @@ a.tag-topic:focus-visible {
    accent; the topic lights up without changing hue, which is the rule the
    breadcrumb, the sidebar and the header nav all follow.
 
-   Both pairs are inert as written: no row contains a .tag-* element now. Kept with
-   .entry-row__tag above, for the same reason. */
+   Both pairs are live. A ledger row carries .tag-solution under its title and a
+   row on a solution archive carries .tag-topic instead - EntryMeta renders one or
+   the other, through SolutionTag and TopicLink. Confirmed against the build: the
+   homepage ships five .tag-solution inside rows, a solution archive three
+   .tag-topic.
+
+   This comment previously said the opposite - that no row contained a .tag-*
+   element - which contradicted the note on .tag-solution further up, and that note
+   was the correct one. Anyone acting on the old wording would have deleted four
+   working rules. */
 .entry-row:focus-within .tag-solution {
 	border-color: rgb(107 161 255 / 0.62);
 	color: var(--color-text);

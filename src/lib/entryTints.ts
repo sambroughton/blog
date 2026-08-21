@@ -1,53 +1,23 @@
-// The hover wash on a ledger row is a radial gradient held under two scrims and
-// a low opacity - see .entry-row in global.css for the geometry and the timings.
+// The hover wash on a ledger row: one radial gradient, the same on every row.
+// Geometry, scrims and timings live in .entry-row in global.css.
 //
-// One colour, the same on every row. This used to be a generated ramp: t ran 0 at
-// the first row to 1 at the last, and hue walked indigo -> cyan down the page. It
-// was invisible, and measurably so. Composited, the first row and the last
-// differed by an Oklab dE of 0.0089, against a side-by-side just-noticeable
-// difference of roughly 0.02 - the whole archive-length sweep sat several times
-// below the threshold at which two swatches can be told apart while touching.
+// Constant rather than a per-row ramp. The ramp that was here walked hue down the
+// page and was invisible - first row to last measured an Oklab dE of 0.0089
+// against a side-by-side JND of about 0.02. A version with real separation was
+// then built and also dropped: rows light one at a time and seconds apart, so a
+// ramp has nothing to be compared against. Restore one only with a reason that
+// survives that.
 //
-// The cause was gamut. sRGB has almost no chroma in the blue-to-cyan arc at these
-// lightnesses: the ceiling at L 0.30 runs 0.049 at hue 200 to 0.066 at hue 240,
-// because a saturated cyan needs green and green carries luminance, so it cannot
-// exist this dark. Every stop asked for 0.13-0.16 and was gamut-mapped back to
-// 0.053-0.062, about 40% of what was written. Both ends landed on the same gamut
-// wall at nearly the same saturation, which is what flattened the ramp.
+// Both stops sit inside sRGB at hue 265, where the chroma ceiling is 0.235 at
+// L 0.34 and 0.147 at L 0.21. Raise either chroma past those and the browser
+// gamut-maps it, painting something other than what is written here. Hue 265 is
+// also a few degrees off the accent bar's #4d7cfe, so the bar reads as part of
+// the wash rather than a second colour on top of it.
 //
-// A ramp along an axis with room - fixed hue, chroma draining down the page - does
-// reach dE 0.043 end to end and steps evenly. It was built and then dropped,
-// because it still would not have been perceived as a ramp: rows light one at a
-// time and seconds apart, and cross-temporal discrimination needs far more than
-// the side-by-side 0.02. The value below is that ramp's drained end, applied
-// throughout. Anyone hovering rows in sequence sees what they saw before; the
-// per-row generator, the index and total plumbing and the /search ordering
-// question all go away.
-//
-// Written in oklch because the two stops hold one hue and differ only in
-// lightness and chroma, which is the relationship being expressed. Tailwind v4
-// already ships an oklch default palette, so the browser support this needs is
-// support the site already requires.
-//
-// Both stops are inside sRGB - the ceiling at hue 265 is 0.235 at L 0.34 and
-// 0.147 at L 0.21 - so what is written is what gets painted, with nothing being
-// mapped. Raising either chroma means rechecking against those ceilings.
-//
-// Hue 265 is within a few degrees of the accent bar's #4d7cfe, so the bar reads as
-// part of the wash rather than as a second colour sitting on top of it.
-//
-// The last stop is rgb(var(--reveal-ground)) rather than a literal. That custom
-// property is set on .entry-row and must track --color-bg, so the tint resolves
-// into the page ground - a literal here would show as a pale band at the
-// right-hand end of every row the moment the ground changed.
+// The last stop must stay rgb(var(--reveal-ground)), which .entry-row sets to
+// track --color-bg: a literal would show as a pale band at the right-hand end of
+// every row the moment the ground changed.
 
-/**
- * The wash gradient for a ledger row. Constant: see the note above for why the
- * per-row ramp this replaced could not be seen.
- *
- * Delivered per row as the --entry-tint custom property rather than written
- * straight into .entry-row__tint, so reintroducing variation is a change to this
- * file alone. .entry-row__tint falls back to transparent without it.
- */
+/** Set per row as --entry-tint, so reintroducing variation is a change to this file alone. */
 export const ENTRY_TINT =
 	'radial-gradient(120% 140% at 12% 50%, oklch(0.34 0.05 265) 0%, oklch(0.21 0.035 265) 44%, rgb(var(--reveal-ground)) 100%)';

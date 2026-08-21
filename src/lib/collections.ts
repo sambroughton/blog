@@ -52,7 +52,7 @@ export function primarySolution(post: Post): SolutionLabel {
  * This is the tag a row shows on a solution archive, where the product is already
  * the h1 above it. See rowTag() below.
  */
-export function primaryTopic(post: Post): TopicLabel {
+function primaryTopic(post: Post): TopicLabel {
 	return post.data.topics[0];
 }
 
@@ -66,8 +66,8 @@ export function primaryTopic(post: Post): TopicLabel {
  * Parameterised on the label so a facet stays tied to the vocabulary it came out
  * of: solutionFacets() hands back a SolutionLabel, which is what <SolutionTag>
  * takes, so a caller can pass one straight through instead of asserting its way
- * past a widened `string`. Defaults to `string` for callers that only need the
- * shape - topFacets() below is the one that does.
+ * past a widened `string`. It defaults to `string` for callers that only need
+ * the shape, though every caller today names its vocabulary.
  */
 export type Facet<Label extends string = string> = { slug: string; label: Label; count: number };
 
@@ -126,34 +126,6 @@ export function solutionFacets(posts: Post[]): Facet<SolutionLabel>[] {
  */
 export function topicFacets(posts: Post[]): Facet<TopicLabel>[] {
 	return countBy(posts, (p) => p.data.topics, TOPICS);
-}
-
-/**
- * The `limit` most-published facets, heaviest first.
- *
- * The one place volume would be allowed to set the order, against the catalogue
- * order every other list keeps - and nothing calls it today. It ranked the rail's
- * "Popular Tags" block, which merged both vocabularies and took the busiest eight.
- * That block is gone, and so is the complete run of solution tags that replaced
- * it: the rail carries no facet list at all now. Every list that remains - the
- * header menu, the /solutions index, the search filters - is a complete set shown
- * in catalogue order, because a portfolio's product list is a fixed thing to be
- * shown whole rather than a shortlist to be ranked. Kept for the next list that
- * genuinely is a shortlist, with the reasoning that made it right for one intact.
- *
- * Copies before sorting: countBy() builds a fresh array per call today, but a
- * helper that reorders its argument in place is a trap for whatever caches one
- * later. Ties hold catalogue order, because Array.prototype.sort is required to
- * be stable (ES2019 onwards) and countBy() emits in catalogue order - which is
- * what keeps a build reproducible when several facets share a count.
- * https://tc39.es/ecma262/#sec-array.prototype.sort
- *
- * Generic on the facet rather than taking Facet[] outright, so the label type
- * survives the shortlisting: a caller passing the result to <SolutionTag> needs a
- * SolutionLabel and not the `string` a widened return would give it.
- */
-export function topFacets<F extends Facet>(facets: F[], limit: number): F[] {
-	return [...facets].sort((a, b) => b.count - a.count).slice(0, limit);
 }
 
 /**
@@ -221,17 +193,6 @@ export function rowFilterData(post: Post): Record<string, string> {
  */
 export function postsBySolution(posts: Post[], slug: string): Post[] {
 	return posts.filter((post) => post.data.solutions.some((label) => slugify(label) === slug));
-}
-
-/**
- * Entries under one topic, newest first. Slug-keyed, as postsBySolution is.
- *
- * No route calls this any more - there are no per-topic archives - but
- * postsInProjects below is one topic filtered by label, which is the same question
- * asked of the one topic that does have a page.
- */
-export function postsByTopic(posts: Post[], slug: string): Post[] {
-	return posts.filter((post) => post.data.topics.some((label) => slugify(label) === slug));
 }
 
 /**
