@@ -10,6 +10,16 @@ interface Props {
 	pagePosts: Post[];
 	/** Every published entry, used for sidebar facet counts. */
 	allPosts: Post[];
+	/**
+	 * Entries behind the whole ledger rather than this page of it, for the count in
+	 * the list header. Not derivable from `allPosts`: that is every entry, projects
+	 * included, and the ledger is the articles. So it comes from whichever caller
+	 * did the slicing, which is the only place the two numbers are both in hand.
+	 *
+	 * Omitted by the callers that pass a complete list, and the count falls back to
+	 * it. See EntryList.astro.
+	 */
+	totalPosts?: number;
 	/** Featured entries for the hero. Pass an empty array to omit it. */
 	heroPosts?: Post[];
 	currentPage: number;
@@ -21,6 +31,7 @@ interface Props {
 const {
 	pagePosts,
 	allPosts,
+	totalPosts,
 	heroPosts = [],
 	currentPage,
 	lastPage,
@@ -35,7 +46,7 @@ const showSidebar = shouldShowSidebar(allPosts.length);
 
 <div class={showSidebar ? 'grid gap-10 md:grid-cols-[1fr_15rem]' : ''}>
 	<div class="min-w-0">
-		<EntryList posts={pagePosts} label={label} emptyMessage={emptyMessage} />
+		<EntryList posts={pagePosts} total={totalPosts} label={label} emptyMessage={emptyMessage} />
 		{lastPage > 1 && <Pagination currentPage={currentPage} lastPage={lastPage} />}
 	</div>
 

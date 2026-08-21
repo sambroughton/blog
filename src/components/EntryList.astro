@@ -13,6 +13,16 @@ interface Props {
 	/** Shown when there is nothing to list. */
 	emptyMessage?: string;
 	/**
+	 * Entries behind the listing, where `posts` is one page of a larger set. The
+	 * header count reads this instead of the slice, so a paginated ledger says how
+	 * deep the archive is rather than reprinting SITE.pageSize on every page but
+	 * the last. Two callers, both of them the ledger; see LedgerView.astro.
+	 *
+	 * Omit it wherever `posts` is the whole set - every unpaginated listing - where
+	 * the slice is the total already and passing it would be the same number twice.
+	 */
+	total?: number;
+	/**
 	 * True on a solution archive, where every row would otherwise repeat the h1.
 	 * Those rows show their primary topic instead. rowTag() applies it.
 	 *
@@ -33,12 +43,19 @@ const {
 	posts,
 	label,
 	emptyMessage = 'No entries yet.',
+	total,
 	filteredBySolution = false,
 	filterable = false,
 } = Astro.props;
 
 // Honest count, correctly pluralised. A blog with one post says "1 article".
-const countLabel = `${posts.length} ${posts.length === 1 ? 'article' : 'articles'}`;
+//
+// `total` when a caller passes one, so a paginated ledger counts the archive and
+// not the page it is showing - see the prop above. Falls back to the slice, which
+// is the whole set on every other listing, and is what /search's client-side
+// rewrite recomputes from the rows it leaves visible.
+const count = total ?? posts.length;
+const countLabel = `${count} ${count === 1 ? 'article' : 'articles'}`;
 ---
 
 <section aria-label={label}>
