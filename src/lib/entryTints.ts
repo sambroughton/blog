@@ -1,64 +1,53 @@
 // The hover wash on a ledger row is a radial gradient held under two scrims and
 // a low opacity - see .entry-row in global.css for the geometry and the timings.
 //
-// The gradient is generated rather than listed, so the ramp spans whatever the
-// list actually is: t runs 0 at the first row to 1 at the last, and hue walks
-// indigo -> steel -> cyan down the page. A five-entry list and a fifty-entry list
-// both get the full sweep, and nothing cycles or repeats.
+// One colour, the same on every row. This used to be a generated ramp: t ran 0 at
+// the first row to 1 at the last, and hue walked indigo -> cyan down the page. It
+// was invisible, and measurably so. Composited, the first row and the last
+// differed by an Oklab dE of 0.0089, against a side-by-side just-noticeable
+// difference of roughly 0.02 - the whole archive-length sweep sat several times
+// below the threshold at which two swatches can be told apart while touching.
 //
-// Written in oklch because the ramp holds lightness constant (0.30 near, 0.19
-// mid) while only chroma and hue move. In sRGB that is not expressible: equal hex
-// steps at fixed lightness drift in perceived brightness, and the mid stops would
-// read as unevenly dark. Tailwind v4 already ships an oklch default palette, so
-// the browser support this needs is support the site already requires.
+// The cause was gamut. sRGB has almost no chroma in the blue-to-cyan arc at these
+// lightnesses: the ceiling at L 0.30 runs 0.049 at hue 200 to 0.066 at hue 240,
+// because a saturated cyan needs green and green carries luminance, so it cannot
+// exist this dark. Every stop asked for 0.13-0.16 and was gamut-mapped back to
+// 0.053-0.062, about 40% of what was written. Both ends landed on the same gamut
+// wall at nearly the same saturation, which is what flattened the ramp.
+//
+// A ramp along an axis with room - fixed hue, chroma draining down the page - does
+// reach dE 0.043 end to end and steps evenly. It was built and then dropped,
+// because it still would not have been perceived as a ramp: rows light one at a
+// time and seconds apart, and cross-temporal discrimination needs far more than
+// the side-by-side 0.02. The value below is that ramp's drained end, applied
+// throughout. Anyone hovering rows in sequence sees what they saw before; the
+// per-row generator, the index and total plumbing and the /search ordering
+// question all go away.
+//
+// Written in oklch because the two stops hold one hue and differ only in
+// lightness and chroma, which is the relationship being expressed. Tailwind v4
+// already ships an oklch default palette, so the browser support this needs is
+// support the site already requires.
+//
+// Both stops are inside sRGB - the ceiling at hue 265 is 0.235 at L 0.34 and
+// 0.147 at L 0.21 - so what is written is what gets painted, with nothing being
+// mapped. Raising either chroma means rechecking against those ceilings.
+//
+// Hue 265 is within a few degrees of the accent bar's #4d7cfe, so the bar reads as
+// part of the wash rather than as a second colour sitting on top of it.
 //
 // The last stop is rgb(var(--reveal-ground)) rather than a literal. That custom
-// property is set on .entry-row and must track --color-bg, so every tint resolves
+// property is set on .entry-row and must track --color-bg, so the tint resolves
 // into the page ground - a literal here would show as a pale band at the
 // right-hand end of every row the moment the ground changed.
 
 /**
- * The `deepest` of the depth presets, and the only one carried over: the shallower
- * ones washed out once the reveal opacity came down to 0.60.
+ * The wash gradient for a ledger row. Constant: see the note above for why the
+ * per-row ramp this replaced could not be seen.
  *
- * Lightness is fixed per stop. Chroma falls as t rises, so the cyan end of the
- * ramp is slightly less saturated than the indigo end - at equal chroma the
- * cyan-ish hues read louder, and the list wants an even weight top to bottom.
+ * Delivered per row as the --entry-tint custom property rather than written
+ * straight into .entry-row__tint, so reintroducing variation is a change to this
+ * file alone. .entry-row__tint falls back to transparent without it.
  */
-const DEEPEST = {
-	nearLightness: 0.3,
-	nearChroma: (t: number) => 0.16 - 0.03 * t,
-	midLightness: 0.19,
-	midChroma: (t: number) => 0.11 - 0.02 * t,
-	hue: (t: number) => 232 - 42 * t,
-} as const;
-
-/**
- * The wash gradient for the row at `index` of a list of `total` rows.
- *
- * @param index Zero-based position in the rendered list.
- * @param total How many rows the list has, which sets the span of the ramp.
- */
-export function entryTint(index: number, total: number): string {
-	// A single-row list is the common case here, not a curiosity: every /domains
-	// and /topics page with one entry hits it, and i/(n-1) is a divide by zero
-	// there. That row takes t = 0, the deepest indigo, which is also what the top
-	// of a long list gets. Non-finite inputs land in the same place rather than
-	// propagating NaN into a colour function, where it would kill the wash.
-	const spannable = Number.isFinite(index) && Number.isFinite(total) && total > 1;
-	// Clamped, so an index past the end of the list holds the last colour instead
-	// of running the ramp past cyan into greens.
-	const t = spannable ? Math.min(Math.max(index / (total - 1), 0), 1) : 0;
-
-	const hue = round(DEEPEST.hue(t));
-	const near = `oklch(${DEEPEST.nearLightness} ${round(DEEPEST.nearChroma(t))} ${hue})`;
-	const mid = `oklch(${DEEPEST.midLightness} ${round(DEEPEST.midChroma(t))} ${hue})`;
-
-	return `radial-gradient(120% 140% at 12% 50%, ${near} 0%, ${mid} 44%, rgb(var(--reveal-ground)) 100%)`;
-}
-
-// Four decimals is past the point a channel can resolve, and it keeps the inline
-// style attribute from carrying floating-point noise like 0.14500000000000002.
-function round(value: number): number {
-	return Math.round(value * 10000) / 10000;
-}
+export const ENTRY_TINT =
+	'radial-gradient(120% 140% at 12% 50%, oklch(0.34 0.05 265) 0%, oklch(0.21 0.035 265) 44%, rgb(var(--reveal-ground)) 100%)';

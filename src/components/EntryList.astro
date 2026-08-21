@@ -1,6 +1,6 @@
 ---
 import { formatDayMonth, isoDate, rowFilterData, rowTag, type Post } from '../lib/collections';
-import { entryTint } from '../lib/entryTints';
+import { ENTRY_TINT } from '../lib/entryTints';
 import { withBase } from '../lib/paths';
 import { readingTimeMinutes } from '../lib/readingTime';
 import EntryMeta from './EntryMeta.astro';
@@ -84,7 +84,7 @@ const countLabel = `${count} ${count === 1 ? 'article' : 'articles'}`;
 				    that rule is its separator, exactly as each row's own bottom rule is the
 				    separator for the row beneath it. Every row then has the same 1.25rem
 				    (py-5) between the rule above it and its own copy. */}
-				{posts.map((post, index) => {
+				{posts.map((post) => {
 					const minutes = readingTimeMinutes(post.body);
 					const tag = rowTag(post, filteredBySolution);
 					// The row is a hover reveal: a colour wash cross-fades in at 0.60
@@ -93,16 +93,15 @@ const countLabel = `${count} ${count === 1 ? 'article' : 'articles'}`;
 					// global.css; the gradient comes from lib/entryTints.ts and is handed
 					// over as --entry-tint.
 					//
-					// posts.length, not a fixed palette size: the hue ramp spans the whole
-					// list, so the first row is indigo and the last is cyan-ish however
-					// many there are. Nothing cycles.
+					// One colour on every row. This was a ramp keyed to the index and the
+					// list length - indigo at the top, cyan-ish at the bottom - which
+					// measured several times below a just-noticeable difference end to end
+					// and so was never visible. See the note in lib/entryTints.ts. Being a
+					// constant, it also settles the question /search used to raise: rows
+					// hidden by a filter no longer leave gaps in anything.
 					//
-					// On /search the ramp gets gaps as rows are hidden, and that is left
-					// alone deliberately: the tint is a hover reveal, so at most one row's
-					// colour is ever on screen and there is nothing for a reader to compare
-					// a non-uniform sequence against. Closing the gaps would mean porting
-					// the oklch generator to the client and resetting every row's custom
-					// property on each keystroke, to fix something invisible.
+					// Still set per row as a custom property rather than written into
+					// .entry-row__tint, so bringing variation back is a one-file change.
 					//
 					// This replaces the sb-blog .mini treatment that was here (ground
 					// lifting to surface-2, border brightening to rule-bright). The rule
@@ -113,7 +112,7 @@ const countLabel = `${count} ${count === 1 ? 'article' : 'articles'}`;
 					return (
 						<li
 							class="entry-row -mx-4 px-4 py-5"
-							style={`--entry-tint: ${entryTint(index, posts.length)}`}
+							style={`--entry-tint: ${ENTRY_TINT}`}
 							{...(filterable ? rowFilterData(post) : {})}
 						>
 							{/* Decorative. The wash and the bar say nothing the row does not

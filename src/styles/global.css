@@ -889,8 +889,8 @@ a.tag-topic:focus-visible {
    left edge and slides the copy 10px right. The wash is three layers stacked
    inside one clipped box:
 
-     tint     a radial gradient, generated per row in lib/entryTints.ts, with a
-              slight scale settle so the colour lands rather than just appears
+     tint     a radial gradient, one constant value from lib/entryTints.ts, with
+              a slight scale settle so the colour lands rather than just appears
      scrim A  left to right - pulls the wash back to the page ground by the
               right-hand edge, under the longest titles and the reading time
      scrim B  top to bottom - holds the first and last few pixels dark so the
@@ -898,34 +898,56 @@ a.tag-topic:focus-visible {
 
    The stack is then held at 0.60 opacity. No text in the row takes a heavier
    weight, a shadow or a brighter colour to survive it, so the wash has to stay
-   under the copy on its own, and this number is the whole mechanism for that.
-   Measured against the brightest end of the ramp (t = 1, the cyan-ish hue, which
-   carries more luminance than the indigo end at equal lightness):
+   under the copy on its own.
 
-     title    #fff on hover     ~18:1
-     dek      --color-text-2    ~7.1:1
-     eyebrow  --color-blue      ~5.8:1  (the solution, above the title)
-     date     --color-text-3    ~4.6:1
-     meta     --color-text-3    ~4.6:1  (area, topics, reading time)
+   The tint is the same on every row. It used to be a per-row ramp; the note in
+   entryTints.ts has why that could not be seen and why it went.
 
-   The floor is unchanged by the row's rebuild, and got simpler. The date and the
-   meta line hold --color-text-3 all the way through the hover, so they set it.
-   Nothing in the row brightens on hover any more except the title: the tag that
-   used to go text-3 -> text-2 is gone, so there is no longer a value that has to
-   be measured lit as well as at rest. The eyebrow is the one addition and it does
-   not move the budget - --color-blue is 6.19:1 at rest against text-3's 4.88:1, so
-   the brightest new thing on the row is safer than the things already on it.
+   Worth knowing before touching any of this: the three attenuators multiply.
+   Scrim A (0.62 at its thinnest) times scrim B (0.18 at its thinnest) times the
+   0.60 opacity leaves the tint contributing about 16% of the pixel at the wash's
+   brightest point, and about 14% where the date and the meta line actually sit.
+   Three knobs all pulling the same way is why so little of the gradient survives.
+   To make the wash louder, thin scrim A's first stop rather than raising the
+   opacity: opacity lifts the parts already resolved to ground along with
+   everything else, scrim A lifts only where the colour is.
 
-   Both floor values clear the 4.5:1 WCAG 1.4.3 AA asks of normal text, but only
-   just, and only because this palette is deep: the previous brighter one failed at
-   this opacity. Treat 0.60 and the oklch lightnesses in entryTints.ts as one
-   setting - raising either means rechecking both. At rest, with no wash, text-3 is
-   4.88:1.
+   Measured against the composited stack at the text column (#0b111e, against a
+   #050a14 ground):
+
+     title    #fff on hover     18.84:1
+     dek      --color-text-2     7.46:1
+     blue     --color-blue       5.89:1
+     date     --color-text-3     4.64:1
+     meta     --color-text-3     4.64:1  (area, topics, reading time)
+
+   The date and the meta line hold --color-text-3 all the way through the hover,
+   so they set the floor. Nothing in the row brightens on hover except the title.
+
+   That floor clears the 4.5:1 WCAG 1.4.3 AA asks of normal text, but only just,
+   and only because this palette is deep. At rest, with no wash, text-3 is 4.88:1
+   against the ground, which is the real ceiling on the whole effect: there is
+   0.38 of headroom between the resting value and the floor, and the wash spends
+   most of it. Brightening --color-text-3 is the single change that would buy more
+   room - #7b8fb0 would take it to 6.04:1 at rest and roughly triple the wash
+   luminance the budget allows - but that is a site-wide token, so the wash is
+   tuned to the token rather than the other way round.
    https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html
 
+   Which knob to turn: chroma is nearly free against this budget and lightness is
+   not. Pushing chroma at fixed lightness moves the floor by hundredths; taking
+   the near stop's lightness from 0.34 to 0.42 drops it under 4.5 on its own. That
+   is why the tint in entryTints.ts is specified as a chroma against a pinned hue
+   and lightness, and why 0.60 here and the two stop lightnesses there are one
+   setting - raising any of them means rechecking all of them.
+
    These are computed from the composited stack, not sampled from a browser, so
-   treat them as within a tenth or so: oklch stops outside sRGB get gamut-mapped
-   by the engine, and gradient interpolation space is not identical across them.
+   treat them as within a tenth or so: gradient interpolation space is not
+   identical across engines, and CSS Color 4 gamut mapping is modelled here as
+   chroma reduction at fixed L and H without the local-MINDE refinement. Both
+   stops of the current tint are inside sRGB, so in practice nothing is being
+   mapped and that last caveat does not bite.
+   https://www.w3.org/TR/css-color-4/#gamut-mapping
 
    Only opacity and transform animate, so a ten-row list does no layout work on
    hover. */
