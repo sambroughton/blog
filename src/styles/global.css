@@ -988,16 +988,23 @@ a.tag-topic:focus-visible {
 	/* Flush with the bottom rule on the right, not the row's bled -mx-4 edge, so
 	   colour and rule share one span.
 
-	   The left edge is held a further 6px in to clear the accent bar. Both are
-	   blue by design, and scrim A is thinnest at its own left edge, so the bar was
-	   standing in the brightest part of the wash and disappearing into it. The bar
-	   keeps the 1rem alignment and the wash yields, because a bar is a line
-	   measurable against the rule below it and a gradient's start point is not. */
-	inset: 0 1rem 0 calc(1rem + 6px);
-	/* Clips the tint's own 2% overscan to this box. Without it the overscan is
-	   clipped by the row instead, which is ~6px wider each side - the whole gutter
-	   above - so the tint would cover the bar again for the first part of every
-	   hover, while the scale settles from 1.02 back to 1. */
+	   The left edge starts at the bar's right edge - 1rem for the bar's own
+	   position, plus its 1px width - so the wash begins exactly where the bar ends
+	   and the two read as one object.
+
+	   This used to be held a further 6px in, to stop the bar standing in the
+	   brightest part of the wash and disappearing into it. That was written for a
+	   louder treatment. Against the current flat tint the bar reads 5.00:1 at the
+	   wash's brightest left edge, against 5.31:1 on bare ground - it gives up
+	   0.31 for touching the colour it belongs to, so the gutter is not worth the
+	   5px of dead ground it left between them. */
+	inset: 0 1rem 0 calc(1rem + 1px);
+	/* Clips the tint's own 2% overscan to this box, and load-bearing now the
+	   wash starts hard against the bar. Without it the overscan is clipped by the
+	   row instead, which is a whole 1rem wider on the left, so the tint would spill
+	   over the bar for the first part of every hover while the scale settles from
+	   1.02 back to 1. The bar would still paint on top - the reveal is at z-index -1
+	   and the bar is not - but the colour either side of it would be wrong. */
 	overflow: hidden;
 	z-index: -1;
 	pointer-events: none;
@@ -1034,8 +1041,9 @@ a.tag-topic:focus-visible {
 	position: absolute;
 	/* Aligned with the bottom rule and the copy, not the row's bled -mx-4 edge,
 	   which would leave it floating 1rem outside every other line in the list.
-	   The wash is inset past this on purpose so the bar has dark ground either
-	   side of it - 1rem of bleed margin to the left, the 6px gutter to the right. */
+	   The wash now begins at this bar's right edge, so the bar has the 1rem of
+	   bleed margin as dark ground on its left and the colour it belongs to on its
+	   right. */
 	left: 1rem;
 	top: 0;
 	bottom: 0;
