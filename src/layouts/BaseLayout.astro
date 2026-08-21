@@ -26,7 +26,9 @@ interface Props {
 	/**
 	 * Trail shown above the content, first crumb to last. Omitted on the home
 	 * page, which is where every trail starts, and on 404, which has nowhere
-	 * meaningful to sit in the hierarchy.
+	 * meaningful to sit in the hierarchy. Also omitted on /page/N: those are the
+	 * home listing paged, not a level below it, so a trail there would announce a
+	 * descent that did not happen.
 	 */
 	crumbs?: Crumb[];
 	/**

@@ -45,10 +45,15 @@ const { pagePosts, articles, allPosts, currentPage, lastPage } = Astro.props;
 const heroPosts = selectHeroPosts(articles);
 ---
 
-<BaseLayout
-	title={`Page ${currentPage}`}
-	crumbs={[{ label: 'Home', href: '/' }, { label: `Page ${currentPage}` }]}
->
+{
+	/* No crumbs. These pages are the home ledger continued, reached by the pager
+    under the listing rather than by going down into anything, so the trail read
+    Home / Page 2 above a view that is the home page - naming a hierarchy that is
+    not there. Page 1 is / itself, which never had a trail, so dropping it here
+    also stops the listing gaining a line the moment a reader pages past the
+    first screen. The <title> still carries the page number. */
+}
+<BaseLayout title={`Page ${currentPage}`}>
 	<LedgerView
 		pagePosts={pagePosts}
 		allPosts={allPosts}
