@@ -33,13 +33,13 @@ const showSidebar = shouldShowSidebar(posts.length);
 
 <BaseLayout
 	title="Projects"
-	description="Write-ups of work that was actually built, broken and re-run."
+	description="Write-ups of things I've built."
 	crumbs={[{ label: 'Home', href: '/' }, { label: 'Projects' }]}
 >
 	<p class="text-blue text-[0.68rem] tracking-[0.12em] uppercase">Browse</p>
 	<h1 class="font-display text-text mt-1 text-2xl leading-tight font-bold sm:text-3xl">Projects</h1>
 	<p class="text-text-2 mt-3 max-w-[52ch] text-sm leading-relaxed">
-		Entries tagged as projects: things built, broken and re-run, rather than notes on a product.
+		Things I've built, documented end to end.
 	</p>
 
 	<div class={showSidebar ? 'mt-10 grid gap-10 md:grid-cols-[1fr_15rem]' : 'mt-10'}>
@@ -56,7 +56,7 @@ const showSidebar = shouldShowSidebar(posts.length);
 			<EntryList
 				posts={projects}
 				label="Projects"
-				emptyMessage="No entries are tagged as projects yet."
+				emptyMessage="Nothing tagged as a project yet."
 			/>
 		</div>
 		{showSidebar && <Sidebar posts={posts} />}

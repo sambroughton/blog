@@ -29,7 +29,7 @@ const solutions = solutionFacets(posts);
 
 <BaseLayout
 	title="Solutions"
-	description="The Microsoft security products these entries are built on."
+	description="The Microsoft security products covered here."
 	crumbs={[{ label: 'Home', href: '/' }, { label: 'Solutions' }]}
 >
 	<p class="text-blue text-[0.68rem] tracking-[0.12em] uppercase">Browse</p>
@@ -37,13 +37,12 @@ const solutions = solutionFacets(posts);
 		Solutions
 	</h1>
 	<p class="text-text-2 mt-3 max-w-[52ch] text-sm leading-relaxed">
-		The Microsoft security products the work sits in. An entry usually names more than one, so it
-		turns up under each of them.
+		The Microsoft security products covered here.
 	</p>
 
 	{
 		solutions.length === 0 ? (
-			<p class="text-text-2 mt-10 text-sm">No entries yet, so there is nothing to browse.</p>
+			<p class="text-text-2 mt-10 text-sm">Nothing published yet.</p>
 		) : (
 			/* Two columns from sm up rather than the three the topics index used. The
 			   labels are full product names - "Microsoft Defender for Cloud Apps" - so a
@@ -58,7 +57,9 @@ const solutions = solutionFacets(posts);
 							class="text-text-2 hover:text-text flex items-baseline justify-between gap-3 py-2 text-sm transition-colors"
 						>
 							<span>{solution.label}</span>
-							<span class="text-blue shrink-0 text-[0.72rem] tabular-nums">{solution.count}</span>
+							<span class="text-blue shrink-0 text-[0.72rem] tabular-nums">
+								{solution.count}
+							</span>
 						</a>
 					</li>
 				))}
